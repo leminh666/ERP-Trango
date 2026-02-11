@@ -1,0 +1,125 @@
+/**
+ * Transaction Payload Builder Helper
+ * Ensures consistent Prisma nested format for all transaction create/update operations
+ */
+
+// Income payload for POST (create)
+export interface IncomeCreateInput {
+  type: 'INCOME';
+  date: string;
+  amount: number | string;
+  walletId: string;
+  incomeCategoryId: string;
+  projectId?: string | null;
+  note?: string;
+  isCommonCost?: false;
+}
+
+// Expense payload for POST (create)
+export interface ExpenseCreateInput {
+  type: 'EXPENSE';
+  date: string;
+  amount: number | string;
+  walletId: string;
+  expenseCategoryId: string;
+  projectId?: string | null;
+  note?: string;
+  isCommonCost: boolean;
+}
+
+// Income payload for PUT (update)
+export interface IncomeUpdateInput {
+  type?: 'INCOME';
+  date?: string;
+  amount?: number | string;
+  walletId?: string;
+  incomeCategoryId?: string;
+  projectId?: string | null;
+  note?: string;
+  isCommonCost?: false;
+}
+
+// Expense payload for PUT (update)
+export interface ExpenseUpdateInput {
+  type?: 'EXPENSE';
+  date?: string;
+  amount?: number | string;
+  walletId?: string;
+  expenseCategoryId?: string;
+  projectId?: string | null;
+  note?: string;
+  isCommonCost?: boolean;
+}
+
+/**
+ * Build Prisma nested payload for INCOME create operation
+ */
+export function buildIncomeCreatePayload(input: IncomeCreateInput) {
+  return {
+    type: 'INCOME',
+    date: input.date,
+    amount: typeof input.amount === 'string' ? parseFloat(input.amount) : input.amount,
+    wallet: { connect: { id: input.walletId } },
+    incomeCategory: { connect: { id: input.incomeCategoryId } },
+    note: input.note || null,
+    project: input.projectId ? { connect: { id: input.projectId } } : undefined,
+    isCommonCost: false,
+  };
+}
+
+/**
+ * Build Prisma nested payload for EXPENSE create operation
+ */
+export function buildExpenseCreatePayload(input: ExpenseCreateInput) {
+  return {
+    type: 'EXPENSE',
+    date: input.date,
+    amount: typeof input.amount === 'string' ? parseFloat(input.amount) : input.amount,
+    wallet: { connect: { id: input.walletId } },
+    expenseCategory: { connect: { id: input.expenseCategoryId } },
+    note: input.note || null,
+    project: input.projectId && !input.isCommonCost ? { connect: { id: input.projectId } } : undefined,
+    isCommonCost: input.isCommonCost === true,
+  };
+}
+
+/**
+ * Build Prisma nested payload for INCOME update operation
+ */
+export function buildIncomeUpdatePayload(input: IncomeUpdateInput) {
+  const payload: any = {
+    type: 'INCOME',
+    note: input.note || null,
+    isCommonCost: false,
+  };
+
+  if (input.date) payload.date = input.date;
+  if (input.amount !== undefined) payload.amount = typeof input.amount === 'string' ? parseFloat(input.amount) : input.amount;
+  if (input.walletId) payload.wallet = { connect: { id: input.walletId } };
+  if (input.incomeCategoryId) payload.incomeCategory = { connect: { id: input.incomeCategoryId } };
+  if (input.projectId) payload.project = { connect: { id: input.projectId } };
+  else if (input.projectId === null || input.projectId === '') payload.project = { disconnect: true };
+
+  return payload;
+}
+
+/**
+ * Build Prisma nested payload for EXPENSE update operation
+ */
+export function buildExpenseUpdatePayload(input: ExpenseUpdateInput) {
+  const payload: any = {
+    note: input.note || null,
+  };
+
+  if (input.type) payload.type = input.type;
+  if (input.date) payload.date = input.date;
+  if (input.amount !== undefined) payload.amount = typeof input.amount === 'string' ? parseFloat(input.amount) : input.amount;
+  if (input.walletId) payload.wallet = { connect: { id: input.walletId } };
+  if (input.expenseCategoryId) payload.expenseCategory = { connect: { id: input.expenseCategoryId } };
+  if (input.projectId) payload.project = { connect: { id: input.projectId } };
+  else if (input.projectId === null || input.projectId === '') payload.project = { disconnect: true };
+  if (input.isCommonCost !== undefined) payload.isCommonCost = input.isCommonCost;
+
+  return payload;
+}
+

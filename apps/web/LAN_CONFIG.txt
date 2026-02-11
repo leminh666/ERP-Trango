@@ -1,0 +1,13 @@
+# =============================================================================
+# API Configuration for LAN / Mobile Testing
+# =============================================================================
+# IMPORTANT: Replace 192.168.1.X with YOUR PC's IP address
+# Find your IP: Run 'ipconfig' and look for IPv4 Address
+#
+# Example:
+# NEXT_PUBLIC_API_URL=http://192.168.1.105:4000
+# =============================================================================
+
+NEXT_PUBLIC_API_URL=http://192.168.1.X:4000
+NEXT_PUBLIC_API_TIMEOUT=15000
+

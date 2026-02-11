@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-01-30T11:22:05.712Z",
+  "passed": 0,
+  "failed": 13,
+  "tests": [
+    {
+      "name": "GET /health",
+      "method": "GET",
+      "path": "/health",
+      "error": "",
+      "passed": false
+    },
+    {
+      "name": "GET /users (public)",
+      "method": "GET",
+      "path": "/users",
+      "error": "",
+      "passed": false
+    },
+    {
+      "name": "GET /settings (no auth)",
+      "method": "GET",
+      "path": "/settings",
+      "error": "",
+      "passed": false
+    },
+    {
+      "name": "GET /customers (no auth)",
+      "method": "GET",
+      "path": "/customers",
+      "error": "",
+      "passed": false
+    },
+    {
+      "name": "GET /projects/summary (no auth)",
+      "method": "GET",
+      "path": "/projects/summary",
+      "error": "",
+      "passed": false
+    },
+    {
+      "name": "GET /transactions (no auth)",
+      "method": "GET",
+      "path": "/transactions",
+      "error": "",
+      "passed": false
+    },
+    {
+      "name": "GET /reminders/overview (no auth)",
+      "method": "GET",
+      "path": "/reminders/overview",
+      "error": "",
+      "passed": false
+    },
+    {
+      "name": "POST /auth/login",
+      "method": "POST",
+      "path": "/auth/login",
+      "error": "",
+      "passed": false
+    }
+  ]
+}

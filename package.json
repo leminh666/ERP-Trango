@@ -1,0 +1,36 @@
+{
+  "name": "tran-go-hoang-gia-erp",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run prisma:migrate && npm run prisma:seed",
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run start:dev --workspace=apps/api",
+    "dev:backend": "cd apps/api && npm run start:dev",
+    "dev:frontend": "cd apps/web && npm run dev",
+    "start": "cd apps/api && npm run start:prod",
+    "kill:port": "npx kill-port 4000 3000",
+    "kill:all": "taskkill /F /IM node.exe 2>nul || echo \"No node processes found\"",
+    "dev:api:clean": "cd apps/api && npm run clean:lock && npm run start:dev",
+    "prisma:migrate": "npm run prisma:migrate --workspace=apps/api",
+    "prisma:seed": "npm run prisma:seed --workspace=apps/api",
+    "prisma:studio": "npm run prisma:studio --workspace=apps/api",
+    "build": "npm run build --workspaces",
+    "scan:endpoints": "node tools/scan-endpoints.mjs",
+    "smoke:test": "node tools/smoke-test.mjs",
+    "test:api": "node tools/smoke-test.mjs",
+    "test:login": "node tools/test-login.mjs",
+    "verify:api": "echo 'Running API smoke tests...' && node tools/smoke-test.mjs",
+    "lint:api": "node tools/check-bad-fetch.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "kill-port": "^2.0.1",
+    "tsx": "^4.19.0"
+  }
+}

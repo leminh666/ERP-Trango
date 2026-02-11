@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-01-30T15:45:44.295Z",
+  "totalFilesScanned": 161,
+  "totalFindings": 0,
+  "findingsByType": {
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0,
+    "INFO": 0
+  },
+  "findings": [],
+  "topOffenders": []
+}

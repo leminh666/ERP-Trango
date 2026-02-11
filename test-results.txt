@@ -1,0 +1,15 @@
+=== LOGIN ===
+Status: 200
+Body: {"accessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlYTk0NThlZS0xMDczLTQyN2YtOTJmOS1kMDU3YjljNTA1YmMiLCJlbWFpbCI6ImFkbWluQGRlbW8uY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzcwMzQ2NjM3LCJleHAiOjE3NzA0MzMwMzd9.m3jLmZ0iY5SK93LvAeOftY2DGO7s4cBJhGG8bSY2_xw","user":{"id":"ea9458ee-1073-427f-92f9-d057b9c505bc","email":"admin@demo.com","name":"Quản trị viên","role":"ADMIN"}}
+
+=== GET /health ===
+Status: 200
+Body: {"status":"ok","timestamp":"2026-02-06T02:57:17.881Z","uptime":19.5955358,"port":4000,"host":"0.0.0.0"}
+
+=== GET /products ===
+Status: 200
+Body: [{"id":"99d418db-95ee-477b-b76c-a0a7ab3d39b2","code":"SP0018","name":"Test Product 1770346530076","unit":"m2","defaultSalePrice":null,"productType":"CEILING_WOOD","isActive":true,"deletedAt":null,"visualType":"IMAGE","imageUrl":"http://localhost:4000/uploads/placeholder.png","createdAt":"2026-02-06T02:55:30.089Z","updatedAt":"2026-02-06T02:55:30.089Z"},{"id":"9e886bc0-ee45-4ac5-8ca1-6012d06bf4c6","code":"SP0017","name":"Ốp tường","unit":"m2","defaultSalePrice":null,"productType":"OTHER_ITEM","isActive":true,"deletedAt":null,"visualType":"IMAGE","imageUrl":"http://localhost:4000/uploads/8c1ce556e5d603287f2eaafce9195813.jpeg","createdAt":"2026-02-05T16:03:15.040Z","updatedAt":"2026-02-05T16:03:15.040Z"},{"id":"a585a4d0-df0e-42db-84f1-2e7eb6c24b13","code":"SP0016","name":"Trần gỗ","unit":"m2","defaultSalePrice":"700000","productType":"OTHER_ITEM","isActive":true,"deletedAt":null,"visualType":"IMAGE","imageUrl":"http://localhost:4000/uploads/18cfd236e21f425c2cc1e36f25ea207c.jpg","createdAt":"2026-02-05T10:58:52.455Z","updatedAt":"2026-02-05T14:25:09.824Z"},{"id":"00071a93-12b5-48d1-bc6f-171fe1e95ed1","code":"SP0015","name":"Vách ngăn phòng","unit":"m2","defaultSalePrice":"3500000","productType":"OTHER_ITEM","isActive":true,"deletedAt":null,"visualType":"IMAGE","imageUrl":"/uploads/2dc78e6ff315721447cfcffd9f702705.jpg","createdAt":"2026-02-01T11:22:44.619Z","updatedAt":"2026-02-05T14:44:56.160Z"}]
+
+=== GET /users ===
+Status: 200
+Body: [{"id":"1255250c-01f0-44aa-a5a1-0690e923b349","email":"admin@tran-go-hoang-gia.com","name":"Admin","phone":null,"age":null,"address":null,"avatarUrl":null,"note":null,"role":"ADMIN","permissions":null,"isActive":true,"deletedAt":null,"createdAt":"2026-01-31T15:09:52.069Z","updatedAt":"2026-01-31T15:09:52.069Z"},{"id":"f4d8431e-0899-48f9-b410-ef8d7ba041a1","email":"staff@demo.com","name":"Nhân viên","phone":null,"age":null,"address":null,"avatarUrl":null,"note":null,"role":"STAFF","permissions":null,"isActive":true,"deletedAt":null,"createdAt":"2026-01-31T14:54:41.419Z","updatedAt":"2026-02-01T03:40:03.425Z"},{"id":"ea9458ee-1073-427f-92f9-d057b9c505bc","email":"admin@demo.com","name":"Quản trị viên","phone":null,"age":null,"address":null,"avatarUrl":null,"note":null,"role":"ADMIN","permissions":null,"isActive":true,"deletedAt":null,"createdAt":"2026-01-31T14:54:41.407Z","updatedAt":"2026-02-01T03:40:03.420Z"}]

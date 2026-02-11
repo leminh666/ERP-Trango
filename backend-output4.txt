@@ -1,0 +1,230 @@
+[AUTH-CONTROLLER] Module loaded
+🔍 Checking for .env files...
+   - apps/api/.env: EXISTS
+   - Working directory: E:\tran-go-hoang-gia-erp\apps\api
+   - Script location: E:\tran-go-hoang-gia-erp\apps\api\dist\src
+✅ dotenv.config() completed
+✅ All required env vars loaded
+   - DATABASE_URL: loaded
+   - JWT_SECRET: loaded
+🔍 Checking port 4000 availability...
+✅ Port 4000 is available
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] AppModule dependencies initialized +28ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +3ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] PassportModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] ConfigHostModule dependencies initialized +6ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] ConfigModule dependencies initialized +2ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] ConfigModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] FilesModule dependencies initialized +2ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] JwtModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] RemindersModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] AuditModule dependencies initialized +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] OrderItemsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] DashboardModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] ReportsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] AiModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] CashflowModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] UsersModule dependencies initialized +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] CustomersModule dependencies initialized +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] SuppliersModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] WorkshopsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] IncomeCategoriesModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] ExpenseCategoriesModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] WalletsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] TransactionsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] ProjectsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] TransfersModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] AdjustmentsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] SettingsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] ProductsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] WorkshopJobsModule dependencies initialized +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [InstanceLoader] AuthModule dependencies initialized +0ms
+✅ Added auto-detected LAN CORS origins: http://192.168.1.2:3000
+📋 Final CORS origins: http://localhost:3000, http://127.0.0.1:3000, http://192.168.1.2:3000
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] AuthController {/auth}: +45ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/auth/login, POST} route +2ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/auth/profile, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/auth/forgot-password, POST} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/auth/reset-password, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/auth/google/start, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/auth/google/callback, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] SettingsController {/settings}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/settings, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/settings/test, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/settings, PUT} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/settings/wallets, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/settings/income-categories, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/settings/expense-categories, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] AuditController {/audit-logs}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/audit-logs, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/audit-logs/:id, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] UsersController {/users}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/users, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/users, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/users/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/users/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/users/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/users/:id/restore, POST} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/users/:id/reset-password, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/users/:id/permissions, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] CustomersController {/customers}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/customers, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/customers/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/customers, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/customers/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/customers/:id, DELETE} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/customers/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/customers/:id/followups, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/customers/:id/followups, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] FollowUpsController {/followups}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/followups/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/followups/:id/mark-done, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/followups/:id/cancel, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] SuppliersController {/suppliers}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/suppliers, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/suppliers/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/suppliers, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/suppliers/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/suppliers/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/suppliers/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] WorkshopsController {/workshops}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshops, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshops/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshops, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshops/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshops/:id, DELETE} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshops/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] RemindersController {/reminders}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/reminders/overview, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/reminders/customers, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] IncomeCategoriesController {/income-categories}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/income-categories, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/income-categories/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/income-categories, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/income-categories/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/income-categories/:id, DELETE} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/income-categories/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/income-categories/:id/usage, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] ExpenseCategoriesController {/expense-categories}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/expense-categories, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/expense-categories/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/expense-categories, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/expense-categories/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/expense-categories/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/expense-categories/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/expense-categories/:id/usage, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] ProductsController {/products}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/products, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/products/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/products/:id/details, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/products/seed, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/products, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/products/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/products/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/products/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] ProductAttributesController {/product-attributes}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/:productId/groups, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/:productId/groups, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/groups/:groupId, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/groups/:groupId, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/values, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/values/:valueId, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/values/:valueId, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/:productId/variants, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/:productId/variants, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/variants/:variantId, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/product-attributes/variants/:variantId, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] WalletsController {/wallets}: +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets/:id/usage/summary, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets/:id/adjustments, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/wallets/:id/transfers, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] FilesController {/files}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/files/upload, POST} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] TransactionsController {/transactions}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transactions, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transactions/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transactions, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transactions/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transactions/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transactions/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] ProjectsController {/projects}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/summary, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/kanban, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:id/stage, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:id/acceptance, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:id/acceptance, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] OrderItemsController {/projects}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:projectId/items, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:projectId/summary, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:projectId/items, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:projectId/items/:itemId, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:projectId/items/:itemId, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/projects/:projectId/items/:itemId/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] DashboardController {/reports}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/reports/dashboard, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] ReportsController {/reports}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/reports/income-summary, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/reports/expense-summary, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/reports/customer-regions, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/reports/sales-channels, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] AiController {/ai}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/ai/parse-transaction, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] TransfersController {/transfers}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transfers, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transfers/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transfers, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transfers/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transfers/:id, PATCH} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/transfers/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] AdjustmentsController {/adjustments}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/adjustments, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/adjustments/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/adjustments, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/adjustments/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/adjustments/:id, PATCH} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/adjustments/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] CashflowController {/cashflow}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/cashflow, GET} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RoutesResolver] WorkshopJobsController {/workshop-jobs}: +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/summary, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/:id, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/:id/payments, GET} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/:id, PUT} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/:id, DELETE} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/:id/restore, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/:id/pay, POST} route +0ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/:id/payments/:expenseId, PATCH} route +1ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [RouterExplorer] Mapped {/workshop-jobs/:id/payments/:expenseId, DELETE} route +0ms
+🔍 [Prisma] DATABASE_URL: loaded (postgresql://postgres:Hamy2015@localhost:5432/tran...)
+✅ [Prisma] Connecting to database...
+✅ [Prisma] Connected successfully to PostgreSQL
+🔍 [Prisma] DATABASE_URL: loaded (postgresql://postgres:Hamy2015@localhost:5432/tran...)
+✅ [Prisma] Connecting to database...
+✅ [Prisma] Connected successfully to PostgreSQL
+[Nest] 13172  - 02/06/2026, 9:53:11 AM     LOG [NestApplication] Nest application successfully started +70ms
+[Nest] 13172  - 02/06/2026, 9:53:11 AM   ERROR [NestApplication] Error: listen EADDRINUSE: address already in use 0.0.0.0:4000 +1ms
+❌ FATAL: Failed to start API server: Error: listen EADDRINUSE: address already in use 0.0.0.0:4000
+    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
+    at listenInCluster (node:net:1920:12)
+    at doListen (node:net:2069:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 4000
+}

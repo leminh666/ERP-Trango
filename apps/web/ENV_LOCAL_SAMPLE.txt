@@ -1,0 +1,20 @@
+# =============================================================================
+# API Configuration for LAN / Mobile Testing
+# =============================================================================
+#
+# ⚠️ IMPORTANT: Replace 192.168.1.X with YOUR PC's IP address
+# To find your IP: Run 'ipconfig' and look for IPv4 Address
+#
+# Example correct format:
+# NEXT_PUBLIC_API_URL=http://192.168.1.105:4000
+#
+# Common mistakes:
+# ❌ NEXT_PUBLIC_API_URL=localhost:4000 (won't work on mobile!)
+# ❌ NEXT_PUBLIC_API_URL=192.168.1.X:4000 (missing http://)
+# ❌ NEXT_PUBLIC_API_URL= http://192.168.1.X:4000 (extra space)
+#
+# =============================================================================
+
+NEXT_PUBLIC_API_URL=http://192.168.1.X:4000
+NEXT_PUBLIC_API_TIMEOUT=15000
+

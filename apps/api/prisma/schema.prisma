@@ -1,0 +1,688 @@
+// Prisma schema for Tran Go Hoang Gia ERP
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String // bcrypt hash
+  name      String // fullName
+  phone     String?
+  age       Int?
+  address   String?
+  avatarUrl String?
+  note      String?
+  role      UserRole @default(STAFF)
+  permissions Json?  // Module permissions: { dashboard: { view, edit, delete }, orders: {...}, ... }
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs          AuditLog[]
+  customers          Customer[]      @relation("CustomerOwner")
+  customerFollowUps  CustomerFollowUp[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([deletedAt])
+  @@index([role])
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  entity       String   // "Transaction" | "Wallet" | ...
+  entityId     String
+  action       String   // CREATE | UPDATE | DELETE | RESTORE | SETTING_UPDATE | STAGE_CHANGE
+  beforeJson   Json?
+  afterJson    Json?
+  byUserId     String
+  byUserEmail  String?
+  ip           String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  byUser User @relation(fields: [byUserId], references: [id], onDelete: Cascade)
+
+  @@index([entity, createdAt])
+  @@index([byUserId, createdAt])
+  @@index([entityId])
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  valueJson   String
+  description String?
+  createdAt   DateTime @updatedAt
+  updatedAt   DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([usedAt])
+}
+
+// === PHASE 3: PARTNERS ===
+
+enum SourceChannel {
+  FACEBOOK
+  TIKTOK
+  WEBSITE
+  ZALO
+  INTRODUCED
+  REFERRAL
+  WALK_IN
+  OTHER
+}
+
+model Customer {
+  id               String   @id @default(uuid())
+  code             String   @unique // "KH0001" auto-increment
+  name             String
+  phone            String?
+  address          String?  // Full address (legacy)
+  region           String?
+
+  // New structured address fields
+  provinceCode     String?
+  provinceName     String?
+  districtCode     String?
+  districtName     String?
+  wardCode         String?
+  wardName         String?
+  addressLine      String?  // Street address (number, street name)
+
+  status           CustomerStatus @default(NEW)
+  lostReason       String?
+  nextFollowUpAt   DateTime?
+  nextFollowUpNote String?
+  ownerUserId      String?
+  tags             String?
+  note             String?
+  isActive         Boolean  @default(true)
+  isSample         Boolean  @default(false) // Mark sample data for cleanup
+  deletedAt        DateTime?
+
+  sourceChannel    SourceChannel?
+  sourceDetail     String?
+
+  visualType VisualType @default(ICON)
+  iconKey    String?
+  imageUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner     User?    @relation("CustomerOwner", fields: [ownerUserId], references: [id])
+  followUps CustomerFollowUp[]
+  projects  Project[]
+
+  @@index([status])
+  @@index([region])
+  @@index([sourceChannel])
+  @@index([ownerUserId])
+  @@index([nextFollowUpAt])
+  @@index([deletedAt])
+}
+
+enum CustomerStatus {
+  NEW
+  CONTACTED
+  CONSIDERING
+  PRICE_TOO_HIGH
+  APPOINTMENT_SET
+  SURVEY_SCHEDULED
+  WON
+  LOST
+}
+
+model CustomerFollowUp {
+  id          String   @id @default(uuid())
+  customerId  String
+  type        FollowUpType
+  scheduledAt DateTime
+  outcome     FollowUpOutcome @default(PENDING)
+  outcomeNote String?
+  createdByUserId String?
+  isSample    Boolean  @default(false) // Mark sample data for cleanup
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdBy User?   @relation(fields: [createdByUserId], references: [id])
+
+  @@index([customerId])
+  @@index([scheduledAt])
+  @@index([outcome])
+}
+
+enum FollowUpType {
+  CALL
+  MEETING
+  SURVEY
+  QUOTE
+  OTHER
+}
+
+enum FollowUpOutcome {
+  PENDING
+  DONE
+  CANCELLED
+  NO_SHOW
+}
+
+model Supplier {
+  id          String   @id @default(uuid())
+  code        String   @unique // "NCC0001"
+  name        String
+  phone       String?
+  address     String?  // Full address (legacy)
+  region      String?
+
+  // New structured address fields
+  provinceCode     String?
+  provinceName     String?
+  districtCode     String?
+  districtName     String?
+  wardCode         String?
+  wardName         String?
+  addressLine      String?  // Street address (number, street name)
+
+  note        String?
+  isActive    Boolean  @default(true)
+  isSample    Boolean  @default(false) // Mark sample data for cleanup
+  deletedAt   DateTime?
+
+  visualType VisualType @default(ICON)
+  iconKey    String?
+  imageUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([deletedAt])
+}
+
+model Workshop {
+  id          String   @id @default(uuid())
+  code        String   @unique // "X0001"
+  name        String
+  phone       String?
+  address     String?  // Full address (legacy)
+
+  // New structured address fields
+  provinceCode     String?
+  provinceName     String?
+  districtCode     String?
+  districtName     String?
+  wardCode         String?
+  wardName         String?
+  addressLine      String?  // Street address (number, street name)
+
+  note        String?
+  isActive    Boolean  @default(true)
+  isSample    Boolean  @default(false) // Mark sample data for cleanup
+  deletedAt   DateTime?
+
+  visualType VisualType @default(ICON)
+  iconKey    String?
+  imageUrl   String?
+  color      String?  @default("#f97316") // Color for visual display
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects     Project[]
+  workshopJobs WorkshopJob[]
+
+  @@index([deletedAt])
+}
+
+// === Sequence for atomic code generation ===
+model CodeSequence {
+  key      String   @id // e.g., "WORKSHOP_JOB"
+  value    Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  @@map("code_sequences")
+}
+
+model WorkshopJob {
+  id             String   @id @default(uuid())
+  code           String   @unique
+  projectId      String
+  workshopId     String
+  title          String?
+  description    String?
+  amount         Decimal  @db.Decimal(15, 2)
+  discountAmount Decimal  @default(0) @db.Decimal(15, 2) // Chiết khấu cho phiếu gia công
+  paidAmount     Decimal  @default(0) @db.Decimal(15, 2)
+  status         WorkshopJobStatus @default(DRAFT)
+  startDate      DateTime?
+  dueDate        DateTime?
+  note           String?
+  createdByUserId String?
+  updatedByUserId String?
+  deletedAt      DateTime?
+  isSample       Boolean  @default(false) // Mark sample data for cleanup
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workshop       Workshop @relation(fields: [workshopId], references: [id])
+  payments       Transaction[]
+  items          WorkshopJobItem[]
+
+  @@index([projectId])
+  @@index([workshopId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model WorkshopJobItem {
+  id              String   @id @default(uuid())
+  workshopJobId   String
+  productId       String?
+  productName     String
+  unit            String
+  quantity        Decimal  @db.Decimal(15, 2)
+  unitPrice       Decimal  @db.Decimal(15, 2)
+  lineTotal       Decimal  @db.Decimal(15, 2)
+  isSample        Boolean  @default(false) // Mark sample data for cleanup
+  createdAt       DateTime @default(now())
+
+  workshopJob     WorkshopJob @relation(fields: [workshopJobId], references: [id], onDelete: Cascade)
+  product         Product?    @relation(fields: [productId], references: [id])
+
+  @@index([workshopJobId])
+  @@index([productId])
+}
+
+enum WorkshopJobStatus {
+  DRAFT
+  SENT
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+// === PHASE 4: CATALOG ===
+
+model IncomeCategory {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  iconKey   String?
+  color     String?
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+
+  visualType VisualType @default(ICON)
+  imageUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@index([deletedAt])
+}
+
+model ExpenseCategory {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  iconKey   String?
+  color     String?
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+
+  visualType VisualType @default(ICON)
+  imageUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@index([deletedAt])
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  unit            String
+  defaultSalePrice Decimal? @db.Decimal(15, 2) // Kept for backward compatibility
+  productType     ProductType @default(OTHER_ITEM)
+  isActive        Boolean  @default(true)
+  deletedAt       DateTime?
+
+  visualType VisualType @default(IMAGE)
+  imageUrl   String     @default("/placeholder-product.png")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+  workshopJobItems WorkshopJobItem[]
+
+  // Relations for attributes & variants
+  attributeGroups ProductAttributeGroup[]
+  variants       ProductVariant[]
+
+  @@index([deletedAt])
+  @@index([productType])
+}
+
+// === PRODUCT ATTRIBUTES & VARIANTS ===
+
+model ProductAttributeGroup {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Cấp trần", "Số mặt", "Chất liệu"
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  values    ProductAttributeValue[]
+
+  @@index([productId])
+}
+
+model ProductAttributeValue {
+  id          String   @id @default(uuid())
+  value       String   // e.g., "2 cấp", "3 cấp", "Gỗ xoan"
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  groupId String
+  group   ProductAttributeGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Parent value for hierarchical attributes (e.g., "Gỗ xoan" is child of "Cột 1 mặt")
+  parentValueId String?
+  parentValue   ProductAttributeValue?  @relation("AttributeValueHierarchy", fields: [parentValueId], references: [id])
+  childValues   ProductAttributeValue[] @relation("AttributeValueHierarchy")
+
+  // Variants that use this attribute value
+  variantAttributes ProductVariantAttribute[]
+
+  @@index([groupId])
+  @@index([parentValueId])
+}
+
+model ProductVariant {
+  id          String   @id @default(uuid())
+  code        String?  // SKU code (optional)
+  name        String   // Display name (e.g., "Trần xoan - 2 cấp")
+  price       Decimal? @db.Decimal(15, 2) // Override price (optional)
+  imageUrl    String?  // Variant image (optional)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Attributes that make up this variant
+  attributes ProductVariantAttribute[]
+
+  // Order items referencing this variant
+  orderItems OrderItem[]
+
+  @@index([productId])
+  @@index([isActive])
+}
+
+model ProductVariantAttribute {
+  id          String   @id @default(uuid())
+
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  valueId String
+  value   ProductAttributeValue @relation(fields: [valueId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, valueId])
+  @@index([valueId])
+}
+
+// === PHASE 5: FUND ===
+
+model Wallet {
+  id          String      @id @default(uuid())
+  code        String      @unique
+  name        String
+  type        WalletType  @default(CASH)
+  note        String?
+  isActive    Boolean     @default(true)
+  deletedAt   DateTime?
+
+  visualType VisualType @default(ICON)
+  iconKey    String?
+  imageUrl   String?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  transactions Transaction[]
+  transactionsTo      Transaction[] @relation("WalletToRelation")
+  adjustments WalletAdjustment[]
+
+  @@index([deletedAt])
+  @@index([type])
+}
+
+enum WalletType {
+  CASH
+  BANK
+  OTHER
+}
+
+enum VisualType {
+  ICON
+  IMAGE
+}
+
+enum ProductType {
+  CEILING_WOOD    // Trần gỗ
+  FURNITURE       // Nội thất
+  OTHER_ITEM      // Hạng mục khác
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+model Transaction {
+  id                String          @id @default(uuid())
+  code              String          @unique
+  type              TransactionType
+  date              DateTime        @default(now())
+  amount            Decimal         @db.Decimal(15, 2)
+  note              String?
+
+  walletId          String
+  wallet            Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  walletToId        String?
+  walletTo          Wallet?         @relation("WalletToRelation", fields: [walletToId], references: [id])
+
+  feeAmount         Decimal         @default(0) @db.Decimal(15, 2)
+
+  incomeCategoryId  String?
+  incomeCategory    IncomeCategory? @relation(fields: [incomeCategoryId], references: [id])
+
+  expenseCategoryId String?
+  expenseCategory   ExpenseCategory? @relation(fields: [expenseCategoryId], references: [id])
+
+  projectId         String?
+  project           Project?  @relation(fields: [projectId], references: [id])
+
+  isCommonCost      Boolean         @default(false)
+
+  supplierId        String?
+  workshopId        String?
+  workshopJobId     String?
+
+  workshopJob       WorkshopJob?    @relation(fields: [workshopJobId], references: [id])
+
+  isSample          Boolean         @default(false) // Mark sample data for cleanup
+
+  createdByUserId   String?
+  updatedByUserId   String?
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+
+  @@index([walletId])
+  @@index([walletToId])
+  @@index([type])
+  @@index([date])
+  @@index([incomeCategoryId])
+  @@index([expenseCategoryId])
+  @@index([projectId])
+  @@index([isCommonCost])
+  @@index([workshopJobId])
+  @@index([deletedAt])
+}
+
+model WalletAdjustment {
+  id                String   @id @default(uuid())
+  walletId          String
+  date              DateTime
+  amount            Decimal  @db.Decimal(15, 2)
+  note              String?
+  createdByUserId   String?
+  deletedAt         DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  wallet            Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([date])
+  @@index([deletedAt])
+}
+
+// === PHASE 6: Project ===
+model Project {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  name        String
+  customerId  String?
+  workshopId  String?
+  address     String?
+  stage       String    @default("Lead")
+  status      String    @default("PENDING")
+  note        String?
+  deadline    DateTime?
+  discountAmount Decimal? @db.Decimal(15, 2) @default(0) // Chiết khấu cho toàn đơn
+  isActive    Boolean   @default(true)
+  isSample    Boolean   @default(false) // Mark sample data for cleanup
+  deletedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  workshop     Workshop?     @relation(fields: [workshopId], references: [id])
+  orderItems   OrderItem[]
+  transactions Transaction[]
+  workshopJobs WorkshopJob[]
+  acceptanceItems OrderAcceptanceItem[]
+
+  @@index([customerId])
+  @@index([workshopId])
+  @@index([stage])
+  @@index([deletedAt])
+  @@index([deadline])
+}
+
+// === PHASE 7: Order Items ===
+model OrderItem {
+  id        String   @id @default(uuid())
+  projectId String
+  productId String?
+  variantId String?  // Optional - for products with variants
+
+  name      String
+  unit      String
+  qty       Decimal  @db.Decimal(15, 2)
+  unitPrice Decimal  @db.Decimal(15, 2)
+  amount    Decimal  @db.Decimal(15, 2)
+
+  note      String?
+
+  isSample  Boolean  @default(false) // Mark sample data for cleanup
+
+  createdByUserId String?
+  updatedByUserId String?
+  deletedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+
+  acceptanceItems OrderAcceptanceItem[]
+
+  @@index([projectId])
+  @@index([productId])
+  @@index([variantId])
+  @@index([deletedAt])
+}
+
+// === Order Acceptance ===
+model OrderAcceptanceItem {
+  id              String   @id @default(uuid())
+  projectId       String
+  orderItemId     String
+
+  acceptedQty     Decimal  @db.Decimal(15, 2) @default(0)
+  unitPrice       Decimal? @db.Decimal(15, 2)  // Optional override of original unit price
+  note            String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  orderItem       OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, orderItemId])
+  @@index([projectId])
+  @@index([orderItemId])
+}
