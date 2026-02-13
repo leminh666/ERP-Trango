@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import { fetchJson, resolveProductImage } from '@/lib/api';
+import { fetchJson, resolveProductImage, uploadFile } from '@/lib/api';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -423,24 +423,4 @@ export default function ProductsPage() {
       )}
     </div>
   );
-}
-
-// Helper function for file upload
-async function uploadFile(endpoint: string, file: File, options: { token: string | null }) {
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${options.token}`,
-    },
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    throw new Error('Upload failed');
-  }
-  
-  return response.json();
 }

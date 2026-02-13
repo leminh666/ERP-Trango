@@ -1,20 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Server-side: get backend URL from env with fallback
-function getBackendUrl(): string {
-  const envUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (envUrl && envUrl.trim()) {
-    return envUrl.replace(/\/$/, '');
-  }
-  // Fallback for server-side only
-  console.warn('[API/files/upload] NEXT_PUBLIC_API_URL not set, using default');
-  return 'http://localhost:4000';
-}
+import { getApiBaseUrl } from '@/src/config';
 
 // Build URL properly using URL constructor
 function buildUrl(path: string): string {
-  const baseUrl = getBackendUrl();
+  const baseUrl = getApiBaseUrl();
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  // If baseUrl is just '/', return the path
+  if (baseUrl === '/') return normalizedPath;
   return new URL(normalizedPath, baseUrl).toString();
 }
 
@@ -50,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward to backend API using proper URL construction
-    const backendUrl = getBackendUrl();
+    const backendUrl = getApiBaseUrl();
     const backendFormData = new FormData();
     backendFormData.append('file', file);
 
