@@ -2,7 +2,6 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginInput } from '@tran-go-hoang-gia/shared';
 import { randomBytes, createHash } from 'crypto';
 import { SettingsService } from '../settings/settings.service';
 
@@ -14,7 +13,7 @@ export class AuthService {
     private settingsService: SettingsService,
   ) {}
 
-  async login(data: LoginInput) {
+  async login(data: any) {
     const { email, password } = data;
 
     const user = await this.prisma.user.findUnique({

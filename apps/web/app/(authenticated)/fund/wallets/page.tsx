@@ -96,7 +96,7 @@ export default function WalletsPage() {
     setUploading(true);
     try {
       // Direct call to backend port 4000
-      const result = await uploadFile('/files/upload', file, { token });
+      const result = await uploadFile('/files/upload', file, { token }) as any;
       if (result.url) {
         setFormData((prev) => ({ ...prev, imageUrl: result.url }));
         setShowLogoUploader(false);

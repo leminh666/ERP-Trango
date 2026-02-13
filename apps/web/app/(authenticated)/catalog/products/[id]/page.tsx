@@ -113,7 +113,7 @@ export default function ProductDetailPage() {
   const handleVariantImageUpload = async (file: File) => {
     setUploading(true);
     try {
-      const result = await uploadFile('/files/upload', file, { token });
+      const result = await uploadFile('/files/upload', file, { token }) as any;
       if (result.url) {
         setNewVariantImage(result.url);
         showSuccess('Upload thành công', 'Đã tải ảnh biến thể');

@@ -30,6 +30,7 @@
     "@prisma/client": "^5.8.0",
     "@types/passport-google-oauth20": "^2.0.17",
     "bcryptjs": "^2.4.3",
+    "ci": "^2.3.0",
     "dotenv": "^16.4.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",

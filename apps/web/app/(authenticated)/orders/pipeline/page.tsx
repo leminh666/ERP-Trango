@@ -362,7 +362,7 @@ export default function OrdersPipelinePage() {
         <div className="flex-1 overflow-hidden">
           <div className="grid grid-cols-4 gap-3 h-full">
             {[...Array(4)].map((_, i) => (
-              <SkeletonCard key={i} className="h-full rounded-lg" />
+              <SkeletonCard key={i}  />
             ))}
           </div>
         </div>

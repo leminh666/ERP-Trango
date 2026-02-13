@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 interface MoneyInputProps {
-  value: number | null | undefined;
+  value: number | null | undefined | any;
   onChange: (value: number) => void;
   placeholder?: string;
   disabled?: boolean;

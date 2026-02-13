@@ -1,7 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginInput, LoginResponse } from '@tran-go-hoang-gia/shared';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -17,7 +16,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Đăng nhập' })
   @ApiResponse({ status: 200, description: 'Đăng nhập thành công' })
   @ApiResponse({ status: 401, description: 'Email hoặc mật khẩu không đúng' })
-  async login(@Body() data: LoginInput): Promise<LoginResponse> {
+  async login(@Body() data: any): Promise<any> {
     return this.authService.login(data);
   }
 
