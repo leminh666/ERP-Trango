@@ -2,14 +2,56 @@
 
 Monorepo cho hệ thống ERP với Next.js + NestJS + Prisma.
 
-## 🛠️ Công nghệ
+## 🚀 Chạy với Docker (Khuyến nghị)
 
-- **Web**: Next.js 14 + Tailwind CSS + shadcn/ui
-- **API**: NestJS + Prisma + JWT Auth
-- **Database**: PostgreSQL (đã cài sẵn, không dùng Docker)
-- **Shared**: TypeScript types + Zod schemas
+### Yêu cầu
+- Docker Desktop for Windows
+- Docker Compose
 
-## 📋 Hướng dẫn cài đặt (Windows)
+### Các bước
+
+```bash
+# 1. Build và chạy tất cả services
+docker compose up -d --build
+
+# 2. Xem logs
+docker compose logs -f
+
+# 3. Dừng tất cả
+docker compose down
+
+# 4. Reset database (xóa toàn bộ dữ liệu)
+docker compose down -v
+docker compose up -d --build
+```
+
+### Truy cập sau khi chạy Docker
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:4000 |
+| API Docs | http://localhost:4000/docs |
+| Database | localhost:5432 |
+
+### Tài khoản demo
+
+| Email | Mật khẩu | Vai trò |
+|-------|----------|---------|
+| admin@demo.com | 123456 | ADMIN |
+| staff@demo.com | 123456 | STAFF |
+
+---
+
+## 🖥️ Chạy không dùng Docker (Local Development)
+
+### Yêu cầu
+- Node.js 20+
+- PostgreSQL 15+ (đã cài sẵn)
+- npm hoặc yarn
+
+### 📋 Hướng dẫn cài đặt (Windows)
+- npm hoặc yarn
 
 ### Bước 1: Mở folder bằng Cursor
 

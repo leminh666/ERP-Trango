@@ -1,0 +1,105 @@
+# =============================================================================
+# Docker Compose - ERP Trango v3.0
+# =============================================================================
+#
+# USAGE:
+#   cp .env.example .env
+#   docker compose up -d --build
+#   docker compose logs -f
+#   docker compose down -v  # Reset database
+#
+# ACCESS:
+#   Frontend: http://localhost:3000
+#   Backend:  http://localhost:4000
+#   API Docs: http://localhost:4000/docs
+#   Database: localhost:5432
+#
+# =============================================================================
+
+services:
+  # =============================================================================
+  # PostgreSQL Database
+  # =============================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: erp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tran_go_hoang_gia_erp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================================================
+  # API Backend - NestJS
+  # =============================================================================
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: erp-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/tran_go_hoang_gia_erp?schema=public
+      JWT_SECRET: super-secret-jwt-key-2026-change-in-prod
+      JWT_EXPIRES_IN: 7d
+      # Allow CORS from any origin in production
+      WEB_CORS_ORIGINS: "*"
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # =============================================================================
+  # Web Frontend - Next.js
+  # =============================================================================
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: erp-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # API URL for frontend - uses Docker network hostname
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      # Enable proxy mode to avoid CORS issues
+      NEXT_PUBLIC_USE_PROXY: true
+      NEXT_PUBLIC_API_TIMEOUT: 15000
+      NEXT_PUBLIC_ENABLE_LOGGING: true
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  default:
+    name: erp-network
+
