@@ -1,20 +1,41 @@
 # =============================================================================
-# API Configuration for LAN / Mobile Testing
+# Frontend Environment Configuration
 # =============================================================================
 #
-# ⚠️ IMPORTANT: Replace 192.168.1.X with YOUR PC's IP address
-# To find your IP: Run 'ipconfig' and look for IPv4 Address
-#
-# Example correct format:
-# NEXT_PUBLIC_API_URL=http://192.168.1.105:4000
-#
-# Common mistakes:
-# ❌ NEXT_PUBLIC_API_URL=localhost:4000 (won't work on mobile!)
-# ❌ NEXT_PUBLIC_API_URL=192.168.1.X:4000 (missing http://)
-# ❌ NEXT_PUBLIC_API_URL= http://192.168.1.X:4000 (extra space)
+# INSTRUCTIONS:
+# 1. Copy this file to: apps/web/.env.local
+# 2. Fill in your values
+# 3. Restart dev server
 #
 # =============================================================================
-
-NEXT_PUBLIC_API_URL=http://192.168.1.X:4000
+# RECOMMENDED: Use Proxy Mode (no IP hardcoding needed!)
+# =============================================================================
+# Enable proxy mode - API calls go through Next.js proxy
+# Mobile/LAN devices can access at http://<YOUR_IP>:3000
+# Backend automatically accessed at http://<YOUR_IP>:4000
+NEXT_PUBLIC_USE_PROXY=true
+# =============================================================================
+# ALTERNATIVE: Direct Mode (set IP manually)
+# =============================================================================
+# If you need direct API calls, set the backend URL:
+# NEXT_PUBLIC_API_URL=http://192.168.1.12:4000
+#
+# Note: If you change network/IP, you MUST update this file!
+# =============================================================================
+# API Configuration
+# NEXT_PUBLIC_API_URL=http://localhost:4000  # Development
+# NEXT_PUBLIC_API_URL=http://192.168.1.12:4000  # LAN access
+# =============================================================================
+# Optional Settings
+# =============================================================================
+# API request timeout (milliseconds)
 NEXT_PUBLIC_API_TIMEOUT=15000
-
+# Asset base URL (if different from API URL)
+# NEXT_PUBLIC_ASSET_URL=http://localhost:4000
+# Enable debug logging
+NEXT_PUBLIC_ENABLE_LOGGING=true
+# Enable mock data mode (for testing without backend)
+# NEXT_PUBLIC_ENABLE_MOCK_DATA=true
+# =============================================================================
+# DO NOT COMMIT .env.local TO VERSION CONTROL!
+# =============================================================================

@@ -3,37 +3,41 @@ const nextConfig = {
   reactStrictMode: true,
 
   // =============================================================================
-  // API Proxy Configuration - Route /api/* to Backend
+  // API Proxy Configuration - LAN/Mobile Support
   // =============================================================================
-  // This enables LAN access without hardcoded IP:
-  // - Mobile accesses FE at http://192.168.1.12:3000
-  // - Requests to /api/* are proxied to backend at localhost:4000
-  // - No CORS needed for /api/* requests (same origin)
+  //
+  // PROXY MODE (RECOMMENDED):
+  // - Set NEXT_PUBLIC_USE_PROXY=true in .env.local
+  // - All /api/* requests are proxied to backend
+  // - No IP hardcoding needed!
+  // - Mobile accesses FE at http://192.168.x.x:3000
+  // - Backend calls automatically go to http://192.168.x.x:4000
+  //
+  // DIRECT MODE (fallback):
+  // - NEXT_PUBLIC_API_URL=http://192.168.x.x:4000
+  // - API calls go directly to backend URL
   // =============================================================================
 
   async rewrites() {
+    // Get API URL from environment, default to localhost:4000
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    
     return [
       {
+        // Proxy /api/* to backend
+        // This enables LAN access without hardcoded IP
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/:path*`,
+        destination: `${apiUrl}/:path*`,
       },
     ];
   },
 
   // =============================================================================
-  // For non-proxy mode (direct API calls), we keep CORS-friendly config
+  // Image Configuration - Support LAN IPs for image loading
   // =============================================================================
-  // Note: With rewrites enabled above, CORS is NOT needed for /api/* requests
-  // because they become same-origin requests.
-  //
-  // HOWEVER, if you access backend directly (e.g., http://192.168.1.12:4000),
-  // CORS is still required. The backend (main.ts) handles this.
-  // =============================================================================
-
-  // Image configuration for proper LAN/mobile support
   images: {
     remotePatterns: [
-      // Allow all localhost variants for development
+      // Allow localhost for development
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -46,14 +50,14 @@ const nextConfig = {
         port: '4000',
         pathname: '/uploads/**',
       },
-      // Allow LAN IPs (e.g., 192.168.x.x:4000)
+      // Allow LAN IPs (192.168.x.x, 10.x.x.x)
       {
         protocol: 'http',
         hostname: '**',
         port: '4000',
         pathname: '/uploads/**',
       },
-      // Production domains (update these for actual production)
+      // Production domains
       {
         protocol: 'https',
         hostname: 'api.trangohoanggia.com',
@@ -65,8 +69,6 @@ const nextConfig = {
         pathname: '/uploads/**',
       },
     ],
-    // Uncomment for development to allow all (less secure but easier)
-    // dangerousAllowWildcardCards: true,
   },
 };
 

@@ -1,34 +1,16 @@
 // =============================================================================
 // Media/Asset URL Resolution Utility
+// =============================================================================
+//
 // Handles image URLs for both desktop and mobile (including LAN access)
+// Uses centralized config - no hardcoded IPs
 // =============================================================================
 
-/**
- * Get the asset base URL from environment or infer from current location
- * Priority: NEXT_PUBLIC_ASSET_URL > NEXT_PUBLIC_API_URL > window.location > localhost:4000
- */
-function getAssetBaseUrl(): string {
-  // 1. Check explicit asset URL env (highest priority)
-  if (process.env.NEXT_PUBLIC_ASSET_URL) {
-    return process.env.NEXT_PUBLIC_ASSET_URL.trim();
-  }
+import { getAssetBaseUrl } from '@/src/config';
 
-  // 2. Check API URL (fallback)
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.trim();
-  }
-
-  // 3. Infer from current location (for LAN access)
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    const port = hostname.includes(':') ? '' : (window.location.port ? `:${window.location.port}` : '');
-    return `${protocol}//${hostname}${port}`;
-  }
-
-  // 4. Fallback for SSR
-  return 'http://localhost:4000';
-}
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
 /**
  * Check if URL is localhost
@@ -51,12 +33,9 @@ function sanitizeUrl(url: string): string {
   }
 }
 
-/**
- * Check if two URLs point to the same resource (ignoring query params)
- */
-function urlsMatch(url1: string, url2: string): boolean {
-  return sanitizeUrl(url1) === sanitizeUrl(url2);
-}
+// =============================================================================
+// Main Functions
+// =============================================================================
 
 /**
  * Resolve a raw image URL to a proper accessible URL for both desktop and mobile
@@ -198,4 +177,3 @@ export function isValidAssetUrl(url: string | null | undefined): boolean {
     return false;
   }
 }
-
