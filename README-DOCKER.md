@@ -1,350 +1,259 @@
 # Docker Deployment Guide - ERP Trango v3.0
 
-## 📋 Table of Contents
+## Overview
 
-1. [Quick Start](#quick-start)
-2. [Development Environment](#development-environment)
-3. [Production Environment](#production-environment)
-4. [Database Migration](#database-migration)
-5. [Backup & Restore](#backup--restore)
-6. [Troubleshooting](#troubleshooting)
+This guide covers deploying ERP Trango v3.0 using Docker Compose.
 
----
+### Architecture
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Docker Desktop for Windows/Mac
-- Docker Engine + Docker Compose for Linux
-- Minimum 4GB RAM available for containers
-
-### Check Docker Installation
-
-```bash
-docker --version        # Should be 20.x+
-docker compose version  # Should be 2.x+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Nginx Reverse Proxy                    │
+│                    (Public Entry Point)                  │
+│                         :80/:443                          │
+└─────────────────────┬───────────────────────────────────┘
+                      │
+          ┌───────────┴───────────┐
+          │                       │
+          ▼                       ▼
+   ┌──────────────┐      ┌──────────────┐
+   │   Frontend   │      │    Backend   │
+   │  Next.js    │      │   NestJS    │
+   │   :3000     │      │    :4000    │
+   └──────┬───────┘      └──────┬───────┘
+          │                      │
+          └──────────┬───────────┘
+                     │
+                     ▼
+              ┌──────────────┐
+              │  PostgreSQL  │
+              │    :5432     │
+              └──────────────┘
 ```
 
 ---
 
-## 🖥️ Development Environment
+## Quick Start
 
-### 1. Start All Services
+### 1. Prerequisites
 
-```bash
-# Navigate to project root
-cd E:\tran-go-hoang-gia-erp
+- Docker Engine 20.10+
+- Docker Compose v2.0+
+- At least 4GB RAM
+- 20GB disk space
 
-# Start all services (db, api, web)
-docker compose up -d --build
-
-# View logs
-docker compose logs -f
-
-# Or view logs for specific service
-docker compose logs -f api
-docker compose logs -f web
-```
-
-### 2. Access Development Services
-
-| Service | URL | Description |
-|---------|-----|-------------|
-| Frontend | http://localhost:3000 | Next.js Web Application |
-| Backend API | http://localhost:4000 | NestJS API |
-| API Docs | http://localhost:4000/docs | Swagger Documentation |
-| Health Check | http://localhost:4000/health | Backend Health Status |
-
-### 3. Stop Services
+### 2. Clone & Setup
 
 ```bash
-# Stop all services
-docker compose down
+# Clone the repository
+git clone https://github.com/leminh666/ERP-Trango.git
+cd ERP-Trango
 
-# Stop and remove volumes (WARNING: deletes all data)
-docker compose down -v
+# Create production environment file
+cp .env.prod.example .env.prod
+
+# Edit the .env.prod file with your values
+nano .env.prod
 ```
 
----
-
-## 🏭 Production Environment
-
-### 1. Prepare Environment
-
-```bash
-# Copy production environment template
-cp .env.production.example .env.production
-
-# Edit with your production values
-# IMPORTANT: Change JWT_SECRET to a strong random value
-nano .env.production
-```
-
-### 2. Start Production Services
+### 3. Start Production
 
 ```bash
 # Build and start all services
 docker compose -f docker-compose.prod.yml up -d --build
 
-# View logs
+# Check logs
 docker compose -f docker-compose.prod.yml logs -f
 
-# Stop services (keep data)
-docker compose -f docker-compose.prod.yml down
-
-# Stop and remove volumes (WARNING: deletes all data)
-docker compose -f docker-compose.prod.yml down -v
+# Check status
+docker compose -f docker-compose.prod.yml ps
 ```
 
-### 3. Access Production Services
-
-| Service | URL | Description |
-|---------|-----|-------------|
-| Frontend | http://your-domain.com | Web Application |
-| API | http://your-domain.com/api | Backend API |
-| Docs | http://your-domain.com/docs | Swagger Documentation |
-
----
-
-## 🗄️ Database Migration
-
-### Run Migrations (Development)
+### 4. Database Migration
 
 ```bash
-# Run migrations in api container
-docker compose exec api npx prisma migrate deploy
-
-# Or for fresh database
-docker compose exec api npx prisma migrate dev --name init
-```
-
-### Run Migrations (Production)
-
-```bash
-# Deploy migrations (non-destructive)
+# Run Prisma migrations
 docker compose -f docker-compose.prod.yml exec api npx prisma migrate deploy
 
-# Check migration status
-docker compose -f docker-compose.prod.yml exec api npx prisma migrate status
+# (Optional) Seed database
+docker compose -f docker-compose.prod.yml exec api npx prisma db seed
 ```
 
-### Seed Database (Development Only)
+### 5. Access Application
 
-```bash
-# Run seed script
-docker compose exec api npx prisma db seed
-```
-
-### Open Prisma Studio (Development)
-
-```bash
-# Open Prisma Studio in browser
-docker compose exec api npx prisma studio
-```
+- **Frontend**: http://your-server-ip or http://your-domain.com
+- **API**: http://your-server-ip/api or http://your-domain.com/api
+- **API Docs**: http://your-server-ip/docs or http://your-domain.com/docs
 
 ---
 
-## 💾 Backup & Restore
+## Development Mode
+
+### Start Development Environment
+
+```bash
+# Build and start dev services
+docker compose up -d --build
+
+# Access via:
+# - Frontend: http://localhost
+# - Backend: http://localhost/api
+```
+
+### For Mobile/LAN Testing
+
+1. Find your computer's LAN IP:
+   - Windows: `ipconfig`
+   - Mac/Linux: `ifconfig`
+
+2. Access from mobile:
+   ```
+   http://<YOUR_LAN_IP>
+   ```
+
+---
+
+## Environment Variables
+
+### Production (.env.prod)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| POSTGRES_USER | Database username | postgres |
+| POSTGRES_PASSWORD | Database password | securepassword123 |
+| POSTGRES_DB | Database name | tran_go_hoang_gia_erp |
+| JWT_SECRET | JWT signing secret | random-256-bit-string |
+| JWT_EXPIRES_IN | Token expiration | 7d |
+| FRONTEND_URL | Frontend URL for CORS | https://domain.com |
+
+---
+
+## Database Management
 
 ### Backup Database
 
 ```bash
 # Create backup
-docker compose exec db pg_dump -U postgres tran_go_hoang_gia_erp > backup_$(date +%Y%m%d_%H%M%S).sql
+docker compose -f docker-compose.prod.yml exec db pg_dump -U postgres tran_go_hoang_gia_erp > backup.sql
 
-# Or with compression
-docker compose exec db pg_dump -U postgres tran_go_hoang_gia_erp | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+# Restore backup
+cat backup.sql | docker compose -f docker-compose.prod.yml exec -T db psql -U postgres tran_go_hoang_gia_erp
 ```
 
-### Restore Database
+### Reset Database
 
 ```bash
-# Restore from backup
-docker compose exec -T db psql -U postgres -d tran_go_hoang_gia_erp < backup_file.sql
-
-# Restore from compressed backup
-gunzip -c backup_file.sql.gz | docker compose exec -T db psql -U postgres -d tran_go_hoang_gia_erp
-```
-
-### Backup with Docker Volume
-
-```bash
-# Backup volume to tarball
-docker run --rm -v erp-network-prod_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/postgres_backup_$(date +%Y%m%d).tar.gz -C /data .
-
-# Restore from tarball
-docker run --rm -v erp-network-prod_postgres_data:/data -v $(pwd):/backup alpine sh -c "cd /data && tar xzf /backup/postgres_backup_20240101.tar.gz --strip-components=1"
+# WARNING: This will delete all data!
+docker compose -f docker-compose.prod.yml down -v
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml exec api npx prisma migrate deploy
 ```
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
-### Port Already in Use
-
-```bash
-# Check what's using the port
-netstat -ano | findstr :3000
-netstat -ano | findstr :4000
-netstat -ano | findstr :5432
-
-# Kill process (replace PID with actual process ID)
-taskkill /PID 12345 /F
-```
-
-### Container Won't Start
+### Check Logs
 
 ```bash
-# Check container logs
-docker compose logs api
-docker compose logs web
-docker compose logs db
+# All services
+docker compose -f docker-compose.prod.yml logs
 
-# Check container status
-docker compose ps
-
-# Restart specific service
-docker compose restart api
-docker compose restart web
+# Specific service
+docker compose -f docker-compose.prod.yml logs api
+docker compose -f docker-compose.prod.yml logs web
+docker compose -f docker-compose.prod.yml logs nginx
 ```
 
-### Database Connection Failed
+### Common Issues
 
-```bash
-# Check database health
-docker compose exec db pg_isready -U postgres
+#### 1. "Connection refused" to API
 
-# Verify DATABASE_URL in .env
-cat .env | grep DATABASE_URL
+- Check if nginx is running: `docker compose ps`
+- Check nginx logs: `docker compose logs nginx`
+- Verify backend is healthy: `curl http://localhost:4000/health`
 
-# Recreate containers
-docker compose down
-docker compose up -d
-```
+#### 2. CORS Errors
 
-### Reset Everything (Development)
+- Verify FRONTEND_URL in .env.prod
+- Check backend logs for CORS configuration
 
-```bash
-# Stop all containers
-docker compose down
+#### 3. Database Connection Failed
 
-# Remove all volumes
-docker compose down -v
+- Wait for PostgreSQL to be ready (check health)
+- Verify DATABASE_URL in backend logs
 
-# Remove all images (optional)
-docker rmi erp-api-dev erp-web-dev nginx:alpine
+#### 4. Uploaded Files Not Showing
 
-# Rebuild and start
-docker compose up -d --build
-```
-
-### View Container Resources
-
-```bash
-# View running containers
-docker stats
-
-# View container details
-docker inspect erp-api-dev
-docker inspect erp-web-dev
-```
+- Check api_uploads volume is mounted
+- Verify file permissions
 
 ---
 
-## 📦 Build & Deploy to VPS
+## SSL/HTTPS Setup (Optional)
 
-### Option 1: Build on VPS
+### Using Certbot
 
 ```bash
-# On VPS, clone the repository
-git clone <your-repo-url>
-cd erp-trango-v3
-
-# Copy environment file
-cp .env.production.example .env.production
-# Edit .env.production with production values
-
-# Build and start
+# Initial setup with SSL
+# 1. Start services first
 docker compose -f docker-compose.prod.yml up -d --build
+
+# 2. Get initial SSL certificate
+docker compose -f docker-compose.prod.yml run --rm certbot certonly -v
+
+# 3. Edit nginx.conf to include SSL configuration
+# 4. Restart nginx
+docker compose -f docker-compose.prod.yml restart nginx
 ```
 
-### Option 2: Build Locally and Push
+---
+
+## Ports Reference
+
+| Service | Internal Port | External (Prod) |
+|---------|---------------|------------------|
+| Nginx | 80, 443 | 80, 443 |
+| PostgreSQL | 5432 | - (internal) |
+| API | 4000 | - (internal) |
+| Frontend | 3000 | - (internal) |
+
+---
+
+## Security Notes
+
+1. Change default JWT_SECRET in production
+2. Use strong PostgreSQL password
+3. Enable SSL/HTTPS in production
+4. Keep Docker images updated
+5. Configure firewall to only allow ports 80/443
+
+---
+
+## Maintenance
+
+### Update Application
 
 ```bash
-# Build images locally
-docker build -t erp-api ./apps/api
-docker build -t erp-web ./apps/web
+# Pull latest code
+git pull origin main
 
-# Save images to tarball
-docker save erp-api | gzip > erp-api.tar.gz
-docker save erp-web | gzip > erp-web.tar.gz
+# Rebuild and restart
+docker compose -f docker-compose.prod.yml up -d --build
 
-# Transfer to VPS (using scp or similar)
-scp erp-api.tar.gz erp-web.tar.gz user@vps:/path/to/project/
-
-# On VPS
-docker load < erp-api.tar.gz
-docker load < erp-web.tar.gz
-
-# Update docker-compose to use loaded images
-# Change "build:" to "image: erp-api" in docker-compose.prod.yml
+# Run migrations if needed
+docker compose -f docker-compose.prod.yml exec api npx prisma migrate deploy
 ```
 
----
-
-## 🔒 Security Checklist for Production
-
-- [ ] Change `JWT_SECRET` to a strong random value (32+ characters)
-- [ ] Change PostgreSQL password
-- [ ] Enable HTTPS with SSL certificates
-- [ ] Restrict `WEB_CORS_ORIGINS` to your frontend domain
-- [ ] Disable `ENABLE_LOGGING` in production
-- [ ] Use secrets management (Docker Swarm, Kubernetes, or external vault)
-- [ ] Regular database backups
-- [ ] Keep Docker images updated
-
----
-
-## 📞 Useful Commands
+### Stop Services
 
 ```bash
-# View all containers
-docker ps -a
+# Stop (keep data)
+docker compose -f docker-compose.prod.yml stop
 
-# Remove all stopped containers
-docker container prune -f
+# Stop (remove containers, keep data)
+docker compose -f docker-compose.prod.yml down
 
-# Remove all unused images
-docker image prune -a -f
-
-# Remove all unused volumes (WARNING: deletes data)
-docker volume prune -f
-
-# Full system cleanup
-docker system prune -a -f --volumes
+# Stop (remove everything including data)
+docker compose -f docker-compose.prod.yml down -v
 ```
-
----
-
-## 📁 File Structure
-
-```
-erp-trango-v3/
-├── apps/
-│   ├── api/
-│   │   ├── Dockerfile          # Multi-stage build
-│   │   ├── prisma/
-│   │   └── src/
-│   └── web/
-│       ├── Dockerfile          # Multi-stage build (standalone)
-│       ├── next.config.js
-│       └── src/
-├── nginx.conf                  # Reverse proxy config
-├── docker-compose.yml          # Development
-├── docker-compose.prod.yml      # Production
-├── .dockerignore
-├── .env.production.example     # Template for production env
-└── README-DOCKER.md            # This file
-```
-

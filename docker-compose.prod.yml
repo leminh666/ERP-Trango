@@ -3,20 +3,21 @@
 # =============================================================================
 #
 # USAGE:
-#   cp .env.production.example .env.production
+#   cp .env.prod.example .env.prod
 #   docker compose -f docker-compose.prod.yml up -d --build
 #   docker compose -f docker-compose.prod.yml logs -f
 #   docker compose -f docker-compose.prod.yml down  # Without volumes
 #
 # ACCESS (via Nginx):
-#   Frontend: http://your-domain.com
+#   Frontend: http://your-domain.com or http://your-vps-ip
 #   Backend:  http://your-domain.com/api
 #   API Docs: http://your-domain.com/docs
 #
 # IMPORTANT:
-#   - Change DOMAIN_NAME to your actual domain
-#   - Set proper JWT_SECRET in .env.production
+#   - Change DOMAIN_NAME to your actual domain or VPS IP
+#   - Set proper JWT_SECRET in .env.prod
 #   - Update database password for production
+#   - Run: docker compose -f docker-compose.prod.yml exec api npx prisma migrate deploy
 #
 # =============================================================================
 
@@ -56,8 +57,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-tran_go_hoang_gia_erp}?schema=public
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
       JWT_EXPIRES_IN: 7d
-      # Restrict CORS to frontend domain only
-      WEB_CORS_ORIGINS: ${FRONTEND_URL:-http://localhost:3000}
+      # CORS: Only allow frontend domain via Nginx
+      WEB_CORS_ORIGINS: ${FRONTEND_URL:-http://localhost}
     # No port exposure - only via Nginx
     depends_on:
       db:
@@ -83,9 +84,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      # Use internal network URL for API (via Nginx)
-      NEXT_PUBLIC_API_URL: http://api:4000
-      NEXT_PUBLIC_USE_PROXY: "false"  # Nginx handles proxy
+      # Use proxy mode - FE calls /api (goes through Nginx)
+      NEXT_PUBLIC_API_URL: /
+      NEXT_PUBLIC_USE_PROXY: "true"
       NEXT_PUBLIC_API_TIMEOUT: 15000
       NEXT_PUBLIC_ENABLE_LOGGING: "false"  # Disable logging in production
     # No port exposure - only via Nginx

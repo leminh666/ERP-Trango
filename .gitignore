@@ -88,3 +88,13 @@ Thumbs.db
 .api-lock
 *.pid
 *.seed
+
+# =====================================================
+# Docker
+# =====================================================
+docker-compose.prod.yml
+.env.prod
+.env.prod.example
+.env.example
+nginx.conf
+README-DOCKER.md

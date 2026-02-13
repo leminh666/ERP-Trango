@@ -102,7 +102,7 @@ export function AiDraftModal({
           {/* Original transcript */}
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-500 mb-1">Giọng nói nhận được:</p>
-            <p className="text-sm italic text-gray-700">"{draft.note}"</p>
+            <p className="text-sm italic text-gray-700">&quot;{draft.note}&quot;</p>
           </div>
 
           {/* Form fields */}

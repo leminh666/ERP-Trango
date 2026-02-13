@@ -455,7 +455,7 @@ export default function WalletsPage() {
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">Xác nhận xóa?</h3>
               <p className="text-gray-500 mb-4">
-                Bạn có chắc muốn xóa "{showConfirmDelete.name}"?
+                Bạn có chắc muốn xóa &quot;{showConfirmDelete.name}&quot;?
                 <br />Sổ quỹ sẽ bị ẩn và có thể khôi phục sau.
               </p>
               <div className="flex justify-center gap-2">

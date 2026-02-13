@@ -842,7 +842,7 @@ export function WorkOrdersTable({
                   <div className="border rounded-lg p-4 text-center text-gray-500">
                     <Package className="h-8 w-8 mx-auto text-gray-300 mb-2" />
                     <p>Chưa có sản phẩm nào</p>
-                    <p className="text-sm">Nhấp "Thêm sản phẩm" để chọn từ danh mục</p>
+                    <p className="text-sm">Nhấp &quot;Thêm sản phẩm&quot; để chọn từ danh mục</p>
                   </div>
                 ) : (
                   <div className="border rounded-lg overflow-hidden">

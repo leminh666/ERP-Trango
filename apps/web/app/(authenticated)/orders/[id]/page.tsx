@@ -1285,7 +1285,7 @@ export default function OrderDetailPage() {
               <CardContent className="p-0">
                 {items.filter(i => !i.deletedAt).length === 0 ? (
                   <div className="py-8 text-center text-gray-500">
-                    Chưa có hạng mục nào. Nhấp "Thêm SP" để bắt đầu.
+                    Chưa có hạng mục nào. Nhấp &quot;Thêm SP&quot; để bắt đầu.
                   </div>
                 ) : (
                   <div className="overflow-x-auto -mx-4 px-4 md:overflow-visible md:mx-0 md:px-0">
@@ -2087,7 +2087,7 @@ export default function OrderDetailPage() {
                         {workshopJobItems.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="p-4 text-center text-gray-500">
-                              Chưa có sản phẩm. Nhấp "Chọn từ danh mục" hoặc "Nhập tay".
+                              Chưa có sản phẩm. Nhấp &quot;Chọn từ danh mục&quot; hoặc &quot;Nhập tay&quot;.
                             </td>
                           </tr>
                         ) : (

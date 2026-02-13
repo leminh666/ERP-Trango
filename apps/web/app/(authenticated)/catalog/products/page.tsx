@@ -289,7 +289,7 @@ export default function ProductsPage() {
             <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p className="mb-2">Chưa có sản phẩm nào</p>
             <p className="text-sm text-gray-400">
-              Nhấp nút "Thêm sản phẩm" để bắt đầu
+              Nhấp nút &quot;Thêm sản phẩm&quot; để bắt đầu
             </p>
           </CardContent>
         </Card>
@@ -410,7 +410,7 @@ export default function ProductsPage() {
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">Xác nhận xóa?</h3>
               <p className="text-gray-500 mb-4">
-                Bạn có chắc muốn xóa "{showConfirmDelete.name}"?
+                Bạn có chắc muốn xóa &quot;{showConfirmDelete.name}&quot;?
                 <br />Sản phẩm sẽ bị ẩn và có thể khôi phục sau.
               </p>
               <div className="flex justify-center gap-2">

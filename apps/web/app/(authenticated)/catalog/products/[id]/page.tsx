@@ -975,7 +975,7 @@ export default function ProductDetailPage() {
           <div className="bg-white rounded-lg p-6 max-w-md mx-4">
             <h3 className="text-lg font-medium mb-2">Xác nhận xóa</h3>
             <p className="text-gray-600 mb-4">
-              Xóa giá trị "{deleteValueInfo.valueName}"?
+              Xóa giá trị &quot;{deleteValueInfo.valueName}&quot;?
             </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDeleteValueInfo(null)}>Hủy</Button>

@@ -246,7 +246,7 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
               <div className="border rounded-lg p-8 text-center text-gray-500">
                 <Package className="h-12 w-12 mx-auto text-gray-300 mb-4" />
                 <p>Chưa có sản phẩm nào</p>
-                <p className="text-sm">Nhấp "Thêm sản phẩm" để bắt đầu</p>
+                <p className="text-sm">Nhấp &quot;Thêm sản phẩm&quot; để bắt đầu</p>
               </div>
             ) : (
               <div className="border rounded-lg overflow-hidden">

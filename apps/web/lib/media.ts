@@ -63,7 +63,7 @@ export function resolveAssetUrl(url: string | null | undefined): string | null {
     return trimmed;
   }
 
-  // Already absolute URL with proper host
+  // Already absolute URL with proper host (https:// or http://)
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     // If it's localhost, replace with current asset base URL for LAN access
     if (isLocalhostUrl(trimmed)) {
@@ -84,15 +84,22 @@ export function resolveAssetUrl(url: string | null | undefined): string | null {
   // Relative URL - prefix with asset base URL
   if (trimmed.startsWith('/') || trimmed.startsWith('uploads/') || !trimmed.includes('://')) {
     const assetBase = getAssetBaseUrl();
-    // Remove trailing slash from asset base
-    const normalizedBase = assetBase.replace(/\/$/, '');
-
+    
     // Normalize the path
     let normalizedPath = trimmed;
     if (!normalizedPath.startsWith('/')) {
       normalizedPath = '/' + normalizedPath;
     }
 
+    // Handle proxy mode (assetBase = "/") vs direct mode (assetBase = "http://api:4000")
+    if (assetBase === '/') {
+      // Proxy mode: use relative path /uploads/...
+      return normalizedPath;
+    }
+    
+    // Direct mode: prefix with asset base
+    // Remove trailing slash from asset base
+    const normalizedBase = assetBase.replace(/\/$/, '');
     return normalizedBase + normalizedPath;
   }
 
@@ -176,4 +183,12 @@ export function isValidAssetUrl(url: string | null | undefined): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Get file URL - alias for resolveAssetUrl for compatibility
+ * @deprecated Use resolveAssetUrl instead
+ */
+export function getFileUrl(path: string | null | undefined): string | null {
+  return resolveAssetUrl(path);
 }

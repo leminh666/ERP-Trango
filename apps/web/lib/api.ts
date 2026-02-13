@@ -549,6 +549,14 @@ export function toArray<T>(data: T | T[] | undefined | null): T[] {
 
 export type { ApiRequestOptions, ApiError, ParsedError };
 
+/**
+ * Build full URL from endpoint path (convenience wrapper)
+ * Similar to buildUrl but exported for external use
+ */
+export function buildApiUrl(endpoint: string): string {
+  return buildUrl(endpoint);
+}
+
 // Re-export media utilities for convenience
 export {
   resolveAssetUrl,
@@ -559,3 +567,12 @@ export {
   shouldUseFallback,
   isValidAssetUrl,
 } from '@/lib/media';
+
+// Re-export config functions for convenience
+export {
+  getApiBaseUrl,
+  getApiTimeout,
+  isUsingProxy,
+  isLoggingEnabled,
+  getAssetBaseUrl,
+} from '@/src/config';

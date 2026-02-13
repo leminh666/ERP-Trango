@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,8 @@ function removeStorageItem(key: string): void {
   }
 }
 
-export default function LoginPage() {
+// Login form content - uses useSearchParams (must be client component)
+function LoginFormContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberLogin, setRememberLogin] = useState(true);
@@ -156,128 +157,150 @@ export default function LoginPage() {
     }
   };
 
-  // Don't render anything until mounted (SSR safety)
+  // Don't render form until mounted (SSR safety)
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">{APP_NAME}</CardTitle>
-            <CardDescription>Đang tải...</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">{APP_NAME}</CardTitle>
+          <CardDescription>Đang tải...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center pb-4">
-          <CardTitle className="text-xl">{APP_NAME}</CardTitle>
-          <CardDescription>Đăng nhập vào hệ thống ERP</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-3">
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                {error}
-              </div>
+    <Card className="w-full max-w-md">
+      <CardHeader className="text-center pb-4">
+        <CardTitle className="text-xl">{APP_NAME}</CardTitle>
+        <CardDescription>Đăng nhập vào hệ thống ERP</CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-3">
+          {error && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              {error}
+            </div>
+          )}
+          {info && (
+            <div className="p-3 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
+              {info}
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <label htmlFor="email" className="text-sm font-medium">
+              Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="email@demo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isSubmitting}
+              autoComplete="email"
+              required
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="password" className="text-sm font-medium">
+              Mật khẩu
+            </label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isSubmitting}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+          <div className="flex items-start">
+            <input
+              id="remember"
+              type="checkbox"
+              checked={rememberLogin}
+              onChange={(e) => setRememberLogin(e.target.checked)}
+              disabled={isSubmitting}
+              className="h-4 w-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="remember" className="ml-2 block text-sm text-gray-900">
+              Ghi nhớ đăng nhập
+              <p className="text-xs text-gray-500 mt-0.5">
+                Lưu email để lần sau đăng nhập nhanh hơn
+              </p>
+            </label>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-3 pt-2">
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang đăng nhập...
+              </>
+            ) : (
+              'Đăng nhập'
             )}
-            {info && (
-              <div className="p-3 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
-                {info}
-              </div>
-            )}
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@demo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-                autoComplete="email"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="text-sm font-medium">
-                Mật khẩu
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isSubmitting}
-                autoComplete="current-password"
-                required
-              />
-            </div>
-            <div className="flex items-start">
-              <input
-                id="remember"
-                type="checkbox"
-                checked={rememberLogin}
-                onChange={(e) => setRememberLogin(e.target.checked)}
-                disabled={isSubmitting}
-                className="h-4 w-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <label htmlFor="remember" className="ml-2 block text-sm text-gray-900">
-                Ghi nhớ đăng nhập
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Lưu email để lần sau đăng nhập nhanh hơn
-                </p>
-              </label>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-3 pt-2">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Đang đăng nhập...
-                </>
-              ) : (
-                'Đăng nhập'
-              )}
-            </Button>
-            <div className="w-full text-center text-sm">
-              <Link href="/forgot-password" className="text-blue-600 hover:underline">
-                Quên mật khẩu?
-              </Link>
-            </div>
-
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Hoặc</span>
-              </div>
-            </div>
-
-            <Button variant="outline" className="w-full" asChild disabled={isSubmitting}>
-              <a href="/auth/google/start">
-                <svg className="mr-2 h-4 w-4" aria-hidden="true" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 109.8 512 0 402.2 0 265.8 0 129.2 109.8 20 244 20c73.2 0 136 28.7 182.4 75.2L376.3 149.5c-30.1-28.7-70.4-46.5-119.9-46.5-93.8 0-170.3 76.5-170.3 170.3s76.5 170.3 170.3 170.3c109.4 0 152.2-82.9 157.8-124.2H244V261.8h244z"></path></svg>
-                Đăng nhập bằng Google
-              </a>
-            </Button>
-
-            <Link href="/" className="text-sm text-muted-foreground hover:underline">
-              ← Quay về trang chủ
+          </Button>
+          <div className="w-full text-center text-sm">
+            <Link href="/forgot-password" className="text-blue-600 hover:underline">
+              Quên mật khẩu?
             </Link>
-          </CardFooter>
-        </form>
-      </Card>
+          </div>
+
+          <div className="relative w-full">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">Hoặc</span>
+            </div>
+          </div>
+
+          <Button variant="outline" className="w-full" asChild disabled={isSubmitting}>
+            <a href="/auth/google/start">
+              <svg className="mr-2 h-4 w-4" aria-hidden="true" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 109.8 512 0 402.2 0 265.8 0 129.2 109.8 20 244 20c73.2 0 136 28.7 182.4 75.2L376.3 149.5c-30.1-28.7-70.4-46.5-119.9-46.5-93.8 0-170.3 76.5-170.3 170.3s76.5 170.3 170.3 170.3c109.4 0 152.2-82.9 157.8-124.2H244V261.8h244z"></path></svg>
+              Đăng nhập bằng Google
+            </a>
+          </Button>
+
+          <Link href="/" className="text-sm text-muted-foreground hover:underline">
+            ← Quay về trang chủ
+          </Link>
+        </CardFooter>
+      </form>
+    </Card>
+  );
+}
+
+// Loading fallback for Suspense
+function LoginFormFallback() {
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">{APP_NAME}</CardTitle>
+        <CardDescription>Đang tải...</CardDescription>
+      </CardHeader>
+      <CardContent className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// Main page component - wraps content in Suspense for useSearchParams
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Suspense fallback={<LoginFormFallback />}>
+        <LoginFormContent />
+      </Suspense>
     </div>
   );
 }

@@ -384,7 +384,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
 
               {items.length === 0 ? (
                 <div className="py-8 text-center text-gray-500 border rounded-md">
-                  Chưa có sản phẩm nào. Nhấp "Thêm sản phẩm" để bắt đầu.
+                  Chưa có sản phẩm nào. Nhấp &quot;Thêm sản phẩm&quot; để bắt đầu.
                 </div>
               ) : (
                 <div className="space-y-3">

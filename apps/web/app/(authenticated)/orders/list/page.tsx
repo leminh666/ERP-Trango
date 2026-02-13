@@ -627,7 +627,7 @@ export default function OrdersListPage() {
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">Xác nhận xóa?</h3>
               <p className="text-gray-500 mb-4">
-                Bạn có chắc muốn xóa đơn hàng "{showDeleteConfirm.code} - {showDeleteConfirm.name}"?
+                Bạn có chắc muốn xóa đơn hàng &quot;{showDeleteConfirm.code} - {showDeleteConfirm.name}&quot;?
                 <br />Đơn hàng sẽ bị ẩn và có thể khôi phục sau.
               </p>
               <div className="flex justify-center gap-2">

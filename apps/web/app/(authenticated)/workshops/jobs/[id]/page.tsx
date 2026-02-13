@@ -959,7 +959,7 @@ export default function WorkshopJobDetailPage() {
                 <div className="text-center py-8 text-gray-500 border rounded-lg">
                   <Package className="h-12 w-12 mx-auto text-gray-300 mb-4" />
                   <p>Chưa có sản phẩm nào</p>
-                  <p className="text-sm">Nhấp "Thêm sản phẩm" để bắt đầu</p>
+                  <p className="text-sm">Nhấp &quot;Thêm sản phẩm&quot; để bắt đầu</p>
                 </div>
               ) : (
                 <div className="border rounded-lg overflow-hidden">

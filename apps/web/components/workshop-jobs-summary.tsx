@@ -122,7 +122,7 @@ export function WorkshopJobsSummary({ projectId, token, onEditDiscount }: Worksh
         <CardContent className="py-8 text-center text-gray-500">
           <Factory className="h-12 w-12 mx-auto text-gray-300 mb-4" />
           <p>Chưa có phiếu gia công nào cho đơn hàng này</p>
-          <p className="text-sm mt-2">Nhấn "Tạo phiếu gia công" để thêm mới</p>
+          <p className="text-sm mt-2">Nhấn &quot;Tạo phiếu gia công&quot; để thêm mới</p>
         </CardContent>
       </Card>
     );
