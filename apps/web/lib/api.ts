@@ -317,6 +317,12 @@ export async function apiClient<T = unknown>(
     clearTimeout(timeoutId);
     log('info', `📥 ${response.status} ${fullUrl}`);
 
+    // Handle network errors (connection refused, etc.)
+    if (!response.ok && response.status === 0) {
+      log('error', `❌ Network error: Cannot connect to ${fullUrl}`);
+      throw new Error(`Không kết nối được máy chủ (${fullUrl}). Vui lòng kiểm tra:\n1. Backend đang chạy trên port 4000?\n2. Cấu hình NEXT_PUBLIC_API_URL đúng?`);
+    }
+
     // Handle 401 Unauthorized
     if (response.status === 401) {
       log('warn', '🔒 401 Unauthorized - clearing invalid token');
@@ -353,6 +359,11 @@ export async function apiClient<T = unknown>(
         userMessage = 'Bản ghi không tồn tại';
       } else if (code === 'P2003') {
         userMessage = 'Ràng buộc dữ liệu không hợp lệ';
+      }
+
+      // Distinguish 404 from other errors
+      if (response.status === 404) {
+        userMessage = `${message} (404)`;
       }
 
       log('error', `❌ ${response.status}:`, userMessage, { code, details: errorData });

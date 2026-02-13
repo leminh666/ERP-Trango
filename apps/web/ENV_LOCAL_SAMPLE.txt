@@ -1,40 +1,42 @@
 # =============================================================================
-# Frontend Environment Configuration
+# Frontend Environment Configuration - ERP Trango v3.0
 # =============================================================================
 #
 # INSTRUCTIONS:
 # 1. Copy this file to: apps/web/.env.local
-# 2. Fill in your values
+# 2. Fill in your values  
 # 3. Restart dev server
 #
 # =============================================================================
-# RECOMMENDED: Use Proxy Mode (no IP hardcoding needed!)
+# SCENARIO 1: DESKTOP DEVELOPMENT (localhost)
 # =============================================================================
-# Enable proxy mode - API calls go through Next.js proxy
-# Mobile/LAN devices can access at http://<YOUR_IP>:3000
-# Backend automatically accessed at http://<YOUR_IP>:4000
+# Backend chạy trên localhost:4000
+# Frontend chạy trên localhost:3000
+# Dùng proxy mode để tránh CORS
+NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_USE_PROXY=true
 # =============================================================================
-# ALTERNATIVE: Direct Mode (set IP manually)
+# SCENARIO 2: LAN / MOBILE ACCESS
 # =============================================================================
-# If you need direct API calls, set the backend URL:
-# NEXT_PUBLIC_API_URL=http://192.168.1.12:4000
+# 1. Backend phải bind tới LAN IP: `npm run start:dev` (không dùng localhost)
+# 2. Frontend cũng chạy trên LAN IP
+# 3. Mobile truy cập: http://<LAN_IP>:3000
 #
-# Note: If you change network/IP, you MUST update this file!
+# Cấu hình với LAN IP:
+# NEXT_PUBLIC_API_URL=http://192.168.1.12:4000
+# NEXT_PUBLIC_USE_PROXY=true
 # =============================================================================
-# API Configuration
-# NEXT_PUBLIC_API_URL=http://localhost:4000  # Development
-# NEXT_PUBLIC_API_URL=http://192.168.1.12:4000  # LAN access
+# SCENARIO 3: DOCKER
+# =============================================================================
+# Backend trong container, frontend ở host
+# NEXT_PUBLIC_API_URL=http://localhost:4000
+# NEXT_PUBLIC_USE_PROXY=true
 # =============================================================================
 # Optional Settings
 # =============================================================================
-# API request timeout (milliseconds)
 NEXT_PUBLIC_API_TIMEOUT=15000
-# Asset base URL (if different from API URL)
 # NEXT_PUBLIC_ASSET_URL=http://localhost:4000
-# Enable debug logging
 NEXT_PUBLIC_ENABLE_LOGGING=true
-# Enable mock data mode (for testing without backend)
 # NEXT_PUBLIC_ENABLE_MOCK_DATA=true
 # =============================================================================
 # DO NOT COMMIT .env.local TO VERSION CONTROL!
