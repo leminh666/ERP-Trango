@@ -38,6 +38,7 @@ export interface EnvConfig {
 
 const DEFAULTS = {
   API_URL: 'http://localhost:4000',
+  API_PORT: 4000,
   USE_PROXY: true, // Recommended for LAN/mobile
   API_TIMEOUT: 15000, // 15s for LAN
   ASSET_URL: null,
@@ -111,6 +112,31 @@ function parseTimeout(value: string | undefined): number {
 // Build Environment Configuration
 // =============================================================================
 
+// =============================================================================
+// Build Environment Configuration
+// =============================================================================
+
+/**
+ * Detect API URL based on browser location
+ * - For localhost: returns http://localhost:4000
+ * - For LAN IPs (192.168.x.x, 10.x.x.x, etc.): returns http://<current-ip>:4000
+ */
+function detectApiUrlFromBrowser(): string {
+  if (typeof window === 'undefined') {
+    return DEFAULTS.API_URL; // Server-side fallback
+  }
+
+  const { hostname } = window.location;
+
+  // If accessing via localhost, use localhost for API
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `http://localhost:${DEFAULTS.API_PORT}`;
+  }
+
+  // For LAN IPs, use the same IP with API port
+  return `http://${hostname}:${DEFAULTS.API_PORT}`;
+}
+
 function buildEnvConfig(): EnvConfig {
   const rawApiUrl = process.env.NEXT_PUBLIC_API_URL;
   const apiUrl = sanitizeEnvValue(rawApiUrl);
@@ -130,8 +156,21 @@ function buildEnvConfig(): EnvConfig {
   const rawMockData = process.env.NEXT_PUBLIC_ENABLE_MOCK_DATA;
   const enableMockData = sanitizeEnvValue(rawMockData).toLowerCase() === 'true';
   
+  // Determine the effective API URL
+  // Priority: env var > browser detection > default
+  let effectiveApiUrl: string;
+  if (apiUrl) {
+    effectiveApiUrl = apiUrl;
+  } else if (typeof window !== 'undefined') {
+    // Runtime detection for LAN
+    effectiveApiUrl = detectApiUrlFromBrowser();
+    console.log('[ENV] Auto-detected API URL from browser:', effectiveApiUrl);
+  } else {
+    effectiveApiUrl = DEFAULTS.API_URL;
+  }
+  
   return {
-    API_URL: apiUrl || DEFAULTS.API_URL,
+    API_URL: effectiveApiUrl,
     USE_PROXY: useProxy,
     API_TIMEOUT: timeout,
     ASSET_URL: assetUrl,

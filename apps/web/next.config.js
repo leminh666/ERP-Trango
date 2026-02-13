@@ -13,13 +13,21 @@ const nextConfig = {
   // - Mobile accesses FE at http://192.168.x.x:3000
   // - Backend calls automatically go to http://192.168.x.x:4000
   //
+  // DOCKER MODE:
+  // - Use docker-compose.yml to link frontend and backend services
+  // - Frontend at http://localhost:3000
+  // - Backend at http://backend:4000 (container name)
+  // - Set NEXT_PUBLIC_API_URL=http://backend:4000 in .env
+  //
   // DIRECT MODE (fallback):
   // - NEXT_PUBLIC_API_URL=http://192.168.x.x:4000
   // - API calls go directly to backend URL
   // =============================================================================
 
   async rewrites() {
-    // Get API URL from environment, default to localhost:4000
+    // Get API URL from environment
+    // For Docker: use container name (backend)
+    // For LAN: use the IP from NEXT_PUBLIC_API_URL
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
     
     return [
