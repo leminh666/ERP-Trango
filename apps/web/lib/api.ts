@@ -38,6 +38,15 @@ export {
   type ParsedError,
 } from '@/src/lib/apiClient';
 
+// Legacy wrapper for backward compatibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function fetchJson<T = any>(
+  path: string,
+  options?: Parameters<typeof apiClient>[1]
+): Promise<T> {
+  return apiClient<T>(path, options);
+}
+
 // Re-export media utilities (keep in lib/ for now)
 export {
   resolveAssetUrl,
