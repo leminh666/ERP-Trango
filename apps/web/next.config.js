@@ -3,6 +3,11 @@ const nextConfig = {
   reactStrictMode: true,
 
   // =============================================================================
+  // Output: standalone for minimal Docker image size
+  // =============================================================================
+  output: 'standalone',
+
+  // =============================================================================
   // API Proxy Configuration - LAN/Mobile Support
   // =============================================================================
   //
@@ -12,6 +17,11 @@ const nextConfig = {
   // - No IP hardcoding needed!
   // - Mobile accesses FE at http://192.168.x.x:3000
   // - Backend calls automatically go to http://192.168.x.x:4000
+  //
+  // NGINX MODE (PRODUCTION):
+  // - Set NEXT_PUBLIC_USE_PROXY=true
+  // - Frontend calls /api/* which is proxied by Nginx to backend
+  // - No CORS issues, works with any IP
   //
   // DOCKER MODE:
   // - Use docker-compose.yml to link frontend and backend services
@@ -29,7 +39,7 @@ const nextConfig = {
     // For Docker: use container name (backend)
     // For LAN: use the IP from NEXT_PUBLIC_API_URL
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    
+
     return [
       {
         // Proxy /api/* to backend

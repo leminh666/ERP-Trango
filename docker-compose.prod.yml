@@ -1,18 +1,22 @@
 # =============================================================================
-# Docker Compose - Development Environment
+# Docker Compose - Production Environment
 # =============================================================================
 #
 # USAGE:
-#   cp .env.example .env
-#   docker compose up -d --build
-#   docker compose logs -f
-#   docker compose down -v  # Reset database
+#   cp .env.production.example .env.production
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml logs -f
+#   docker compose -f docker-compose.prod.yml down  # Without volumes
 #
-# ACCESS:
-#   Frontend: http://localhost:3000
-#   Backend:  http://localhost:4000
-#   API Docs: http://localhost:4000/docs
-#   Database: localhost:5432
+# ACCESS (via Nginx):
+#   Frontend: http://your-domain.com
+#   Backend:  http://your-domain.com/api
+#   API Docs: http://your-domain.com/docs
+#
+# IMPORTANT:
+#   - Change DOMAIN_NAME to your actual domain
+#   - Set proper JWT_SECRET in .env.production
+#   - Update database password for production
 #
 # =============================================================================
 
@@ -22,91 +26,85 @@ services:
   # =============================================================================
   db:
     image: postgres:15-alpine
-    container_name: erp-db-dev
+    container_name: erp-db-prod
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: tran_go_hoang_gia_erp
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-tran_go_hoang_gia_erp}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # No port exposure - only internal network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   # =============================================================================
-  # API Backend - NestJS
+  # API Backend - NestJS (Internal only)
   # =============================================================================
   api:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    container_name: erp-api-dev
+    container_name: erp-api-prod
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/tran_go_hoang_gia_erp?schema=public
-      JWT_SECRET: super-secret-jwt-key-2026-change-in-prod
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-tran_go_hoang_gia_erp}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
       JWT_EXPIRES_IN: 7d
-      # Allow CORS from any origin in development
-      WEB_CORS_ORIGINS: "*"
-      # Enable detailed logging
-      ENABLE_LOGGING: "true"
-    ports:
-      - "4000:4000"
+      # Restrict CORS to frontend domain only
+      WEB_CORS_ORIGINS: ${FRONTEND_URL:-http://localhost:3000}
+    # No port exposure - only via Nginx
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      # Mount uploads directory for file persistence
       - api_uploads:/app/uploads
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 30s
 
   # =============================================================================
-  # Web Frontend - Next.js
+  # Web Frontend - Next.js (Internal only)
   # =============================================================================
   web:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
-    container_name: erp-web-dev
+    container_name: erp-web-prod
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      # API URL for frontend - uses Docker network hostname
-      NEXT_PUBLIC_API_URL: http://localhost:4000
-      # Enable proxy mode to avoid CORS issues
-      NEXT_PUBLIC_USE_PROXY: "true"
+      # Use internal network URL for API (via Nginx)
+      NEXT_PUBLIC_API_URL: http://api:4000
+      NEXT_PUBLIC_USE_PROXY: "false"  # Nginx handles proxy
       NEXT_PUBLIC_API_TIMEOUT: 15000
-      NEXT_PUBLIC_ENABLE_LOGGING: "true"
-    ports:
-      - "3000:3000"
+      NEXT_PUBLIC_ENABLE_LOGGING: "false"  # Disable logging in production
+    # No port exposure - only via Nginx
     depends_on:
       - api
 
   # =============================================================================
-  # Nginx Reverse Proxy (Optional - for testing production setup)
+  # Nginx Reverse Proxy (Public Entry Point)
   # =============================================================================
   nginx:
     image: nginx:alpine
-    container_name: erp-nginx-dev
+    container_name: erp-nginx-prod
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./data/certbot:/etc/letsencrypt:ro  # For SSL certificates
     depends_on:
       - api
       - web
@@ -116,16 +114,30 @@ services:
       timeout: 10s
       retries: 3
 
+  # =============================================================================
+  # Certbot (SSL Certificates - Optional)
+  # =============================================================================
+  certbot:
+    image: certbot/certbot:latest
+    container_name: erp-certbot
+    volumes:
+      - ./data/certbot:/etc/letsencrypt:rw
+      - ./data/www:/var/www/certbot:rw
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait; done'"
+    depends_on:
+      - nginx
+
 # =============================================================================
-# Volumes
+# Volumes (Persistent Data)
 # =============================================================================
 volumes:
   postgres_data:
   api_uploads:
 
 # =============================================================================
-# Networks
+# Networks (Internal Only)
 # =============================================================================
 networks:
   default:
-    name: erp-network-dev
+    name: erp-network-prod
+
