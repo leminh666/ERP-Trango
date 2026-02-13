@@ -21,7 +21,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/components/toast-provider';
-import { parseApiError } from '@/lib/apiClient';
+import { parseApiError } from '@/lib/api';
 
 // =============================================================================
 // Types

@@ -15,8 +15,7 @@
 //
 // =============================================================================
 
-import { apiClient, get, post, put, patch, del, type ApiRequestOptions } from '@/lib/apiClient';
-import { unwrapItems } from '@/lib/apiClient';
+import { apiClient, get, post, put, patch, del, type ApiRequestOptions, unwrapItems } from '@/lib/api';
 
 // =============================================================================
 // Types

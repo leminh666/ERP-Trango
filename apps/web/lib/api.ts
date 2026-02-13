@@ -537,3 +537,14 @@ export function toArray<T>(data: T | T[] | undefined | null): T[] {
 // =============================================================================
 
 export type { ApiRequestOptions, ApiError, ParsedError };
+
+// Re-export media utilities for convenience
+export {
+  resolveAssetUrl,
+  getPlaceholderImage,
+  resolveProductImage,
+  getFileUrl,
+  type SafeImageProps,
+  shouldUseFallback,
+  isValidAssetUrl,
+} from '@/lib/media';

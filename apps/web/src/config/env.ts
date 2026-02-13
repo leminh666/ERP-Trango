@@ -112,10 +112,6 @@ function parseTimeout(value: string | undefined): number {
 // Build Environment Configuration
 // =============================================================================
 
-// =============================================================================
-// Build Environment Configuration
-// =============================================================================
-
 /**
  * Detect API URL based on browser location
  * - For localhost: returns http://localhost:4000

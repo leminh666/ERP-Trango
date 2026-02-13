@@ -12,7 +12,7 @@
 //
 // =============================================================================
 
-import { apiClient, get, post, put, patch, del } from '@/lib/apiClient';
+import { apiClient, get, post, put, patch, del } from '@/lib/api';
 
 // =============================================================================
 // Types

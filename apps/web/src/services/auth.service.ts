@@ -16,8 +16,8 @@
 //
 // =============================================================================
 
-import { apiClient, get, post, type ApiRequestOptions } from '@/lib/apiClient';
-import { getToken, removeToken, removeUser, setToken, setUser } from '@/lib/apiClient';
+import { apiClient, get, post, type ApiRequestOptions } from '@/lib/api';
+import { getToken, removeToken, removeUser, setToken, setUser } from '@/lib/api';
 
 // =============================================================================
 // Types
