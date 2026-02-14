@@ -1,0 +1,48 @@
+name: Deploy to Server
+
+on:
+    push:
+        branches:
+            - main # Trigger khi có push vào nhánh main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "20.9.0" # Phiên bản Node.js
+
+            - name: Install dependencies
+              run: npm ci # Cài đặt các dependencies
+
+            - name: Build the project
+              run: npm run build # Chạy npm run build để build ứng dụng
+
+            - name: Deploy to server
+              uses: appleboy/ssh-action@v0.1.5
+              with:
+                  host: ${{ secrets.SERVER_HOST }} # IP Server
+                  username: ${{ secrets.SERVER_USER }} # Username Server
+                  key: ${{ secrets.SERVER_KEY }} # Secret Key
+                  port: ${{ secrets.SERVER_PORT}} # Port
+                  script: |
+                      # Cập nhật PATH để bao gồm các công cụ npm và pm2 từ NVM
+                      export PATH=$PATH:/root/.nvm/versions/node/v20.9.0/bin
+
+                      # Kiểm tra lại npm và pm2
+                      which npm
+                      which pm2
+
+                      cd /var/www/projects/ERP-Trango/  # Đến thư mục chứa project trên server
+
+                      git pull origin main  # Pull latest code từ repository
+                      npm install  # Cài đặt lại dependencies nếu có thay đổi
+                      npm run build  # Xây dựng lại ứng dụng
+                      pm2 restart api-erp.trangohoanggia.com  # Restart ứng dụng API với PM2
+                      pm2 restart erp.trangohoanggia.com  # Restart ứng dụng Web với PM2
