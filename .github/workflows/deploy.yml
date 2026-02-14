@@ -22,7 +22,7 @@ jobs:
               run: npm ci # Cài đặt các dependencies
             
             - name: Run generate prisma client
-              run: npm run prisma:generate # Chạy npm run prisma:generate để generate prisma client
+              run: cd apps/api && npm run prisma:generate # Chạy npm run prisma:generate để generate prisma client
 
             - name: Build the project
               run: npm run build # Chạy npm run build để build ứng dụng
