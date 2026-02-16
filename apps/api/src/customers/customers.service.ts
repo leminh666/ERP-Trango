@@ -106,6 +106,9 @@ export class CustomersService {
       const lastCode = lastCustomer ? parseInt(lastCustomer.code.replace('KH', '')) : 0;
       const newCode = `KH${String(lastCode + 1).padStart(4, '0')}`;
 
+
+      console.log('data', data);
+
       const result = await this.prisma.customer.create({
         data: {
           ...data,

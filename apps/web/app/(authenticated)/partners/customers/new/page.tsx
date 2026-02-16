@@ -28,7 +28,6 @@ export default function CustomerCreatePage() {
     visualType: 'ICON' as VisualType,
     iconKey: 'user',
     imageUrl: '',
-    color: '#3b82f6',
   });
 
   useEffect(() => {
@@ -85,7 +84,6 @@ export default function CustomerCreatePage() {
           visualType: form.visualType,
           iconKey: form.iconKey || null,
           imageUrl: form.imageUrl || null,
-          color: form.color || null,
         },
       });
 
