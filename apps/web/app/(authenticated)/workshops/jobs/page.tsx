@@ -13,7 +13,7 @@ import { SkeletonTable } from '@/components/skeleton';
 import { useToast } from '@/components/toast-provider';
 import { MetricInfo } from '@/components/ui/metric-info';
 import { METRIC_KEYS } from '@/lib/metrics/metric-keys';
-import { Factory, Search, Plus, Filter, Edit, Trash2, X } from 'lucide-react';
+import { Factory, Search, Plus, Filter, Edit, Trash2, X, Eye } from 'lucide-react';
 import { CreateWorkshopJobModal } from '@/components/create-workshop-job-modal';
 import { unwrapItems, apiClient } from '@/lib/api';
 import { useDefaultTimeFilter } from '@/lib/hooks';
@@ -67,6 +67,22 @@ const STATUS_OPTIONS = [
   { value: 'SENT', label: 'Đã gửi' },
   { value: 'CANCELLED', label: 'Hủy' },
 ];
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'DRAFT': return 'bg-gray-100 text-gray-700';
+    case 'DONE': return 'bg-emerald-100 text-emerald-700';
+    case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
+    case 'SENT': return 'bg-yellow-100 text-yellow-700';
+    case 'CANCELLED': return 'bg-red-100 text-red-700';
+    default: return 'bg-gray-100 text-gray-700';
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  const found = STATUS_OPTIONS.find(s => s.value === status);
+  return found?.label || status;
+};
 
 export default function WorkshopJobsPage() {
   const { token, user, isLoading: authLoading } = useAuth();
@@ -440,78 +456,177 @@ export default function WorkshopJobsPage() {
               Chưa có phiếu gia công nào trong khoảng thời gian này
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left p-3 font-medium">Mã phiếu</th>
-                    <th className="text-left p-3 font-medium">Đơn hàng</th>
-                    <th className="text-left p-3 font-medium">Xưởng</th>
-                    <th className="text-right p-3 font-medium">Tổng tiền</th>
-                    <th className="text-right p-3 font-medium">Đã trả</th>
-                    <th className="text-right p-3 font-medium">Công nợ</th>
-                    <th className="text-left p-3 font-medium">Trạng thái</th>
-                    <th className="text-left p-3 font-medium">Ghi chú</th>
-                    <th className="text-left p-3 font-medium w-24">Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {jobs.map((job) => (
-                    <tr
-                      key={job.id}
-                      className="border-b hover:bg-gray-50 cursor-pointer"
-                      onClick={() => router.push(`/workshops/jobs/${job.id}`)}
-                    >
-                      <td className="p-3 font-medium">{job.code}</td>
-                      <td className="p-3">
-                        <div className="font-medium">{job.project?.name}</div>
-                        <div className="text-xs text-gray-500">{job.project?.code}</div>
-                      </td>
-                      <td className="p-3">{job.workshop?.name}</td>
-                      <td className="p-3 text-right font-medium text-blue-600">
-                        {formatCurrency(job.amount)}
-                      </td>
-                      <td className="p-3 text-right text-green-600">
-                        {job.paidAmount > 0 ? formatCurrency(job.paidAmount) : '-'}
-                      </td>
-                      <td className="p-3 text-right text-red-600">
-                        {job.debtAmount > 0 ? formatCurrency(job.debtAmount) : '0'}
-                      </td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
-                          {job.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-gray-500 max-w-xs truncate">
-                        {job.note || '-'}
-                      </td>
-                      <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(job)}
-                            title="Sửa"
-                            className="hover:bg-blue-100"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setShowConfirmDelete(job)}
-                            title="Xóa"
-                            className="hover:bg-red-100"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
+            <>
+              {/* Mobile Card List - giống Orders list mobile */}
+              <div className="md:hidden">
+                {jobs.map((job) => (
+                  <Card
+                    key={job.id}
+                    className="m-3 mb-2 hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      {/* Dòng 1: Mã phiếu + Status badge */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block px-2 py-0.5 rounded text-xs ${getStatusColor(job.status)}`}>
+                              {getStatusLabel(job.status)}
+                            </span>
+                            <span className="text-xs text-gray-500">{job.code}</span>
+                          </div>
+                          {/* Dòng 2: Tên đơn hàng / khách hàng / xưởng */}
+                          <p className="font-semibold text-gray-900 mt-1 truncate">
+                            {job.project?.name || '-'}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate">
+                            {job.workshop?.name || '-'}
+                          </p>
                         </div>
-                      </td>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/workshops/jobs/${job.id}`);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      </div>
+
+                      {/* Dòng 3: 3 chỉ số chính - Tổng tiền / Đã trả / Công nợ */}
+                      <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t">
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">Tổng tiền</p>
+                          <p className="font-medium text-sm text-blue-600">{formatCurrency(job.amount)}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-green-600">Đã trả</p>
+                          <p className="font-medium text-sm text-green-600">
+                            {job.paidAmount > 0 ? formatCurrency(job.paidAmount) : '-'}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-red-600">Công nợ</p>
+                          <p className="font-medium text-sm text-red-600">
+                            {job.debtAmount > 0 ? formatCurrency(job.debtAmount) : '0'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Dòng cuối: Action buttons */}
+                      <div className="flex items-center gap-1 mt-3 pt-2 border-t">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/workshops/jobs/${job.id}`);
+                          }}
+                        >
+                          Xem chi tiết
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(job);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowConfirmDelete(job);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table - giữ nguyên như cũ */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-gray-50">
+                      <th className="text-left p-3 font-medium">Mã phiếu</th>
+                      <th className="text-left p-3 font-medium">Đơn hàng</th>
+                      <th className="text-left p-3 font-medium">Xưởng</th>
+                      <th className="text-right p-3 font-medium">Tổng tiền</th>
+                      <th className="text-right p-3 font-medium">Đã trả</th>
+                      <th className="text-right p-3 font-medium">Công nợ</th>
+                      <th className="text-left p-3 font-medium">Trạng thái</th>
+                      <th className="text-left p-3 font-medium">Ghi chú</th>
+                      <th className="text-left p-3 font-medium w-24">Hành động</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {jobs.map((job) => (
+                      <tr
+                        key={job.id}
+                        className="border-b hover:bg-gray-50 cursor-pointer"
+                        onClick={() => router.push(`/workshops/jobs/${job.id}`)}
+                      >
+                        <td className="p-3 font-medium">{job.code}</td>
+                        <td className="p-3">
+                          <div className="font-medium">{job.project?.name}</div>
+                          <div className="text-xs text-gray-500">{job.project?.code}</div>
+                        </td>
+                        <td className="p-3">{job.workshop?.name}</td>
+                        <td className="p-3 text-right font-medium text-blue-600">
+                          {formatCurrency(job.amount)}
+                        </td>
+                        <td className="p-3 text-right text-green-600">
+                          {job.paidAmount > 0 ? formatCurrency(job.paidAmount) : '-'}
+                        </td>
+                        <td className="p-3 text-right text-red-600">
+                          {job.debtAmount > 0 ? formatCurrency(job.debtAmount) : '0'}
+                        </td>
+                        <td className="p-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${getStatusColor(job.status)}`}>
+                            {getStatusLabel(job.status)}
+                          </span>
+                        </td>
+                        <td className="p-3 text-gray-500 max-w-xs truncate">
+                          {job.note || '-'}
+                        </td>
+                        <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(job)}
+                              title="Sửa"
+                              className="hover:bg-blue-100"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setShowConfirmDelete(job)}
+                              title="Xóa"
+                              className="hover:bg-red-100"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

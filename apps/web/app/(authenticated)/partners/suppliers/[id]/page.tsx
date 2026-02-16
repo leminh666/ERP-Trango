@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Supplier } from '@tran-go-hoang-gia/shared';
-import { ArrowLeft, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, FileText, Phone, MapPin, Building, Receipt } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, FileText, Phone, MapPin, Building, Receipt, Wrench } from 'lucide-react';
 import { useToast } from '@/components/toast-provider';
 import { VisualRenderer } from '@/components/visual-selector';
 import { TimeFilter, TimeFilterValue } from '@/components/time-filter';
@@ -22,6 +22,28 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { AddressSelector } from '@/components/ui/address-selector';
 
 // Related record interfaces
+interface SupplierOrder {
+  id: string;
+  code: string;
+  name: string;
+  stage: string;
+  createdAt: string;
+}
+
+interface SupplierWorkshopJob {
+  id: string;
+  code: string;
+  title: string | null;
+  amount: number;
+  paidAmount: number;
+  debtAmount: number;
+  status: string;
+  orderId: string | null;
+  orderCode: string | null;
+  orderName: string | null;
+  createdAt: string;
+}
+
 interface SupplierTransaction {
   id: string;
   code: string;
@@ -48,6 +70,8 @@ export default function SupplierDetailPage() {
 
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [summary, setSummary] = useState<SupplierSummary | null>(null);
+  const [orders, setOrders] = useState<SupplierOrder[]>([]);
+  const [workshopJobs, setWorkshopJobs] = useState<SupplierWorkshopJob[]>([]);
   const [transactions, setTransactions] = useState<SupplierTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingData, setLoadingData] = useState(true);
@@ -108,28 +132,63 @@ export default function SupplierDetailPage() {
       queryParams.append('from', timeFilter.from);
       queryParams.append('to', timeFilter.to);
 
-      // Fetch summary
-      const summaryData = await apiClient<SupplierSummary>(`/suppliers/${params.id}/summary?${queryParams.toString()}`);
-      setSummary(summaryData);
+      // Use the new related endpoint
+      const relatedData = await apiClient<any>(`/suppliers/${params.id}/related?${queryParams.toString()}`);
+      
+      // Set orders (may be empty for suppliers)
+      setOrders((relatedData.orders || []).map((o: any) => ({
+        id: o.id,
+        code: o.code,
+        name: o.name,
+        stage: o.stage,
+        createdAt: o.createdAt,
+      })));
 
-      // Fetch transactions (directly via supplierId)
-      const txParams = new URLSearchParams();
-      txParams.append('supplierId', params.id);
-      txParams.append('from', timeFilter.from);
-      txParams.append('to', timeFilter.to);
-      const txData = await apiClient<any[]>(`/transactions?${txParams.toString()}`);
+      // Set workshop jobs
+      setWorkshopJobs((relatedData.workshopJobs || []).map((wj: any) => ({
+        id: wj.id,
+        code: wj.code,
+        title: wj.title,
+        amount: wj.amount,
+        paidAmount: wj.paidAmount,
+        debtAmount: wj.debtAmount,
+        status: wj.status,
+        orderId: wj.orderId,
+        orderCode: wj.orderCode,
+        orderName: wj.orderName,
+        createdAt: wj.createdAt,
+      })));
 
-      const formattedTx = (txData || []).map(tx => ({
+      // Set transactions
+      const incomes = (relatedData.incomes || []).map((tx: any) => ({
         id: tx.id,
         code: tx.code || '',
-        type: tx.type,
+        type: 'INCOME' as const,
         date: tx.date,
         amount: Number(tx.amount),
-        categoryName: tx.type === 'INCOME' ? tx.incomeCategory?.name : tx.expenseCategory?.name,
+        categoryName: tx.categoryName || null,
         note: tx.note || null,
-        walletName: tx.wallet?.name || null,
+        walletName: tx.walletName || null,
       }));
-      setTransactions(formattedTx);
+      const expenses = (relatedData.expenses || []).map((tx: any) => ({
+        id: tx.id,
+        code: tx.code || '',
+        type: 'EXPENSE' as const,
+        date: tx.date,
+        amount: Number(tx.amount),
+        categoryName: tx.categoryName || null,
+        note: tx.note || null,
+        walletName: tx.walletName || null,
+      }));
+      setTransactions([...incomes, ...expenses]);
+
+      // Set summary
+      setSummary({
+        totalIncome: relatedData.summary?.totalIncome || 0,
+        totalExpense: relatedData.summary?.totalExpense || 0,
+        net: relatedData.summary?.net || 0,
+        transactionCount: relatedData.summary?.transactionCount || 0,
+      });
     } catch (error) {
       console.error('Failed to fetch related data:', error);
     } finally {
@@ -347,7 +406,11 @@ export default function SupplierDetailPage() {
 
       {/* Tabs for related data */}
       <Tabs defaultValue="income" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsList className="grid w-full grid-cols-4 mb-4">
+          <TabsTrigger value="workshopJobs" className="flex items-center gap-1">
+            <Wrench className="h-4 w-4" />
+            <span className="hidden sm:inline">Phiếu GC ({workshopJobs.length})</span>
+          </TabsTrigger>
           <TabsTrigger value="income" className="flex items-center gap-1">
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Mua hàng ({expenseTxs.length})</span>
@@ -361,6 +424,61 @@ export default function SupplierDetailPage() {
             <span className="hidden sm:inline">Tổng hợp</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Workshop Jobs Tab */}
+        <TabsContent value="workshopJobs">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-orange-600" />
+                Phiếu gia công liên quan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingData ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
+                  ))}
+                </div>
+              ) : workshopJobs.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Chưa có phiếu gia công nào</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-gray-50 text-left">
+                        <th className="p-3 font-medium">Mã phiếu</th>
+                        <th className="p-3 font-medium">Đơn hàng</th>
+                        <th className="p-3 font-medium">Trạng thái</th>
+                        <th className="p-3 font-medium text-right">Tổng tiền</th>
+                        <th className="p-3 font-medium text-right">Đã trả</th>
+                        <th className="p-3 font-medium text-right">Còn nợ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {workshopJobs.map(job => (
+                        <tr key={job.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/workshops/jobs/${job.id}`)}>
+                          <td className="p-3 font-medium">{job.code}</td>
+                          <td className="p-3">
+                            <div className="font-medium">{job.orderName || '-'}</div>
+                            <div className="text-xs text-gray-500">{job.orderCode || ''}</div>
+                          </td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{job.status}</span>
+                          </td>
+                          <td className="p-3 text-right font-medium text-blue-600">{formatCurrency(job.amount)}</td>
+                          <td className="p-3 text-right text-green-600">{formatCurrency(job.paidAmount)}</td>
+                          <td className="p-3 text-right text-red-600">{formatCurrency(job.debtAmount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Income Tab (Mua hàng = Expense for supplier) */}
         <TabsContent value="income">

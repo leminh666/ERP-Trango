@@ -50,6 +50,18 @@ export class CustomersController {
     return this.customersService.findOne(id);
   }
 
+  @Get(':id/related')
+  @ApiOperation({ summary: 'Lấy dữ liệu liên quan của khách hàng' })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  async getRelated(
+    @Param('id') id: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.customersService.findRelated(id, from, to);
+  }
+
   @Post()
   @ApiOperation({ summary: 'Tạo khách hàng mới' })
   @ApiResponse({ status: 201, description: 'Khách hàng đã được tạo' })

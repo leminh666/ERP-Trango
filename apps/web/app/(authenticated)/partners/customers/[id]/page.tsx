@@ -12,8 +12,9 @@ import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Customer, CustomerStatus, Project } from '@tran-go-hoang-gia/shared';
-import { ArrowLeft, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, FileText, Users, Calendar, Phone, MapPin, Building, Plus, Receipt } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, FileText, Users, Calendar, Phone, MapPin, Building, Plus, Receipt, Wrench } from 'lucide-react';
 import { useToast } from '@/components/toast-provider';
+import { QuickCreateOrderModal } from '@/components/quick-create-order-modal';
 import { VisualRenderer } from '@/components/visual-selector';
 import { TimeFilter, TimeFilterValue } from '@/components/time-filter';
 import { useDefaultTimeFilter } from '@/lib/hooks';
@@ -29,6 +30,20 @@ interface CustomerOrder {
   name: string;
   stage: string;
   estimatedTotal: number;
+  createdAt: string;
+}
+
+interface CustomerWorkshopJob {
+  id: string;
+  code: string;
+  title: string | null;
+  amount: number;
+  paidAmount: number;
+  debtAmount: number;
+  status: string;
+  orderId: string | null;
+  orderCode: string | null;
+  orderName: string | null;
   createdAt: string;
 }
 
@@ -83,11 +98,13 @@ export default function CustomerDetailPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [summary, setSummary] = useState<CustomerSummary | null>(null);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const [workshopJobs, setWorkshopJobs] = useState<CustomerWorkshopJob[]>([]);
   const [transactions, setTransactions] = useState<CustomerTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingData, setLoadingData] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const { timeFilter, setTimeFilter } = useDefaultTimeFilter();
@@ -143,32 +160,79 @@ export default function CustomerDetailPage() {
       queryParams.append('from', timeFilter.from);
       queryParams.append('to', timeFilter.to);
 
-      // Fetch summary
-      const summaryData = await apiClient<CustomerSummary>(`/customers/${params.id}/summary?${queryParams.toString()}`);
-      setSummary(summaryData);
+      // Use the new related endpoint
+      const relatedData = await apiClient<any>(`/customers/${params.id}/related?${queryParams.toString()}`);
+      
+      // Set orders
+      setOrders((relatedData.orders || []).map((o: any) => ({
+        id: o.id,
+        code: o.code,
+        name: o.name,
+        stage: o.stage,
+        estimatedTotal: 0,
+        createdAt: o.createdAt,
+      })));
 
-      // Fetch orders
-      const ordersData = await apiClient<CustomerOrder[]>(`/projects?customerId=${params.id}&${queryParams.toString()}`);
-      setOrders(ordersData || []);
+      // Set workshop jobs
+      setWorkshopJobs((relatedData.workshopJobs || []).map((wj: any) => ({
+        id: wj.id,
+        code: wj.code,
+        title: wj.title,
+        amount: wj.amount,
+        paidAmount: wj.paidAmount,
+        debtAmount: wj.debtAmount,
+        status: wj.status,
+        orderId: wj.orderId,
+        orderCode: wj.orderCode,
+        orderName: wj.orderName,
+        createdAt: wj.createdAt,
+      })));
 
-      // Fetch transactions (via projects)
-      const txParams = new URLSearchParams();
-      txParams.append('customerId', params.id);
-      txParams.append('from', timeFilter.from);
-      txParams.append('to', timeFilter.to);
-      const txData = await apiClient<any[]>(`/transactions?${txParams.toString()}`);
-
-      const formattedTx = (txData || []).map(tx => ({
+      // Set transactions
+      const allTx = [...(relatedData.incomes || []), ...(relatedData.expenses || [])];
+      const formattedTx = allTx.map((tx: any) => ({
         id: tx.id,
         code: tx.code || '',
-        type: tx.type,
+        type: tx.amount > 0 && !relatedData.incomes?.find((i: any) => i.id === tx.id) ? 'EXPENSE' : 
+              (relatedData.incomes?.find((i: any) => i.id === tx.id) ? 'INCOME' : 'EXPENSE'),
+        date: tx.date,
+        amount: Math.abs(tx.amount),
+        categoryName: tx.categoryName || null,
+        note: tx.note || null,
+        walletName: tx.walletName || null,
+      }));
+      
+      // Correct the types based on the actual data
+      const incomes = (relatedData.incomes || []).map((tx: any) => ({
+        id: tx.id,
+        code: tx.code || '',
+        type: 'INCOME' as const,
         date: tx.date,
         amount: Number(tx.amount),
-        categoryName: tx.type === 'INCOME' ? tx.incomeCategory?.name : tx.expenseCategory?.name,
+        categoryName: tx.categoryName || null,
         note: tx.note || null,
-        walletName: tx.wallet?.name || null,
+        walletName: tx.walletName || null,
       }));
-      setTransactions(formattedTx);
+      const expenses = (relatedData.expenses || []).map((tx: any) => ({
+        id: tx.id,
+        code: tx.code || '',
+        type: 'EXPENSE' as const,
+        date: tx.date,
+        amount: Number(tx.amount),
+        categoryName: tx.categoryName || null,
+        note: tx.note || null,
+        walletName: tx.walletName || null,
+      }));
+      setTransactions([...incomes, ...expenses]);
+
+      // Set summary
+      setSummary({
+        totalIncome: relatedData.summary?.totalIncome || 0,
+        totalExpense: relatedData.summary?.totalExpense || 0,
+        net: relatedData.summary?.net || 0,
+        orderCount: relatedData.summary?.orderCount || 0,
+        orderTotal: 0,
+      });
     } catch (error) {
       console.error('Failed to fetch related data:', error);
     } finally {
@@ -308,6 +372,10 @@ export default function CustomerDetailPage() {
 
               {/* Actions */}
               <div className="flex gap-2 mt-4">
+                <Button size="sm" variant="default" onClick={() => setShowCreateOrderModal(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Tạo đơn hàng
+                </Button>
                 <Button size="sm" variant="outline" onClick={openEditModal}>
                   <Edit className="h-4 w-4 mr-1" />
                   Sửa
@@ -387,10 +455,14 @@ export default function CustomerDetailPage() {
 
       {/* Tabs for related data */}
       <Tabs defaultValue="orders" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-4">
+        <TabsList className="grid w-full grid-cols-5 mb-4">
           <TabsTrigger value="orders" className="flex items-center gap-1">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Đơn hàng ({orders.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="workshopJobs" className="flex items-center gap-1">
+            <Wrench className="h-4 w-4" />
+            <span className="hidden sm:inline">Phiếu GC ({workshopJobs.length})</span>
           </TabsTrigger>
           <TabsTrigger value="income" className="flex items-center gap-1">
             <TrendingUp className="h-4 w-4" />
@@ -448,6 +520,61 @@ export default function CustomerDetailPage() {
                           <td className="p-3 text-right text-gray-500">
                             {new Date(order.createdAt).toLocaleDateString('vi-VN')}
                           </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Workshop Jobs Tab */}
+        <TabsContent value="workshopJobs">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-orange-600" />
+                Phiếu gia công
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingData ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
+                  ))}
+                </div>
+              ) : workshopJobs.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Chưa có phiếu gia công nào</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-gray-50 text-left">
+                        <th className="p-3 font-medium">Mã phiếu</th>
+                        <th className="p-3 font-medium">Đơn hàng</th>
+                        <th className="p-3 font-medium">Trạng thái</th>
+                        <th className="p-3 font-medium text-right">Tổng tiền</th>
+                        <th className="p-3 font-medium text-right">Đã trả</th>
+                        <th className="p-3 font-medium text-right">Còn nợ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {workshopJobs.map(job => (
+                        <tr key={job.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/workshops/jobs/${job.id}`)}>
+                          <td className="p-3 font-medium">{job.code}</td>
+                          <td className="p-3">
+                            <div className="font-medium">{job.orderName || '-'}</div>
+                            <div className="text-xs text-gray-500">{job.orderCode || ''}</div>
+                          </td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{job.status}</span>
+                          </td>
+                          <td className="p-3 text-right font-medium text-blue-600">{formatCurrency(job.amount)}</td>
+                          <td className="p-3 text-right text-green-600">{formatCurrency(job.paidAmount)}</td>
+                          <td className="p-3 text-right text-red-600">{formatCurrency(job.debtAmount)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -710,6 +837,23 @@ export default function CustomerDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Quick Create Order Modal */}
+      {showCreateOrderModal && customer && (
+        <QuickCreateOrderModal
+          customerId={customer.id}
+          customerName={customer.name}
+          customerPhone={customer.phone || undefined}
+          customerAddress={customer.address || undefined}
+          onClose={() => setShowCreateOrderModal(false)}
+          onCreated={(orderId, orderName) => {
+            setShowCreateOrderModal(false);
+            showSuccess('Thành công', `Đã tạo đơn hàng "${orderName}"`);
+            // Navigate to the new order detail page
+            router.push(`/orders/${orderId}`);
+          }}
+        />
+      )}
     </div>
   );
 }

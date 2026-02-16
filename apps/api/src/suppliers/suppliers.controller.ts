@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { SuppliersService } from './suppliers.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -23,6 +23,18 @@ export class SuppliersController {
   @ApiOperation({ summary: 'Lấy thông tin nhà cung cấp' })
   async findOne(@Param('id') id: string) {
     return this.suppliersService.findOne(id);
+  }
+
+  @Get(':id/related')
+  @ApiOperation({ summary: 'Lấy dữ liệu liên quan của nhà cung cấp' })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  async getRelated(
+    @Param('id') id: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.suppliersService.findRelated(id, from, to);
   }
 
   @Post()
