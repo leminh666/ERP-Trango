@@ -30,6 +30,11 @@ model User {
   customers          Customer[]      @relation("CustomerOwner")
   customerFollowUps  CustomerFollowUp[]
   passwordResetTokens PasswordResetToken[]
+  
+  // CRM relations
+  crmActivities     CrmActivity[]
+  crmStageHistories CrmStageHistory[]
+  crmCustomers      CrmCustomer[]   @relation("CrmCustomerOwner")
 
   @@index([deletedAt])
   @@index([role])
@@ -38,6 +43,106 @@ model User {
 enum UserRole {
   ADMIN
   STAFF
+}
+
+// === CRM MODULE ===
+enum CrmStage {
+  LEAD
+  QUOTED
+  CONSIDERING
+  APPOINTMENT_SCHEDULED
+  CONTRACT_SIGNED
+  CANCELLED
+}
+
+model CrmCustomer {
+  id               String    @id @default(uuid())
+  customerId       String    @unique
+  stage            CrmStage  @default(LEAD)
+  
+  // Brief/Requirements fields
+  area             String?   // Diện tích
+  layout           String?   // Mặt bằng/không gian
+  style            String?   // Phong cách
+  architectureType String?   // Kiến trúc nhà
+  briefNote        String?   // Ghi chú tự do
+  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  ownerUser        User?     @relation("CrmCustomerOwner", fields: [ownerUserId], references: [id])
+  ownerUserId      String?
+  activities       CrmActivity[]
+  stageHistories  CrmStageHistory[]
+
+  @@index([stage])
+  @@index([customerId])
+  @@index([ownerUserId])
+}
+
+model CrmActivity {
+  id              String          @id @default(uuid())
+  customerId      String
+  userId          String
+  type            CrmActivityType
+  outcome         String?         // Kết quả ngắn
+  note            String?         // Ghi chú dài
+  createdAt       DateTime        @default(now())
+  
+  // Follow-up fields
+  nextFollowUpAt      DateTime?     // Thời gian hẹn tiếp theo
+  nextFollowUpNote    String?       // Nội dung hẹn tiếp theo
+  followUpStatus      FollowUpStatus @default(PENDING) // Trạng thái hẹn
+  priority            Priority       @default(MEDIUM)  // Mức ưu tiên
+
+  customer    CrmCustomer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id])
+
+  @@index([customerId])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([nextFollowUpAt])
+  @@index([followUpStatus])
+}
+
+enum CrmActivityType {
+  CALL
+  MEETING
+  MESSAGE
+  NOTE
+  QUOTE
+  OTHER
+}
+
+enum FollowUpStatus {
+  PENDING
+  DONE
+  MISSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model CrmStageHistory {
+  id          String    @id @default(uuid())
+  customerId  String
+  userId      String
+  fromStage   CrmStage?
+  toStage     CrmStage
+  note        String?   @default("")
+  createdAt   DateTime  @default(now())
+
+  customer    CrmCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id])
+
+  @@index([customerId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model AuditLog {
@@ -138,6 +243,9 @@ model Customer {
   owner     User?    @relation("CustomerOwner", fields: [ownerUserId], references: [id])
   followUps CustomerFollowUp[]
   projects  Project[]
+  
+  // CRM relation
+  crm        CrmCustomer?
 
   @@index([status])
   @@index([region])

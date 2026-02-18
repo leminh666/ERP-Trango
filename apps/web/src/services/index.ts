@@ -27,3 +27,6 @@ export { workshopService, type WorkshopJob, type JobStatus } from './workshop.se
 // Financial Service (Wallets, Cashbook)
 export { financialService, type Wallet, type Transaction, type CashflowSummary } from './financial.service';
 
+// CRM Service
+export { crmService, type CrmCustomerFilters, type CrmCreateActivityInput, type CrmUpdateCustomerInput, type CrmReportFilters } from './crm.service';
+

@@ -717,3 +717,111 @@ export interface SystemSettings {
   reminders: ReminderConfig;
   voice: VoiceConfig;
 }
+
+// === CRM MODULE ===
+
+export enum CrmStage {
+  LEAD = 'LEAD',
+  QUOTED = 'QUOTED',
+  CONSIDERING = 'CONSIDERING',
+  APPOINTMENT_SCHEDULED = 'APPOINTMENT_SCHEDULED',
+  CONTRACT_SIGNED = 'CONTRACT_SIGNED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum CrmActivityType {
+  CALL = 'CALL',
+  MEETING = 'MEETING',
+  MESSAGE = 'MESSAGE',
+  NOTE = 'NOTE',
+  QUOTE = 'QUOTE',
+  OTHER = 'OTHER',
+}
+
+export enum FollowUpStatus {
+  PENDING = 'PENDING',
+  DONE = 'DONE',
+  MISSED = 'MISSED',
+}
+
+export enum Priority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+}
+
+export interface CrmCustomer {
+  id: string;
+  customerId: string;
+  stage: CrmStage;
+  area: string | null;
+  layout: string | null;
+  style: string | null;
+  architectureType: string | null;
+  briefNote: string | null;
+  ownerUserId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  customer?: Customer;
+  ownerUser?: { id: string; name: string; email: string } | null;
+  activities?: CrmActivity[];
+  stageHistories?: CrmStageHistory[];
+}
+
+export interface CrmActivity {
+  id: string;
+  customerId: string;
+  userId: string;
+  type: CrmActivityType;
+  outcome: string | null;
+  note: string | null;
+  createdAt: Date;
+  nextFollowUpAt: Date | null;
+  nextFollowUpNote: string | null;
+  followUpStatus: FollowUpStatus;
+  priority: Priority;
+  user?: { id: string; name: string; email: string };
+}
+
+export interface CrmStageHistory {
+  id: string;
+  customerId: string;
+  userId: string;
+  fromStage: CrmStage | null;
+  toStage: CrmStage;
+  note: string | null;
+  createdAt: Date;
+  user?: { id: string; name: string; email: string };
+}
+
+export interface CrmScheduleItem {
+  id: string;
+  customerId: string;
+  stage: CrmStage;
+  area: string | null;
+  layout: string | null;
+  style: string | null;
+  briefNote: string | null;
+  ownerUserId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  customer: Customer;
+  ownerUser?: { id: string; name: string; email: string } | null;
+}
+
+export interface CrmReport {
+  totalLeads: number;
+  stageDistribution: Record<string, number>;
+  activitiesCount: number;
+  totalFollowUps: number;
+  conversionRates: {
+    leadToQuoted: number;
+    quotedToContract: number;
+    leadToContract: number;
+  };
+  byUser: Array<{
+    userId: string | null;
+    user: { id: string; name: string; email: string } | null;
+    count: number;
+  }>;
+}

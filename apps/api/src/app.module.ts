@@ -25,6 +25,7 @@ import { TransfersModule } from './transfers/transfers.module';
 import { AdjustmentsModule } from './adjustments/adjustments.module';
 import { CashflowModule } from './cashflow/cashflow.module';
 import { WorkshopJobsModule } from './workshop-jobs/workshop-jobs.module';
+import { CrmModule } from './crm/crm.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { WorkshopJobsModule } from './workshop-jobs/workshop-jobs.module';
     AdjustmentsModule,
     CashflowModule,
     WorkshopJobsModule,
+    CrmModule,
   ],
 })
 export class AppModule {}

@@ -15,6 +15,9 @@ import {
   PieChart,
   Users as Users2,
   Store,
+  UserCheck,
+  CalendarDays,
+  TrendingUp,
 } from 'lucide-react';
 import { UserRoleType } from '@tran-go-hoang-gia/shared';
 import { featureFlags } from './features';
@@ -40,6 +43,26 @@ export const menuConfig: MenuGroup[] = [
         label: 'Dashboard',
         icon: LayoutDashboard,
         href: '/dashboard',
+      },
+    ],
+  },
+  {
+    title: 'CRM - CSKH',
+    items: [
+      {
+        label: 'Khách hàng',
+        icon: UserCheck,
+        href: '/crm/customers',
+      },
+      {
+        label: 'Lịch hẹn',
+        icon: CalendarDays,
+        href: '/crm/schedule',
+      },
+      {
+        label: 'Báo cáo Sale',
+        icon: TrendingUp,
+        href: '/crm/reports',
       },
     ],
   },
@@ -138,11 +161,6 @@ export const menuConfig: MenuGroup[] = [
   {
     title: 'Danh mục',
     items: [
-      {
-        label: 'Khách hàng',
-        icon: Users2,
-        href: '/partners/customers',
-      },
       {
         label: 'Nhà cung cấp',
         icon: Truck,

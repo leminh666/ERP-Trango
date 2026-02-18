@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, CrmStage, SourceChannel } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 
 @Injectable()
@@ -261,11 +261,26 @@ export class CustomersService {
 
       console.log('data', data);
 
-      const result = await this.prisma.customer.create({
-        data: {
-          ...data,
-          code: newCode,
-        },
+      // Create Customer and CrmCustomer in a transaction
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Create Customer
+        const customer = await tx.customer.create({
+          data: {
+            ...data,
+            code: newCode,
+          },
+        });
+
+        // Automatically create CRM record for the new customer
+        await tx.crmCustomer.create({
+          data: {
+            customerId: customer.id,
+            ownerUserId: customer.ownerUserId || undefined,
+            stage: CrmStage.LEAD,
+          },
+        });
+
+        return customer;
       });
 
       // Audit log for CREATE
