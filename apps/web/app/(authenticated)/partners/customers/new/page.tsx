@@ -9,11 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { VisualSelector } from '@/components/visual-selector';
+import { useToast } from '@/components/toast-provider';
 import { VisualType } from '@tran-go-hoang-gia/shared';
 
 export default function CustomerCreatePage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
 
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -56,15 +58,15 @@ export default function CustomerCreatePage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      alert('Vui lòng nhập tên khách hàng');
+      showError('Lỗi nhập liệu', 'Vui lòng nhập tên khách hàng');
       return;
     }
     if (form.visualType === 'ICON' && !form.iconKey) {
-      alert('Vui lòng chọn icon');
+      showError('Lỗi nhập liệu', 'Vui lòng chọn icon');
       return;
     }
     if (form.visualType === 'IMAGE' && !form.imageUrl) {
-      alert('Vui lòng tải lên logo');
+      showError('Lỗi nhập liệu', 'Vui lòng tải lên logo');
       return;
     }
 
@@ -87,11 +89,11 @@ export default function CustomerCreatePage() {
         },
       });
 
-      alert('Tạo khách hàng thành công!');
+      showSuccess('Thành công', 'Tạo khách hàng thành công!');
       router.push(`/partners/customers/${created.id}`);
     } catch (error: any) {
       console.error('Failed to create customer:', error);
-      alert(error.message || 'Có lỗi xảy ra');
+      showError('Lỗi', error.message || 'Có lỗi xảy ra');
     } finally {
       setSaving(false);
     }
