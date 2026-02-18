@@ -16,8 +16,9 @@ import { useToast } from '@/components/toast-provider';
 import { 
   ArrowLeft, Phone, MapPin, Calendar, UserCheck, 
   Plus, Clock, Edit, CheckCircle, XCircle, MessageSquare,
-  Filter, Search
+  Filter, Search, FileText, Receipt, DollarSign, Eye
 } from 'lucide-react';
+import Link from 'next/link';
 
 // Stage colors
 const STAGE_COLORS: Record<CrmStage, { bg: string; text: string; label: string }> = {
@@ -86,6 +87,12 @@ export default function CrmCustomerDetailPage() {
   const [customer, setCustomer] = useState<CrmCustomer | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // Related data states
+  const [orders, setOrders] = useState<any[]>([]);
+  const [incomeReceipts, setIncomeReceipts] = useState<any[]>([]);
+  const [expenseReceipts, setExpenseReceipts] = useState<any[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
 
   // Form states
   const [activeTab, setActiveTab] = useState('info');
@@ -123,6 +130,37 @@ export default function CrmCustomerDetailPage() {
       setLoading(false);
     }
   };
+
+  const fetchRelatedData = async () => {
+    if (!customer?.customerId) return;
+    
+    try {
+      setRelatedLoading(true);
+      
+      // Fetch projects/orders for this customer
+      const ordersData = await get<any[]>(`/projects?customerId=${customer.customerId}`);
+      setOrders((ordersData || []).slice(0, 5));
+      
+      // Fetch income receipts (transactions) for projects of this customer
+      const incomeData = await get<any[]>(`/transactions?type=INCOME&customerId=${customer.customerId}&take=5&orderBy=desc`);
+      setIncomeReceipts(incomeData || []);
+      
+      // Fetch expense receipts
+      const expenseData = await get<any[]>(`/transactions?type=EXPENSE&customerId=${customer.customerId}&take=5&orderBy=desc`);
+      setExpenseReceipts(expenseData || []);
+    } catch (error: any) {
+      console.error('Failed to fetch related data:', error);
+    } finally {
+      setRelatedLoading(false);
+    }
+  };
+
+  // Fetch related data when customer is loaded and tab is info
+  useEffect(() => {
+    if (customer?.customerId && activeTab === 'info') {
+      fetchRelatedData();
+    }
+  }, [activeTab, customer?.customerId]);
 
   const handleStageChange = async (newStage: CrmStage) => {
     if (!customer) return;
@@ -329,35 +367,40 @@ export default function CrmCustomerDetailPage() {
         }
       />
 
-      {/* Customer Header Card */}
+      {/* Customer Header Card - Full Info */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+          {/* Main Info Row */}
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+            {/* Left: Avatar + Name + Primary Contact */}
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                 <UserCheck className="h-8 w-8 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold">{customer.customer?.name}</h2>
-                <div className="flex flex-wrap gap-3 text-sm text-gray-600 mt-1">
+                <h2 className="text-xl font-semibold text-lg">{customer.customer?.name}</h2>
+                
+                {/* Primary Contact Info Row */}
+                <div className="flex flex-wrap items-center gap-3 mt-1 text-sm">
                   {customer.customer?.phone && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-gray-700">
                       <Phone className="h-4 w-4" />
-                      {customer.customer.phone}
+                      <a href={`tel:${customer.customer.phone}`} className="hover:text-blue-600">
+                        {customer.customer.phone}
+                      </a>
                     </span>
                   )}
-                  {sourceLabel && (
-                    <span className="px-2 py-0.5 bg-gray-100 rounded text-xs">
-                      {sourceLabel}
-                    </span>
-                  )}
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${stageColor.bg} ${stageColor.text}`}>
+                    {stageColor.label}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-2">
+            {/* Right: Stage Selector */}
+            <div className="flex flex-col items-start lg:items-end gap-2">
               <select
-                className="px-3 py-2 border rounded-md"
+                className="px-3 py-2 border rounded-md text-sm"
                 value={customer.stage}
                 onChange={(e) => handleStageChange(e.target.value as CrmStage)}
                 disabled={saving}
@@ -369,6 +412,56 @@ export default function CrmCustomerDetailPage() {
               {customer.ownerUser && (
                 <span className="text-sm text-gray-500">
                   NV phụ trách: <span className="font-medium">{customer.ownerUser.name}</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Secondary Info Row - Chips/Badges */}
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex flex-wrap gap-2">
+              {/* Customer Code */}
+              {customer.customer?.code && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
+                  <FileText className="h-3 w-3" />
+                  Mã: <span className="font-medium">{customer.customer.code}</span>
+                </span>
+              )}
+
+              {/* Source */}
+              {sourceLabel && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
+                  Nguồn: <span className="font-medium">{sourceLabel}</span>
+                  {customer.customer?.sourceDetail && (
+                    <span className="text-gray-500">({customer.customer.sourceDetail})</span>
+                  )}
+                </span>
+              )}
+
+              {/* Created Date */}
+              {customer.customer?.createdAt && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
+                  <Calendar className="h-3 w-3" />
+                  Tạo: <span className="font-medium">
+                    {new Date(customer.customer.createdAt).toLocaleDateString('vi-VN')}
+                  </span>
+                </span>
+              )}
+
+              {/* Address */}
+              {customer.customer?.address && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs max-w-[300px] truncate">
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{customer.customer.address}</span>
+                </span>
+              )}
+
+              {/* Created Date - CRM */}
+              {customer.createdAt && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 rounded text-xs text-blue-700">
+                  CRM từ: <span className="font-medium">
+                    {new Date(customer.createdAt).toLocaleDateString('vi-VN')}
+                  </span>
                 </span>
               )}
             </div>
@@ -386,45 +479,171 @@ export default function CrmCustomerDetailPage() {
 
         {/* Tab: Thông tin */}
         <TabsContent value="info">
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin khách hàng</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-gray-500">Mã khách hàng</Label>
-                  <p className="font-medium">{customer.customer?.code}</p>
+          <div className="space-y-6">
+            {/* Basic Info - Compact version to avoid duplication with header */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Thông tin khách hàng</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <Label className="text-gray-500 text-xs">Mã KH</Label>
+                    <p className="font-medium">{customer.customer?.code || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500 text-xs">SĐT</Label>
+                    <p className="font-medium">{customer.customer?.phone || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500 text-xs">Địa chỉ</Label>
+                    <p className="font-medium truncate">{customer.customer?.address || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500 text-xs">Nguồn</Label>
+                    <p className="font-medium">{sourceLabel || '-'}</p>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-gray-500">Số điện thoại</Label>
-                  <p className="font-medium">{customer.customer?.phone || '-'}</p>
+              </CardContent>
+            </Card>
+
+            {/* Orders Section */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Đơn hàng ({orders.length})
+                  </CardTitle>
+                  <Link href={`/projects?customerId=${customer.customerId}`}>
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-3 w-3 mr-1" />
+                      Xem tất cả
+                    </Button>
+                  </Link>
                 </div>
-                <div>
-                  <Label className="text-gray-500">Địa chỉ</Label>
-                  <p className="font-medium">{customer.customer?.address || '-'}</p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {relatedLoading ? (
+                  <div className="text-center py-4 text-gray-500">Đang tải...</div>
+                ) : orders.length > 0 ? (
+                  <div className="space-y-2">
+                    {orders.map((order: any) => (
+                      <Link key={order.id} href={`/projects/${order.id}`}>
+                        <div className="flex items-center justify-between p-2 rounded hover:bg-gray-50 border">
+                          <div>
+                            <p className="font-medium text-sm">{order.name || order.code}</p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className={`px-2 py-0.5 text-xs rounded ${
+                              order.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                              order.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {order.status === 'COMPLETED' ? 'Hoàn thành' : 
+                               order.status === 'CANCELLED' ? 'Đã hủy' :
+                               order.status === 'PENDING' ? 'Chờ xử lý' : order.status}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm">Chưa có đơn hàng</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Income Receipts */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Receipt className="h-4 w-4 text-green-600" />
+                    Phiếu thu ({incomeReceipts.length})
+                  </CardTitle>
+                  <Link href={`/cashbook?type=INCOME&customerId=${customer.customerId}`}>
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-3 w-3 mr-1" />
+                      Xem tất cả
+                    </Button>
+                  </Link>
                 </div>
-                <div>
-                  <Label className="text-gray-500">Nguồn</Label>
-                  <p className="font-medium">{sourceLabel || '-'}</p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {relatedLoading ? (
+                  <div className="text-center py-4 text-gray-500">Đang tải...</div>
+                ) : incomeReceipts.length > 0 ? (
+                  <div className="space-y-2">
+                    {incomeReceipts.map((receipt: any) => (
+                      <div key={receipt.id} className="flex items-center justify-between p-2 rounded border">
+                        <div>
+                          <p className="font-medium text-sm">{receipt.code}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(receipt.date).toLocaleDateString('vi-VN')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-sm text-green-600">
+                            +{Number(receipt.amount).toLocaleString('vi-VN')}đ
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm">Chưa có phiếu thu</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Expense Receipts */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-red-600" />
+                    Phiếu chi ({expenseReceipts.length})
+                  </CardTitle>
+                  <Link href={`/cashbook?type=EXPENSE&customerId=${customer.customerId}`}>
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-3 w-3 mr-1" />
+                      Xem tất cả
+                    </Button>
+                  </Link>
                 </div>
-                <div>
-                  <Label className="text-gray-500">Ngày tạo</Label>
-                  <p className="font-medium">
-                    {customer.customer?.createdAt 
-                      ? new Date(customer.customer.createdAt).toLocaleDateString('vi-VN')
-                      : '-'}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-gray-500">Trạng thái CRM</Label>
-                  <p className={`inline-flex px-2 py-1 rounded-full text-sm font-medium ${stageColor.bg} ${stageColor.text}`}>
-                    {stageColor.label}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {relatedLoading ? (
+                  <div className="text-center py-4 text-gray-500">Đang tải...</div>
+                ) : expenseReceipts.length > 0 ? (
+                  <div className="space-y-2">
+                    {expenseReceipts.map((receipt: any) => (
+                      <div key={receipt.id} className="flex items-center justify-between p-2 rounded border">
+                        <div>
+                          <p className="font-medium text-sm">{receipt.code}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(receipt.date).toLocaleDateString('vi-VN')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-sm text-red-600">
+                            -{Number(receipt.amount).toLocaleString('vi-VN')}đ
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm">Chưa có phiếu chi</div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Tab: Nhu cầu */}

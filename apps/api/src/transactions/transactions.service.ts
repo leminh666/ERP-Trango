@@ -18,11 +18,14 @@ export class TransactionsService {
     to?: Date;
     walletId?: string;
     projectId?: string;
+    customerId?: string; // Filter by customer via project
     isCommonCost?: boolean;
     incomeCategoryId?: string;
     expenseCategoryId?: string;
     includeDeleted?: boolean;
     search?: string;
+    take?: number;
+    orderBy?: string;
   }) {
     const {
       type,
@@ -30,11 +33,14 @@ export class TransactionsService {
       to,
       walletId,
       projectId,
+      customerId,
       isCommonCost,
       incomeCategoryId,
       expenseCategoryId,
       includeDeleted,
       search,
+      take,
+      orderBy,
     } = params;
 
     const where: Prisma.TransactionWhereInput = {
@@ -52,11 +58,18 @@ export class TransactionsService {
           { code: { contains: search, mode: 'insensitive' } },
         ],
       } : {}),
+      // Filter by customer via project relationship
+      ...(customerId ? {
+        project: {
+          customerId: customerId
+        }
+      } : {}),
     };
 
     return this.prisma.transaction.findMany({
       where,
-      orderBy: { date: 'desc' },
+      orderBy: orderBy ? { date: orderBy === 'asc' ? 'asc' : 'desc' } : { date: 'desc' },
+      take: take || 100,
       include: {
         wallet: true,
         incomeCategory: true,

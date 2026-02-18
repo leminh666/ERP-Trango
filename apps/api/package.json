@@ -11,9 +11,14 @@
     "start:prod": "node dist/src/main",
     "lint": "eslint src --ext .ts",
     "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:generate": "prisma generate",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:studio": "prisma studio",
+    "db:push": "prisma db push",
+    "db:migrate:crm": "ts-node -r tsconfig-paths/register prisma/migrations/add_crm_tables.sql",
+    "db:sync": "prisma db push --accept-data-loss --skip-generate && prisma generate",
+    "migrate:crm": "ts-node scripts/migrate-customers-to-crm.ts",
     "clean:lock": "node -e \"const fs = require('fs'); const lock = require('path').resolve(__dirname, '.api-lock'); if(fs.existsSync(lock)) { fs.unlinkSync(lock); console.log('✅ Removed stale lock'); } else { console.log('ℹ️ No lock file'); }\""
   },
   "prisma": {

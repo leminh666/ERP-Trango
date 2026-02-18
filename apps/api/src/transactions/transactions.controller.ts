@@ -17,22 +17,28 @@ export class TransactionsController {
   @ApiQuery({ name: 'to', required: false })
   @ApiQuery({ name: 'walletId', required: false })
   @ApiQuery({ name: 'projectId', required: false })
+  @ApiQuery({ name: 'customerId', required: false })
   @ApiQuery({ name: 'isCommonCost', required: false, type: Boolean })
   @ApiQuery({ name: 'incomeCategoryId', required: false })
   @ApiQuery({ name: 'expenseCategoryId', required: false })
   @ApiQuery({ name: 'includeDeleted', required: false, type: Boolean })
   @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'take', required: false })
+  @ApiQuery({ name: 'orderBy', required: false })
   async findAll(
     @Query('type') type?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('walletId') walletId?: string,
     @Query('projectId') projectId?: string,
+    @Query('customerId') customerId?: string,
     @Query('isCommonCost') isCommonCost?: string,
     @Query('incomeCategoryId') incomeCategoryId?: string,
     @Query('expenseCategoryId') expenseCategoryId?: string,
     @Query('includeDeleted') includeDeleted?: string,
     @Query('search') search?: string,
+    @Query('take') take?: string,
+    @Query('orderBy') orderBy?: string,
   ) {
     return this.service.findAll({
       type,
@@ -40,11 +46,14 @@ export class TransactionsController {
       to: to ? new Date(to) : undefined,
       walletId,
       projectId,
+      customerId,
       isCommonCost: isCommonCost === 'true' ? true : isCommonCost === 'false' ? false : undefined,
       incomeCategoryId,
       expenseCategoryId,
       includeDeleted: includeDeleted === 'true',
       search,
+      take: take ? parseInt(take) : undefined,
+      orderBy,
     });
   }
 
