@@ -480,33 +480,6 @@ export default function CrmCustomerDetailPage() {
         {/* Tab: Thông tin */}
         <TabsContent value="info">
           <div className="space-y-6">
-            {/* Basic Info - Compact version to avoid duplication with header */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Thông tin khách hàng</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <Label className="text-gray-500 text-xs">Mã KH</Label>
-                    <p className="font-medium">{customer.customer?.code || '-'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-500 text-xs">SĐT</Label>
-                    <p className="font-medium">{customer.customer?.phone || '-'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-500 text-xs">Địa chỉ</Label>
-                    <p className="font-medium truncate">{customer.customer?.address || '-'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-500 text-xs">Nguồn</Label>
-                    <p className="font-medium">{sourceLabel || '-'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Orders Section */}
             <Card>
               <CardHeader className="pb-3">
@@ -515,7 +488,7 @@ export default function CrmCustomerDetailPage() {
                     <FileText className="h-4 w-4" />
                     Đơn hàng ({orders.length})
                   </CardTitle>
-                  <Link href={`/projects?customerId=${customer.customerId}`}>
+                  <Link href={`/orders?customerId=${customer.customerId}`}>
                     <Button variant="outline" size="sm">
                       <Eye className="h-3 w-3 mr-1" />
                       Xem tất cả
@@ -529,7 +502,7 @@ export default function CrmCustomerDetailPage() {
                 ) : orders.length > 0 ? (
                   <div className="space-y-2">
                     {orders.map((order: any) => (
-                      <Link key={order.id} href={`/projects/${order.id}`}>
+                      <Link key={order.id} href={`/orders/${order.id}`}>
                         <div className="flex items-center justify-between p-2 rounded hover:bg-gray-50 border">
                           <div>
                             <p className="font-medium text-sm">{order.name || order.code}</p>
@@ -566,7 +539,7 @@ export default function CrmCustomerDetailPage() {
                     <Receipt className="h-4 w-4 text-green-600" />
                     Phiếu thu ({incomeReceipts.length})
                   </CardTitle>
-                  <Link href={`/cashbook?type=INCOME&customerId=${customer.customerId}`}>
+                  <Link href={`/cashbook/income`}>
                     <Button variant="outline" size="sm">
                       <Eye className="h-3 w-3 mr-1" />
                       Xem tất cả
@@ -609,7 +582,7 @@ export default function CrmCustomerDetailPage() {
                     <DollarSign className="h-4 w-4 text-red-600" />
                     Phiếu chi ({expenseReceipts.length})
                   </CardTitle>
-                  <Link href={`/cashbook?type=EXPENSE&customerId=${customer.customerId}`}>
+                  <Link href={`/cashbook/expense`}>
                     <Button variant="outline" size="sm">
                       <Eye className="h-3 w-3 mr-1" />
                       Xem tất cả
