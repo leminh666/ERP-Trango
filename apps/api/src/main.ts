@@ -299,10 +299,16 @@ async function bootstrap() {
   // =============================================================================
   // CORS Configuration - Flexible for LAN/Mobile Access
   // =============================================================================
-  const corsOrigins = [
+  
+  // Default production domains - always allowed (secure, not wildcard)
+  const defaultOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://erp.trangohoanggia.com',    // Production frontend
+    'https://trangohoanggia.com',        // Alternative domain
   ];
+  
+  const corsOrigins = [...defaultOrigins];
 
   // Add custom CORS origins from environment
   if (process.env.WEB_CORS_ORIGINS) {

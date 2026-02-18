@@ -69,21 +69,29 @@ export class DashboardService {
       .map(([date, data]) => ({ date, ...data }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // 3. Get AR (Accounts Receivable) - Customer debts
-    const arTop = await this.prisma.customer.findMany({
+    // 3. Get AR (Accounts Receivable) - from CRM Customers
+    // Using CrmCustomer as single source of truth for customer data
+    const arTop = await this.prisma.crmCustomer.findMany({
       where: {
-        status: { notIn: ['WON', 'LOST'] },
-        deletedAt: null,
+        stage: { notIn: ['CONTRACT_SIGNED', 'CANCELLED'] },
+        customer: {
+          deletedAt: null,
+          isActive: true,
+        },
       },
       take: 5,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        status: true,
-        _count: {
-          select: { followUps: true },
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            status: true,
+            _count: {
+              select: { followUps: true },
+            },
+          },
         },
       },
     });
@@ -130,11 +138,15 @@ export class DashboardService {
         expense: d.expense,
       })),
       arTop: arTop.map(c => ({
-        id: c.id,
-        name: c.name,
-        phone: c.phone,
-        status: c.status,
-        followUpCount: c._count.followUps,
+        id: c.customer.id,
+        crmId: c.id,
+        name: c.customer.name,
+        phone: c.customer.phone,
+        stage: c.stage,
+        legacyCustomerId: c.legacyCustomerId,
+        // Keep status for backward compatibility with frontend
+        status: c.stage, 
+        followUpCount: c.customer._count.followUps,
       })),
       apWorkshopTop: apWorkshopTop.map(w => ({
         id: w.id,

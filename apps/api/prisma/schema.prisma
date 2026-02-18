@@ -58,6 +58,7 @@ enum CrmStage {
 model CrmCustomer {
   id               String    @id @default(uuid())
   customerId       String    @unique
+  legacyCustomerId String?   @unique // Map to legacy Customer.id for migration
   stage            CrmStage  @default(LEAD)
   
   // Brief/Requirements fields
@@ -79,6 +80,7 @@ model CrmCustomer {
   @@index([stage])
   @@index([customerId])
   @@index([ownerUserId])
+  @@index([legacyCustomerId])
 }
 
 model CrmActivity {
