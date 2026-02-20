@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
 import { Wallet, WalletType, VisualType } from '@tran-go-hoang-gia/shared';
-import { ArrowLeft, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, FileText, Upload, RefreshCw, Eye } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, FileText, Upload, RefreshCw, Eye, ArrowRightLeft, Settings, X } from 'lucide-react';
 import { IconRenderer } from '@/components/icon-picker';
 import { VisualRenderer, VisualSelector } from '@/components/visual-selector';
 import { useToast } from '@/components/toast-provider';
@@ -179,6 +179,30 @@ export default function WalletDetailPage() {
   });
   const [uploading, setUploading] = useState(false);
 
+  // Wallets list for transfer modal
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+
+  // Transfer modal state
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferFormData, setTransferFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    walletId: '',
+    walletToId: '',
+    amount: '',
+    note: '',
+  });
+  const [transferSubmitting, setTransferSubmitting] = useState(false);
+
+  // Adjustment modal state
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+  const [adjustmentFormData, setAdjustmentFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    amount: '',
+    type: 'ADD' as 'ADD' | 'SUBTRACT',
+    note: '',
+  });
+  const [adjustmentSubmitting, setAdjustmentSubmitting] = useState(false);
+
   const isAdmin = user?.role === 'ADMIN';
 
   // Format VND currency
@@ -190,6 +214,7 @@ export default function WalletDetailPage() {
   useEffect(() => {
     if (params.id) {
       fetchWallet();
+      fetchWallets();
       fetchSummary();
       fetchAdjustments();
       fetchTransfers();
@@ -205,6 +230,15 @@ export default function WalletDetailPage() {
     } catch (error) {
       console.error('Failed to fetch wallet:', error);
       setWallet(null);
+    }
+  };
+
+  const fetchWallets = async () => {
+    try {
+      const data = await apiClient<Wallet[]>('/wallets');
+      setWallets(data);
+    } catch (error) {
+      console.error('Failed to fetch wallets:', error);
     }
   };
 
@@ -537,6 +571,102 @@ export default function WalletDetailPage() {
     }
   };
 
+  // ========== TRANSFER HANDLERS ==========
+  const handleCreateTransfer = async () => {
+    if (!transferFormData.walletToId || !transferFormData.amount) {
+      showError('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+      return;
+    }
+    if (!wallet?.id || transferFormData.walletToId === wallet.id) {
+      showError('Lỗi', 'Ví nguồn và ví đích phải khác nhau');
+      return;
+    }
+    const amount = parseFloat(transferFormData.amount);
+    if (amount <= 0) {
+      showError('Lỗi', 'Số tiền phải lớn hơn 0');
+      return;
+    }
+
+    setTransferSubmitting(true);
+    try {
+      await apiClient('/transfers', {
+        method: 'POST',
+        body: JSON.stringify({
+          date: transferFormData.date,
+          walletId: wallet.id,
+          walletToId: transferFormData.walletToId,
+          amount: amount,
+          note: transferFormData.note,
+        }),
+      });
+      showSuccess('Thành công', 'Chuyển tiền thành công');
+      setShowTransferModal(false);
+      setTransferFormData({
+        date: new Date().toISOString().split('T')[0],
+        walletId: wallet?.id || '',
+        walletToId: '',
+        amount: '',
+        note: '',
+      });
+      // Refresh all data after successful transfer
+      fetchWallet();
+      fetchWallets();
+      fetchSummary();
+      fetchAdjustments();
+      fetchTransfers();
+      fetchIncomes();
+      fetchExpenses();
+    } catch (error: any) {
+      // Error is already handled by API client, no need to show additional toast
+      console.error('Transfer error:', error);
+    } finally {
+      setTransferSubmitting(false);
+    }
+  };
+
+  // ========== ADJUSTMENT HANDLERS ==========
+  const handleCreateAdjustment = async () => {
+    if (!adjustmentFormData.amount) {
+      showError('Lỗi', 'Vui lòng nhập số tiền');
+      return;
+    }
+    const amount = parseFloat(adjustmentFormData.amount);
+    if (amount <= 0) {
+      showError('Lỗi', 'Số tiền phải lớn hơn 0');
+      return;
+    }
+
+    setAdjustmentSubmitting(true);
+    try {
+      await apiClient('/adjustments', {
+        method: 'POST',
+        body: JSON.stringify({
+          date: adjustmentFormData.date,
+          walletId: wallet?.id,
+          amount: adjustmentFormData.type === 'SUBTRACT' ? -amount : amount,
+          note: adjustmentFormData.note,
+        }),
+      });
+      showSuccess('Thành công', 'Điều chỉnh số dư thành công');
+      setShowAdjustmentModal(false);
+      setAdjustmentFormData({
+        date: new Date().toISOString().split('T')[0],
+        amount: '',
+        type: 'ADD',
+        note: '',
+      });
+      // Refresh all data after successful adjustment
+      fetchWallet();
+      fetchSummary();
+      fetchAdjustments();
+    } catch (error: any) {
+      // Error is already handled by API client
+      console.error('Adjustment error:', error);
+    } finally {
+      setAdjustmentSubmitting(false);
+    }
+  };
+
   const handleEditTransaction = (tx: WalletTransactionSummary) => {
     setEditingTransaction({
       id: tx.id,
@@ -745,7 +875,7 @@ export default function WalletDetailPage() {
               {wallet.note && <p className="text-gray-600 mt-2">{wallet.note}</p>}
               
               {isAdmin && (
-                <div className="flex gap-2 mt-4">
+                <div className="flex gap-2 mt-4 flex-wrap">
                   <Button size="sm" variant="outline" onClick={openEditModal}>
                     <Edit className="h-4 w-4 mr-1" />
                     Sửa
@@ -753,6 +883,16 @@ export default function WalletDetailPage() {
                   <Button size="sm" variant="destructive" onClick={() => setShowConfirmDelete(true)}>
                     <Trash2 className="h-4 w-4 mr-1" />
                     Xóa
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setShowTransferModal(true);
+                  }}>
+                    <ArrowRightLeft className="h-4 w-4 mr-1" />
+                    Chuyển tiền
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowAdjustmentModal(true)}>
+                    <Settings className="h-4 w-4 mr-1" />
+                    Điều chỉnh
                   </Button>
                 </div>
               )}
@@ -1578,6 +1718,147 @@ export default function WalletDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Transfer Modal */}
+      {showTransferModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Chuyển nội bộ</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowTransferModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label>Ngày *</Label>
+                  <Input
+                    type="date"
+                    value={transferFormData.date}
+                    onChange={(e) => setTransferFormData({ ...transferFormData, date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Từ ví *</Label>
+                  <Input
+                    value={wallet?.name || ''}
+                    disabled
+                    className="bg-gray-100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Đây là ví hiện tại</p>
+                </div>
+                <div>
+                  <Label>Đến ví *</Label>
+                  <Select
+                    value={transferFormData.walletToId}
+                    onChange={(e) => setTransferFormData({ ...transferFormData, walletToId: e.target.value })}
+                    className="w-full"
+                  >
+                    <option value="">Chọn ví đích</option>
+                    {wallets
+                      .filter((w) => w.id !== transferFormData.walletId)
+                      .map((w) => (
+                        <option key={w.id} value={w.id}>
+                          {w.name}
+                        </option>
+                      ))}
+                  </Select>
+                </div>
+                <div>
+                  <Label>Số tiền *</Label>
+                  <MoneyInput
+                    value={transferFormData.amount ? parseFloat(transferFormData.amount) : 0}
+                    onChange={(val) => setTransferFormData({ ...transferFormData, amount: String(val) })}
+                    placeholder="Nhập số tiền"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Ghi chú</Label>
+                  <Input
+                    type="text"
+                    value={transferFormData.note}
+                    onChange={(e) => setTransferFormData({ ...transferFormData, note: e.target.value })}
+                    placeholder="Nhập ghi chú (tùy chọn)"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setShowTransferModal(false)}>
+                    Hủy
+                  </Button>
+                  <Button onClick={handleCreateTransfer} disabled={transferSubmitting}>
+                    {transferSubmitting ? 'Đang tạo...' : 'Tạo chuyển khoản'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Adjustment Modal */}
+      {showAdjustmentModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Điều chỉnh số dư</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowAdjustmentModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label>Ngày *</Label>
+                  <Input
+                    type="date"
+                    value={adjustmentFormData.date}
+                    onChange={(e) => setAdjustmentFormData({ ...adjustmentFormData, date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Loại điều chỉnh *</Label>
+                  <Select
+                    value={adjustmentFormData.type}
+                    onChange={(e) => setAdjustmentFormData({ ...adjustmentFormData, type: e.target.value as 'ADD' | 'SUBTRACT' })}
+                    className="w-full"
+                  >
+                    <option value="ADD">Cộng tiền (+)</option>
+                    <option value="SUBTRACT">Trừ tiền (-)</option>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Số tiền *</Label>
+                  <MoneyInput
+                    value={adjustmentFormData.amount ? parseFloat(adjustmentFormData.amount) : 0}
+                    onChange={(val) => setAdjustmentFormData({ ...adjustmentFormData, amount: String(val) })}
+                    placeholder="Nhập số tiền"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Ghi chú</Label>
+                  <Input
+                    type="text"
+                    value={adjustmentFormData.note}
+                    onChange={(e) => setAdjustmentFormData({ ...adjustmentFormData, note: e.target.value })}
+                    placeholder="Nhập ghi chú (tùy chọn)"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setShowAdjustmentModal(false)}>
+                    Hủy
+                  </Button>
+                  <Button onClick={handleCreateAdjustment} disabled={adjustmentSubmitting}>
+                    {adjustmentSubmitting ? 'Đang tạo...' : 'Tạo điều chỉnh'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

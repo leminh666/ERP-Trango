@@ -19,7 +19,7 @@ export function ResponsiveSidebar({ className }: ResponsiveSidebarProps) {
   const { user } = useAuth();
   const userRole = user?.role;
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Báo cáo', 'Danh mục'])); // Default expanded
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Báo cáo', 'Danh mục', 'Sổ quỹ'])); // Default expanded
 
   // Get icon name from component for comparison
   const getIconName = (icon: ComponentType<{ className?: string }>) => {

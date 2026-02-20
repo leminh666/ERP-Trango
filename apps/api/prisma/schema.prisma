@@ -668,6 +668,10 @@ model Transaction {
 
   isSample          Boolean         @default(false) // Mark sample data for cleanup
 
+  // Advertisement fields
+  isAds             Boolean         @default(false)
+  adsPlatform       String?         // FACEBOOK, TIKTOK, GOOGLE
+
   createdByUserId   String?
   updatedByUserId   String?
 

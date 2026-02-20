@@ -21,10 +21,12 @@ export interface ExpenseCreateInput {
   date: string;
   amount: number | string;
   walletId: string;
-  expenseCategoryId: string;
+  expenseCategoryId?: string; // Optional for ads
   projectId?: string | null;
   note?: string;
   isCommonCost: boolean;
+  isAds?: boolean;
+  adsPlatform?: string;
 }
 
 // Income payload for PUT (update)
@@ -49,6 +51,8 @@ export interface ExpenseUpdateInput {
   projectId?: string | null;
   note?: string;
   isCommonCost?: boolean;
+  isAds?: boolean;
+  adsPlatform?: string;
 }
 
 /**
@@ -76,10 +80,12 @@ export function buildExpenseCreatePayload(input: ExpenseCreateInput) {
     date: input.date,
     amount: typeof input.amount === 'string' ? parseFloat(input.amount) : input.amount,
     wallet: { connect: { id: input.walletId } },
-    expenseCategory: { connect: { id: input.expenseCategoryId } },
+    expenseCategory: input.expenseCategoryId ? { connect: { id: input.expenseCategoryId } } : undefined,
     note: input.note || null,
     project: input.projectId && !input.isCommonCost ? { connect: { id: input.projectId } } : undefined,
     isCommonCost: input.isCommonCost === true,
+    isAds: input.isAds === true,
+    adsPlatform: input.adsPlatform || null,
   };
 }
 
@@ -116,9 +122,12 @@ export function buildExpenseUpdatePayload(input: ExpenseUpdateInput) {
   if (input.amount !== undefined) payload.amount = typeof input.amount === 'string' ? parseFloat(input.amount) : input.amount;
   if (input.walletId) payload.wallet = { connect: { id: input.walletId } };
   if (input.expenseCategoryId) payload.expenseCategory = { connect: { id: input.expenseCategoryId } };
+  else if (input.expenseCategoryId === null || input.expenseCategoryId === '') payload.expenseCategory = { disconnect: true };
   if (input.projectId) payload.project = { connect: { id: input.projectId } };
   else if (input.projectId === null || input.projectId === '') payload.project = { disconnect: true };
   if (input.isCommonCost !== undefined) payload.isCommonCost = input.isCommonCost;
+  if (input.isAds !== undefined) payload.isAds = input.isAds;
+  if (input.adsPlatform !== undefined) payload.adsPlatform = input.adsPlatform || null;
 
   return payload;
 }

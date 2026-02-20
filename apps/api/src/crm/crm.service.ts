@@ -53,12 +53,14 @@ export class CrmService {
       };
     }
 
-    // Filter overdue follow-ups
+    // Filter overdue follow-ups - check CrmActivity nextFollowUpAt
     if (includeOverdue) {
-      where.customer = {
-        ...where.customer,
-        nextFollowUpAt: {
-          lt: new Date(),
+      where.activities = {
+        some: {
+          nextFollowUpAt: {
+            lt: new Date(),
+          },
+          followUpStatus: 'PENDING',
         },
       };
     }
@@ -75,6 +77,14 @@ export class CrmService {
         },
         ownerUser: {
           select: { id: true, name: true, email: true },
+        },
+        activities: {
+          where: {
+            followUpStatus: 'PENDING',
+            nextFollowUpAt: { not: null },
+          },
+          orderBy: { nextFollowUpAt: 'asc' },
+          take: 1,
         },
       },
       orderBy: {
@@ -602,6 +612,46 @@ export class CrmService {
         user: userMap[u.ownerUserId as string] || null,
         count: u._count,
       })),
+    };
+  }
+
+  // ========== KPI FOR CUSTOMER ==========
+  
+  async getCustomerKpi(customerId: string) {
+    // Get all projects for this customer
+    const projects = await this.prisma.project.findMany({
+      where: { customerId, deletedAt: null },
+      include: {
+        orderItems: true,
+      },
+    });
+
+    // Calculate total amount from projects (sum of orderItems.amount)
+    const totalAmount = projects.reduce((sum, project) => {
+      const projectTotal = project.orderItems.reduce((itemSum, item) => {
+        return itemSum + Number(item.amount || 0);
+      }, 0);
+      return sum + projectTotal;
+    }, 0);
+
+    // Get all income transactions (đã thanh toán)
+    const incomeTransactions = await this.prisma.transaction.findMany({
+      where: {
+        project: { customerId },
+        type: 'INCOME',
+      },
+    });
+    const paidAmount = incomeTransactions.reduce((sum, t) => {
+      return sum + Number(t.amount || 0);
+    }, 0);
+
+    // Calculate debt (công nợ)
+    const debtAmount = Math.max(0, totalAmount - paidAmount);
+
+    return {
+      totalAmount,
+      paidAmount,
+      debtAmount,
     };
   }
 }

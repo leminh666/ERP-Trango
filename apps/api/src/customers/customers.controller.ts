@@ -70,16 +70,41 @@ export class CustomersController {
       name: string;
       phone?: string;
       address?: string;
-      region?: string;
-      city?: string;
-      district?: string;
+      provinceName?: string;
+      provinceCode?: string;
+      districtName?: string;
+      districtCode?: string;
+      wardName?: string;
+      wardCode?: string;
+      addressLine?: string;
       tags?: string;
       note?: string;
       ownerUserId?: string;
+      sourceChannel?: string;
+      sourceDetail?: string;
     },
     @Request() req?: { user: { id: string; email?: string } },
   ) {
-    return this.customersService.create(data as any, req?.user?.id, req?.user?.email);
+    // Map incoming data to Prisma schema (remove 'city', 'district', 'region')
+    const prismaData: any = {
+      name: data.name,
+      phone: data.phone,
+      address: data.address,
+      provinceName: data.provinceName,
+      provinceCode: data.provinceCode,
+      districtName: data.districtName,
+      districtCode: data.districtCode,
+      wardName: data.wardName,
+      wardCode: data.wardCode,
+      addressLine: data.addressLine,
+      tags: data.tags,
+      note: data.note,
+      ownerUserId: data.ownerUserId,
+      sourceChannel: data.sourceChannel as any,
+      sourceDetail: data.sourceDetail,
+    };
+    
+    return this.customersService.create(prismaData, req?.user?.id, req?.user?.email);
   }
 
   @Put(':id')

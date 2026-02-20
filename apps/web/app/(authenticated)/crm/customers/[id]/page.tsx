@@ -16,7 +16,7 @@ import { useToast } from '@/components/toast-provider';
 import { 
   ArrowLeft, Phone, MapPin, Calendar, UserCheck, 
   Plus, Clock, Edit, CheckCircle, XCircle, MessageSquare,
-  Filter, Search, FileText, Receipt, DollarSign, Eye
+  Filter, Search, FileText, Receipt, DollarSign, Eye, X
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -94,8 +94,16 @@ export default function CrmCustomerDetailPage() {
   const [expenseReceipts, setExpenseReceipts] = useState<any[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(false);
 
+  // KPI States
+  const [kpiData, setKpiData] = useState({
+    totalAmount: 0,
+    paidAmount: 0,
+    debtAmount: 0,
+  });
+  const [kpiLoading, setKpiLoading] = useState(false);
+
   // Form states
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState('general');
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>('all');
   const [activitySearch, setActivitySearch] = useState('');
@@ -111,6 +119,69 @@ export default function CrmCustomerDetailPage() {
   });
 
   const customerId = params?.id;
+
+  // Local form state for needs (Nhu cầu)
+  // Modal state for needs (Nhu cầu)
+  const [showNeedsModal, setShowNeedsModal] = useState(false);
+  
+  const [needsForm, setNeedsForm] = useState({
+    area: '',
+    layout: '',
+    style: '',
+    architectureType: '',
+    briefNote: '',
+  });
+  const [needsSaving, setNeedsSaving] = useState(false);
+  const [needsSaveTimeout, setNeedsSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Update local form when customer data loads
+  useEffect(() => {
+    if (customer) {
+      setNeedsForm({
+        area: customer.area || '',
+        layout: customer.layout || '',
+        style: customer.style || '',
+        architectureType: customer.architectureType || '',
+        briefNote: customer.briefNote || '',
+      });
+    }
+  }, [customer?.id]); // Only update when customer ID changes
+
+  // Handle input change with debounced auto-save
+  const handleNeedsChange = (field: string, value: string) => {
+    // Update local form state immediately for UI responsiveness
+    setNeedsForm(prev => ({ ...prev, [field]: value }));
+    
+    // Clear existing timeout
+    if (needsSaveTimeout) {
+      clearTimeout(needsSaveTimeout);
+    }
+    
+    // Set new timeout for debounced save (800ms)
+    const timeout = setTimeout(() => {
+      if (customer?.customerId) {
+        handleNeedsSave(field, value);
+      }
+    }, 800);
+    
+    setNeedsSaveTimeout(timeout);
+  };
+
+  // Save individual field to API
+  const handleNeedsSave = async (field: string, value: string) => {
+    if (!customer?.customerId) return;
+    
+    try {
+      setNeedsSaving(true);
+      await put(`/crm/customers/${customer.customerId}`, { [field]: value });
+      // Don't refetch - local state is already updated
+    } catch (error: any) {
+      console.error('Failed to save needs:', error);
+      showError('Lỗi', 'Không thể lưu: ' + (error.message || 'Lỗi không xác định'));
+    } finally {
+      setNeedsSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && customerId) {
@@ -132,21 +203,21 @@ export default function CrmCustomerDetailPage() {
   };
 
   const fetchRelatedData = async () => {
-    if (!customer?.customerId) return;
+    if (!customer?.id) return;
     
     try {
       setRelatedLoading(true);
       
-      // Fetch projects/orders for this customer
-      const ordersData = await get<any[]>(`/projects?customerId=${customer.customerId}`);
+      // Fetch projects/orders for this customer (use customer.id - the actual Customer ID, not CRM ID)
+      const ordersData = await get<any[]>(`/projects?customerId=${customer.id}`);
       setOrders((ordersData || []).slice(0, 5));
       
       // Fetch income receipts (transactions) for projects of this customer
-      const incomeData = await get<any[]>(`/transactions?type=INCOME&customerId=${customer.customerId}&take=5&orderBy=desc`);
+      const incomeData = await get<any[]>(`/transactions?type=INCOME&customerId=${customer.id}&take=5&orderBy=desc`);
       setIncomeReceipts(incomeData || []);
       
       // Fetch expense receipts
-      const expenseData = await get<any[]>(`/transactions?type=EXPENSE&customerId=${customer.customerId}&take=5&orderBy=desc`);
+      const expenseData = await get<any[]>(`/transactions?type=EXPENSE&customerId=${customer.id}&take=5&orderBy=desc`);
       setExpenseReceipts(expenseData || []);
     } catch (error: any) {
       console.error('Failed to fetch related data:', error);
@@ -155,18 +226,43 @@ export default function CrmCustomerDetailPage() {
     }
   };
 
+  // Fetch KPI data (total amount, paid, debt)
+  const fetchKpiData = async () => {
+    if (!customer?.id) return;
+    
+    try {
+      setKpiLoading(true);
+      
+      // Use optimized KPI endpoint
+      const kpiData = await get<{ totalAmount: number; paidAmount: number; debtAmount: number }>(
+        `/crm/customers/${customer.id}/kpi`
+      );
+      
+      setKpiData({
+        totalAmount: kpiData.totalAmount || 0,
+        paidAmount: kpiData.paidAmount || 0,
+        debtAmount: kpiData.debtAmount || 0,
+      });
+    } catch (error: any) {
+      console.error('Failed to fetch KPI data:', error);
+    } finally {
+      setKpiLoading(false);
+    }
+  };
+
   // Fetch related data when customer is loaded and tab is info
   useEffect(() => {
-    if (customer?.customerId && activeTab === 'info') {
+    if (customer?.customerId && activeTab === 'general') {
       fetchRelatedData();
+      fetchKpiData();
     }
   }, [activeTab, customer?.customerId]);
 
   const handleStageChange = async (newStage: CrmStage) => {
-    if (!customer) return;
+    if (!customer?.customerId) return;
     try {
       setSaving(true);
-      await put(`/crm/customers/${customerId}`, { stage: newStage });
+      await put(`/crm/customers/${customer.customerId}`, { stage: newStage });
       showSuccess('Thành công', 'Đã cập nhật trạng thái');
       fetchCustomer();
     } catch (error: any) {
@@ -192,7 +288,8 @@ export default function CrmCustomerDetailPage() {
 
     try {
       setSaving(true);
-      await crmService.createActivity(customerId as string, {
+      if (!customer?.customerId) return;
+      await crmService.createActivity(customer.customerId, {
         type: activityForm.type,
         outcome: activityForm.outcome,
         note: activityForm.note || undefined,
@@ -234,9 +331,11 @@ export default function CrmCustomerDetailPage() {
   };
 
   const handleBriefUpdate = async (field: string, value: string) => {
+    if (!customer?.customerId) return;
     try {
       setSaving(true);
-      await put(`/crm/customers/${customerId}`, { [field]: value });
+      await put(`/crm/customers/${customer.customerId}`, { [field]: value });
+      showSuccess('Thành công', 'Đã lưu thông tin');
       fetchCustomer();
     } catch (error: any) {
       showError('Lỗi', error.message || 'Không thể cập nhật');
@@ -353,6 +452,9 @@ export default function CrmCustomerDetailPage() {
     ? SOURCE_LABELS[customer.customer.sourceChannel] || customer.customer.sourceChannel 
     : null;
   const filteredActivities = getFilteredActivities();
+  
+  // Check if customer has needs data
+  const hasNeedsData = !!(customer.area || customer.layout || customer.style || customer.architectureType || customer.briefNote);
 
   return (
     <div>
@@ -466,20 +568,137 @@ export default function CrmCustomerDetailPage() {
               )}
             </div>
           </div>
+
+          {/* KPI Cards - Financial Overview */}
+          <div className="mt-4 pt-4 border-t">
+            <div className="grid grid-cols-3 gap-4">
+              {/* Tổng tiền */}
+              <div className="bg-blue-50 rounded-lg p-3 text-center">
+                {kpiLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-blue-200 rounded w-16 mx-auto mb-1"></div>
+                    <div className="h-6 bg-blue-200 rounded w-24 mx-auto"></div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-blue-600 font-medium">Tổng tiền</p>
+                    <p className="text-lg font-bold text-blue-700">
+                      {kpiData.totalAmount.toLocaleString('vi-VN')}đ
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Đã thanh toán */}
+              <div className="bg-green-50 rounded-lg p-3 text-center">
+                {kpiLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-green-200 rounded w-20 mx-auto mb-1"></div>
+                    <div className="h-6 bg-green-200 rounded w-24 mx-auto"></div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-green-600 font-medium">Đã thanh toán</p>
+                    <p className="text-lg font-bold text-green-700">
+                      {kpiData.paidAmount.toLocaleString('vi-VN')}đ
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Công nợ */}
+              <div className="bg-red-50 rounded-lg p-3 text-center">
+                {kpiLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-red-200 rounded w-16 mx-auto mb-1"></div>
+                    <div className="h-6 bg-red-200 rounded w-24 mx-auto"></div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-red-600 font-medium">Công nợ</p>
+                    <p className="text-lg font-bold text-red-700">
+                      {kpiData.debtAmount.toLocaleString('vi-VN')}đ
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="info">Thông tin</TabsTrigger>
-          <TabsTrigger value="brief">Nhu cầu</TabsTrigger>
+          <TabsTrigger value="general">Thông tin chung</TabsTrigger>
           <TabsTrigger value="care-log">Nhật ký chăm sóc</TabsTrigger>
         </TabsList>
 
-        {/* Tab: Thông tin */}
-        <TabsContent value="info">
+        {/* Tab: Thông tin chung */}
+        <TabsContent value="general">
           <div className="space-y-6">
+            {/* Nhu cầu / Mong muốn của khách */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    Nhu cầu / Mong muốn của khách
+                  </CardTitle>
+                  <Button 
+                    variant={hasNeedsData ? "outline" : "default"} 
+                    size="sm"
+                    onClick={() => setShowNeedsModal(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    {hasNeedsData ? 'Cập nhật nhu cầu' : 'Tạo nhu cầu'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {hasNeedsData ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {customer.area && (
+                        <div>
+                          <span className="text-sm text-gray-500">Diện tích:</span>
+                          <p className="font-medium">{customer.area} m²</p>
+                        </div>
+                      )}
+                      {customer.layout && (
+                        <div>
+                          <span className="text-sm text-gray-500">Mặt bằng/Không gian:</span>
+                          <p className="font-medium">{customer.layout}</p>
+                        </div>
+                      )}
+                      {customer.style && (
+                        <div>
+                          <span className="text-sm text-gray-500">Phong cách:</span>
+                          <p className="font-medium">{customer.style}</p>
+                        </div>
+                      )}
+                      {customer.architectureType && (
+                        <div>
+                          <span className="text-sm text-gray-500">Kiến trúc nhà:</span>
+                          <p className="font-medium">{customer.architectureType}</p>
+                        </div>
+                      )}
+                    </div>
+                    {customer.briefNote && (
+                      <div className="pt-2 border-t">
+                        <span className="text-sm text-gray-500">Ghi chú thêm:</span>
+                        <p className="text-sm mt-1">{customer.briefNote}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    Chưa có thông tin nhu cầu. Bấm "Tạo nhu cầu" để nhập thông tin.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Orders Section */}
             <Card>
               <CardHeader className="pb-3">
@@ -488,7 +707,7 @@ export default function CrmCustomerDetailPage() {
                     <FileText className="h-4 w-4" />
                     Đơn hàng ({orders.length})
                   </CardTitle>
-                  <Link href={`/orders?customerId=${customer.customerId}`}>
+                  <Link href={`/orders?customerId=${customer.id}`}>
                     <Button variant="outline" size="sm">
                       <Eye className="h-3 w-3 mr-1" />
                       Xem tất cả
@@ -617,63 +836,6 @@ export default function CrmCustomerDetailPage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Tab: Nhu cầu */}
-        <TabsContent value="brief">
-          <Card>
-            <CardHeader>
-              <CardTitle>Nhu cầu khách hàng</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-gray-500">Diện tích (m²)</Label>
-                <Input
-                  value={customer.area || ''}
-                  onBlur={(e) => handleBriefUpdate('area', e.target.value)}
-                  placeholder="Nhập diện tích..."
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-500">Mặt bằng / Không gian</Label>
-                <Input
-                  value={customer.layout || ''}
-                  onBlur={(e) => handleBriefUpdate('layout', e.target.value)}
-                  placeholder="Nhập mặt bằng..."
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-500">Phong cách</Label>
-                <Input
-                  value={customer.style || ''}
-                  onBlur={(e) => handleBriefUpdate('style', e.target.value)}
-                  placeholder="Nhập phong cách..."
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-500">Kiến trúc nhà</Label>
-                <Input
-                  value={customer.architectureType || ''}
-                  onBlur={(e) => handleBriefUpdate('architectureType', e.target.value)}
-                  placeholder="Nhập kiểu kiến trúc..."
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-500">Ghi chú thêm</Label>
-                <textarea
-                  className="w-full px-3 py-2 border rounded-md mt-1"
-                  rows={4}
-                  value={customer.briefNote || ''}
-                  onBlur={(e) => handleBriefUpdate('briefNote', e.target.value)}
-                  placeholder="Ghi chú về nhu cầu khách hàng..."
-                />
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Tab: Nhật ký chăm sóc (MERGED) */}
@@ -901,6 +1063,111 @@ export default function CrmCustomerDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modal: Nhu cầu / Mong muốn */}
+      {showNeedsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">
+                {hasNeedsData ? 'Cập nhật nhu cầu' : 'Tạo nhu cầu'}
+              </h2>
+              <Button variant="ghost" size="sm" onClick={() => setShowNeedsModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-4 space-y-4">
+              {/* Diện tích */}
+              <div>
+                <Label className="block text-sm font-medium mb-1">Diện tích (m²)</Label>
+                <Input
+                  type="number"
+                  value={needsForm.area}
+                  onChange={(e) => setNeedsForm({ ...needsForm, area: e.target.value })}
+                  placeholder="Nhập diện tích..."
+                />
+              </div>
+
+              {/* Mặt bằng/Không gian */}
+              <div>
+                <Label className="block text-sm font-medium mb-1">Mặt bằng / Không gian</Label>
+                <Input
+                  value={needsForm.layout}
+                  onChange={(e) => setNeedsForm({ ...needsForm, layout: e.target.value })}
+                  placeholder="Nhập mặt bằng hoặc không gian..."
+                />
+              </div>
+
+              {/* Phong cách */}
+              <div>
+                <Label className="block text-sm font-medium mb-1">Phong cách</Label>
+                <Input
+                  value={needsForm.style}
+                  onChange={(e) => setNeedsForm({ ...needsForm, style: e.target.value })}
+                  placeholder="Nhập phong cách..."
+                />
+              </div>
+
+              {/* Kiến trúc nhà */}
+              <div>
+                <Label className="block text-sm font-medium mb-1">Kiến trúc nhà</Label>
+                <Input
+                  value={needsForm.architectureType}
+                  onChange={(e) => setNeedsForm({ ...needsForm, architectureType: e.target.value })}
+                  placeholder="Nhập kiểu kiến trúc..."
+                />
+              </div>
+
+              {/* Ghi chú thêm */}
+              <div>
+                <Label className="block text-sm font-medium mb-1">Ghi chú thêm</Label>
+                <textarea
+                  className="w-full px-3 py-2 border rounded-md text-sm"
+                  rows={4}
+                  value={needsForm.briefNote}
+                  onChange={(e) => setNeedsForm({ ...needsForm, briefNote: e.target.value })}
+                  placeholder="Ghi chú về nhu cầu khách hàng..."
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-2 p-4 border-t">
+              <Button variant="outline" onClick={() => setShowNeedsModal(false)}>
+                Hủy
+              </Button>
+              <Button 
+                onClick={async () => {
+                  try {
+                    setNeedsSaving(true);
+                    await put(`/crm/customers/${customer.customerId}`, {
+                      area: needsForm.area || null,
+                      layout: needsForm.layout || null,
+                      style: needsForm.style || null,
+                      architectureType: needsForm.architectureType || null,
+                      briefNote: needsForm.briefNote || null,
+                    });
+                    showSuccess('Thành công', 'Đã lưu nhu cầu khách hàng');
+                    setShowNeedsModal(false);
+                    fetchCustomer();
+                  } catch (error: any) {
+                    console.error('Failed to save needs:', error);
+                    showError('Lỗi', 'Không thể lưu nhu cầu');
+                  } finally {
+                    setNeedsSaving(false);
+                  }
+                }} 
+                disabled={needsSaving}
+              >
+                {needsSaving ? 'Đang lưu...' : 'Lưu'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

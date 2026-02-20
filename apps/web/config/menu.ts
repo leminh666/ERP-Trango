@@ -16,7 +16,6 @@ import {
   Users as Users2,
   Store,
   UserCheck,
-  CalendarDays,
   TrendingUp,
 } from 'lucide-react';
 import { UserRoleType } from '@tran-go-hoang-gia/shared';
@@ -53,11 +52,6 @@ export const menuConfig: MenuGroup[] = [
         label: 'Khách hàng',
         icon: UserCheck,
         href: '/crm/customers',
-      },
-      {
-        label: 'Lịch hẹn',
-        icon: CalendarDays,
-        href: '/crm/schedule',
       },
       {
         label: 'Báo cáo Sale',
@@ -120,16 +114,6 @@ export const menuConfig: MenuGroup[] = [
         label: 'Ví / Tài khoản',
         icon: Wallet,
         href: '/fund/wallets',
-      },
-      {
-        label: 'Chuyển tiền',
-        icon: Wallet,
-        href: '/fund/transfers',
-      },
-      {
-        label: 'Điều chỉnh',
-        icon: Settings,
-        href: '/fund/adjustments',
       },
       {
         label: 'Dòng tiền',

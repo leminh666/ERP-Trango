@@ -56,13 +56,30 @@ export class WalletsService {
     // Calculate balance for each wallet from transactions
     const walletsWithBalance = await Promise.all(
       wallets.map(async (wallet) => {
-        // Calculate balance: INCOME - EXPENSE
-        const transactions = await this.prisma.transaction.findMany({
+        // Calculate balance: INCOME - EXPENSE + TRANSFER_IN - TRANSFER_OUT
+        // For TRANSFER type:
+        // - walletId (source wallet): acts as EXPENSE (money goes out)
+        // - walletToId (destination wallet): acts as INCOME (money comes in)
+        
+        // Get all transactions where this wallet is the source
+        const sourceTransactions = await this.prisma.transaction.findMany({
           where: {
             walletId: wallet.id,
             deletedAt: null,
-            // Only count non-transfer transactions for balance
-            type: { in: ['INCOME', 'EXPENSE'] },
+            type: { in: ['INCOME', 'EXPENSE', 'TRANSFER'] },
+          },
+          select: {
+            type: true,
+            amount: true,
+          },
+        });
+
+        // Get all transactions where this wallet is the destination (walletToId)
+        const destTransactions = await this.prisma.transaction.findMany({
+          where: {
+            walletToId: wallet.id,
+            deletedAt: null,
+            type: 'TRANSFER',
           },
           select: {
             type: true,
@@ -71,11 +88,20 @@ export class WalletsService {
         });
 
         let balance = 0;
-        for (const tx of transactions) {
+        
+        // Process source transactions (money going OUT)
+        for (const tx of sourceTransactions) {
           if (tx.type === 'INCOME') {
             balance += Number(tx.amount || 0);
-          } else if (tx.type === 'EXPENSE') {
+          } else if (tx.type === 'EXPENSE' || tx.type === 'TRANSFER') {
             balance -= Number(tx.amount || 0);
+          }
+        }
+        
+        // Process destination transactions (money coming IN)
+        for (const tx of destTransactions) {
+          if (tx.type === 'TRANSFER') {
+            balance += Number(tx.amount || 0);
           }
         }
 
@@ -380,29 +406,79 @@ export class WalletsService {
     const startDate = from || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const endDate = to || new Date();
 
-    // Calculate total income
-    const incomeTotalResult = await this.prisma.transaction.aggregate({
+    // Calculate total income (INCOME transactions + TRANSFER_IN + ADJUSTMENT_INCREASE to this wallet)
+    const incomeFromIncome = await this.prisma.transaction.aggregate({
       where: {
         walletId,
         type: 'INCOME',
-        deletedAt: null, // AUDIT FIX: Exclude soft-deleted records
+        deletedAt: null,
         date: { gte: startDate, lte: endDate },
       },
       _sum: { amount: true },
     });
-    const incomeTotal = Number(incomeTotalResult._sum.amount || 0);
+    
+    const incomeFromTransfer = await this.prisma.transaction.aggregate({
+      where: {
+        walletToId: walletId,
+        type: 'TRANSFER',
+        deletedAt: null,
+        date: { gte: startDate, lte: endDate },
+      },
+      _sum: { amount: true },
+    });
+    
+    // Adjustments that increase balance (positive amount)
+    const adjustmentsIncome = await this.prisma.walletAdjustment.aggregate({
+      where: {
+        walletId,
+        amount: { gt: 0 },
+        deletedAt: null,
+        date: { gte: startDate, lte: endDate },
+      },
+      _sum: { amount: true },
+    });
+    
+    const incomeTotal = 
+      Number(incomeFromIncome._sum.amount || 0) + 
+      Number(incomeFromTransfer._sum.amount || 0) +
+      Number(adjustmentsIncome._sum.amount || 0);
 
-    // Calculate total expense
-    const expenseTotalResult = await this.prisma.transaction.aggregate({
+    // Calculate total expense (EXPENSE transactions + TRANSFER_OUT + ADJUSTMENT_DECREASE from this wallet)
+    const expenseFromExpense = await this.prisma.transaction.aggregate({
       where: {
         walletId,
         type: 'EXPENSE',
-        deletedAt: null, // AUDIT FIX: Exclude soft-deleted records
+        deletedAt: null,
         date: { gte: startDate, lte: endDate },
       },
       _sum: { amount: true },
     });
-    const expenseTotal = Number(expenseTotalResult._sum.amount || 0);
+    
+    const expenseFromTransfer = await this.prisma.transaction.aggregate({
+      where: {
+        walletId,
+        type: 'TRANSFER',
+        deletedAt: null,
+        date: { gte: startDate, lte: endDate },
+      },
+      _sum: { amount: true },
+    });
+    
+    // Adjustments that decrease balance (negative amount)
+    const adjustmentsExpense = await this.prisma.walletAdjustment.aggregate({
+      where: {
+        walletId,
+        amount: { lt: 0 },
+        deletedAt: null,
+        date: { gte: startDate, lte: endDate },
+      },
+      _sum: { amount: true },
+    });
+    
+    const expenseTotal = 
+      Number(expenseFromExpense._sum.amount || 0) + 
+      Number(expenseFromTransfer._sum.amount || 0) +
+      Math.abs(Number(adjustmentsExpense._sum.amount || 0));
 
     // Calculate adjustments total within the period
     const adjustmentsResult = await this.prisma.walletAdjustment.aggregate({
@@ -415,8 +491,8 @@ export class WalletsService {
     });
     const adjustmentsTotal = Number(adjustmentsResult._sum.amount || 0);
 
-    // Net = income - expense + adjustments (includes opening balance)
-    const net = incomeTotal - expenseTotal + adjustmentsTotal;
+    // Net = income - expense (adjustments already included in income/expense totals)
+    const net = incomeTotal - expenseTotal;
 
     // Income by category
     const incomeByCategory = await this.prisma.transaction.groupBy({
@@ -456,17 +532,17 @@ export class WalletsService {
       where: { id: { in: expenseCategoryIds } },
     });
 
-    // Recent transactions (top 50 income/expense)
+    // Recent transactions (top 50 income/expense/transfer)
     const recentTransactions = await this.prisma.transaction.findMany({
       where: {
         walletId,
-        type: { in: ['INCOME', 'EXPENSE'] },
+        type: { in: ['INCOME', 'EXPENSE', 'TRANSFER'] },
         deletedAt: null,
         date: { gte: startDate, lte: endDate },
       },
       orderBy: { date: 'desc' },
       take: 50,
-      include: { incomeCategory: true, expenseCategory: true, project: true },
+      include: { incomeCategory: true, expenseCategory: true, project: true, wallet: true, walletTo: true },
     });
 
     return {

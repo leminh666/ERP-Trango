@@ -142,6 +142,15 @@ export class CrmController {
     );
   }
 
+  @Get('customers/:customerId/kpi')
+  @ApiOperation({ summary: 'Lấy KPI tài chính của khách hàng (theo Customer ID)' })
+  async getCustomerKpi(
+    @Param('customerId') customerId: string,
+  ) {
+    // customerId here is the actual Customer ID (from Customer table), not CRM ID
+    return this.crmService.getCustomerKpi(customerId);
+  }
+
   // ========== SCHEDULE ==========
 
   @Get('schedule')

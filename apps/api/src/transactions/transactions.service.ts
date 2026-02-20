@@ -118,8 +118,21 @@ export class TransactionsService {
       if (!data.wallet?.connect?.id) {
         throw new BadRequestException('Phiếu chi bắt buộc chọn Ví');
       }
-      if (!data.expenseCategory?.connect?.id) {
+      
+      // Check if this is an ads expense
+      const isAds = data.isAds === true;
+      
+      // If not ads, require expense category
+      if (!isAds && !data.expenseCategory?.connect?.id) {
         throw new BadRequestException('Phiếu chi bắt buộc chọn Danh mục chi');
+      }
+      // If ads, expense category is optional (not allowed)
+      if (isAds && data.expenseCategory?.connect?.id) {
+        throw new BadRequestException('Phiếu chi quảng cáo không được chọn Danh mục chi');
+      }
+      // If ads, require adsPlatform
+      if (isAds && !data.adsPlatform) {
+        throw new BadRequestException('Phiếu chi quảng cáo bắt buộc chọn Nền tảng');
       }
       if (data.incomeCategory?.connect?.id) {
         throw new BadRequestException('Phiếu chi không được chọn Danh mục thu');
@@ -129,10 +142,11 @@ export class TransactionsService {
       const projectId = (data.project?.connect as any)?.id;
       const hasProjectId = !!projectId && projectId.trim() !== '';
       
-      if (!isCommonCost && !hasProjectId) {
+      // Ads expenses don't require project or common cost - they are standalone
+      if (!isAds && !isCommonCost && !hasProjectId) {
         throw new BadRequestException('Phiếu chi phải gán đơn hàng hoặc chọn Chi phí chung');
       }
-      if (isCommonCost && hasProjectId) {
+      if (!isAds && isCommonCost && hasProjectId) {
         throw new BadRequestException('Chi phí chung không được gán đơn hàng');
       }
     }
@@ -147,6 +161,38 @@ export class TransactionsService {
     const lastCode = lastTx ? parseInt(lastTx.code.replace(prefix, '')) : 0;
     const newCode = `${prefix}${String(lastCode + 1).padStart(4, '0')}`;
 
+    // If isAds=true, auto-assign "Marketing" category
+    let expenseCategory = data.expenseCategory;
+    if (data.isAds === true && !data.expenseCategory?.connect?.id) {
+      // Find or create "Marketing" category
+      let marketingCategory = await this.prisma.expenseCategory.findFirst({
+        where: { 
+          name: { contains: 'Marketing', mode: 'insensitive' },
+          deletedAt: null,
+        },
+      });
+      
+      if (!marketingCategory) {
+        // Get max code to generate new one
+        const lastCategory = await this.prisma.expenseCategory.findFirst({
+          orderBy: { code: 'desc' },
+        });
+        const lastCode = lastCategory ? parseInt(lastCategory.code.replace(/[^0-9]/g, '')) : 0;
+        const newCode = `EXP${String(lastCode + 1).padStart(4, '0')}`;
+        
+        // Create Marketing category if not exists
+        marketingCategory = await this.prisma.expenseCategory.create({
+          data: {
+            code: newCode,
+            name: 'Marketing',
+            isActive: true,
+          },
+        });
+      }
+      
+      expenseCategory = { connect: { id: marketingCategory.id } };
+    }
+
     // Construct data object explicitly to avoid issues with spread operator
     const createData: any = {
       type: data.type,
@@ -156,9 +202,11 @@ export class TransactionsService {
       createdByUserId: userId,
       note: data.note || null,
       isCommonCost: data.isCommonCost === true,
+      isAds: data.isAds === true,
+      adsPlatform: data.adsPlatform || null,
       wallet: data.wallet,
       incomeCategory: data.incomeCategory,
-      expenseCategory: data.expenseCategory,
+      expenseCategory: expenseCategory,
       project: data.project,
       workshopId: data.workshopId,
       workshopJob: data.workshopJob,

@@ -75,6 +75,8 @@ export class TransactionsController {
       expenseCategoryId?: string;
       projectId?: string;
       isCommonCost?: boolean;
+      isAds?: boolean;
+      adsPlatform?: string;
       note?: string;
     },
     @Request() req?: { user: { id: string; email?: string } },
@@ -95,6 +97,8 @@ export class TransactionsController {
       expenseCategoryId?: string;
       projectId?: string;
       isCommonCost?: boolean;
+      isAds?: boolean;
+      adsPlatform?: string;
       note?: string;
     },
     @Request() req?: { user: { id: string; email?: string } },

@@ -14,7 +14,7 @@ export function Sidebar() {
   const { user } = useAuth();
   const userRole = user?.role;
 
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Báo cáo', 'Danh mục']));
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Báo cáo', 'Danh mục', 'Sổ quỹ']));
 
   // Groups that are collapsed by default (large groups EXCEPT Đơn hàng which is frequently used)
   const largeGroups = ['Sổ quỹ', 'Danh mục'];

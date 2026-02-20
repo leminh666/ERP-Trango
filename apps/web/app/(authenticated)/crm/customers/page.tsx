@@ -4,17 +4,17 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { 
-  Search, Phone, MapPin, Calendar, UserCheck, 
-  Plus, ChevronRight, AlertCircle, Filter
+  Search, Phone, Calendar, UserCheck, 
+  Plus, ChevronRight, Filter
 } from 'lucide-react';
 import { crmService, CrmCustomerFilters } from '@/src/services/crm.service';
 import { CrmCustomer, CrmStage, SourceChannel } from '@tran-go-hoang-gia/shared';
 import { useToast } from '@/components/toast-provider';
+import { CreateCustomerModal } from '@/src/components/crm/CreateCustomerModal';
 
 // Stage colors
 const STAGE_COLORS: Record<CrmStage, { bg: string; text: string; label: string }> = {
@@ -41,13 +41,16 @@ const SOURCE_LABELS: Record<SourceChannel, string> = {
 export default function CrmCustomersPage() {
   const { token, user } = useAuth();
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showError } = useToast();
   
   const [customers, setCustomers] = useState<CrmCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState<CrmStage | ''>('');
   const [showOverdueOnly, setShowOverdueOnly] = useState(false);
+
+  // Modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const isAdmin = user?.role === 'ADMIN';
 
@@ -104,7 +107,7 @@ export default function CrmCustomersPage() {
         title="CRM - CSKH"
         description="Quản lý khách hàng và chăm sóc"
         action={
-          <Button onClick={() => router.push('/crm/customers/new')}>
+          <Button onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Tạo khách hàng
           </Button>
@@ -162,7 +165,14 @@ export default function CrmCustomersPage() {
         <div className="grid gap-4">
           {customers.map((item) => {
             const stageColor = STAGE_COLORS[item.stage] || STAGE_COLORS[CrmStage.LEAD];
-            const followUpInfo = getNextFollowUpText(item.customer?.nextFollowUpAt || null);
+            
+            // Get next follow-up from CrmActivity (not from Customer)
+            const nextActivity = item.activities && item.activities.length > 0 
+              ? item.activities[0] 
+              : null;
+            const followUpInfo = nextActivity?.nextFollowUpAt 
+              ? getNextFollowUpText(nextActivity.nextFollowUpAt as unknown as string)
+              : null;
             const sourceLabel = item.customer?.sourceChannel 
               ? SOURCE_LABELS[item.customer.sourceChannel] || item.customer.sourceChannel 
               : null;
@@ -207,7 +217,7 @@ export default function CrmCustomersPage() {
                         {/* Brief info */}
                         {(item.area || item.style) && (
                           <div className="text-sm text-gray-500 mt-1">
-                            {item.area && <span>Diện tích: {item.area}</span>}
+                            {item.area && <span>Diện tích: {item.area}m²</span>}
                             {item.area && item.style && <span> | </span>}
                             {item.style && <span>Style: {item.style}</span>}
                           </div>
@@ -217,13 +227,22 @@ export default function CrmCustomersPage() {
 
                     <div className="flex items-center gap-2 shrink-0">
                       {/* Follow-up countdown */}
-                      {followUpInfo && (
+                      {followUpInfo ? (
                         <div className={`text-sm ${followUpInfo.isOverdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
                             {followUpInfo.text}
+                            {nextActivity?.nextFollowUpAt && (
+                              <span className="text-xs ml-1">
+                                ({new Date(nextActivity.nextFollowUpAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})
+                              </span>
+                            )}
                           </div>
                         </div>
+                      ) : (
+                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded">
+                          Chưa hẹn
+                        </span>
                       )}
                       
                       <ChevronRight className="h-5 w-5 text-gray-400" />
@@ -245,7 +264,15 @@ export default function CrmCustomersPage() {
           })}
         </div>
       )}
+
+      {/* Create Customer Modal */}
+      <CreateCustomerModal 
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={fetchCustomers}
+        userRole={user?.role}
+        userId={user?.id}
+      />
     </div>
   );
 }
-

@@ -26,6 +26,8 @@ import {
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -191,25 +193,19 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Transactions Count */}
+        {/* Customer Debt */}
         <Card>
           <CardHeader className="pb-2 px-4 pt-4">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <span className="truncate">Số giao dịch</span>
+              <Users className="h-4 w-4" />
+              <span className="truncate">Công nợ KH</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="text-xl sm:text-2xl font-bold text-gray-700 truncate">
-              {data?.series?.reduce(
-                (sum, s) =>
-                  sum +
-                  (s.revenue > 0 ? 1 : 0) +
-                  (s.expense > 0 ? 1 : 0),
-                0
-              ) || 0}
+            <div className="text-xl sm:text-2xl font-bold text-orange-600 truncate">
+              {formatCurrency(data?.customerDebtTotal || 0)}
             </div>
-            <p className="text-xs text-gray-500 mt-1 truncate">Giao dịch trong kỳ</p>
+            <p className="text-xs text-orange-600 mt-1 truncate">Tổng công nợ khách hàng</p>
           </CardContent>
         </Card>
       </div>
@@ -309,9 +305,58 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
+      {/* Ads Expense Chart */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-purple-600" />
+            Chi quảng cáo theo nền tảng
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="h-[280px]">
+          {loading ? (
+            <div className="h-[228px] flex items-center justify-center">
+              Đang tải dữ liệu...
+            </div>
+          ) : !data?.adsByPlatform || data.adsByPlatform.length === 0 ? (
+            <div className="h-[228px] flex flex-col items-center justify-center text-gray-500">
+              <TrendingUp className="h-12 w-12 mb-2 text-gray-300" />
+              <p>Chưa có dữ liệu chi quảng cáo</p>
+              <p className="text-xs mt-1">Chi quảng cáo sẽ hiển thị ở đây</p>
+            </div>
+          ) : (
+            <SafeResponsiveContainer loading={false} minHeight={228} className="h-[228px]">
+              <div style={{ width: '100%', height: 228 }}>
+                <BarChart data={data.adsByPlatform} style={{ width: '100%', height: '100%' }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="platform"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickFormatter={formatCompactCurrency}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip
+                    formatter={(value: number | undefined) => formatCurrency(value || 0)}
+                  />
+                  <Bar
+                    dataKey="amount"
+                    name="Chi quảng cáo"
+                    fill="#9333ea"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </div>
+            </SafeResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Debt Tables */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* AR - Customer Debts */}
+        {/* Customer Debts Table */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -320,9 +365,9 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {data?.arTop && data.arTop.length > 0 ? (
+            {data?.customerDebts && data.customerDebts.length > 0 ? (
               <div className="space-y-3">
-                {data.arTop.map((customer) => (
+                {data.customerDebts.map((customer) => (
                   <div
                     key={customer.id}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded"
@@ -334,19 +379,8 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <span
-                        className={`inline-block px-2 py-0.5 text-xs rounded ${
-                          customer.status === 'NEW'
-                            ? 'bg-blue-100 text-blue-700'
-                            : customer.status === 'CONTACTED'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {customer.status}
-                      </span>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {customer.followUpCount} lần liên hệ
+                      <p className="font-semibold text-orange-600">
+                        {formatCurrency(customer.debt)}
                       </p>
                     </div>
                   </div>
@@ -360,7 +394,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* AP - Workshop Debts */}
+        {/* Workshop Debts */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -369,9 +403,9 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {data?.apWorkshopTop && data.apWorkshopTop.length > 0 ? (
+            {data?.workshopDebts && data.workshopDebts.length > 0 ? (
               <div className="space-y-3">
-                {data.apWorkshopTop.map((workshop) => (
+                {data.workshopDebts.map((workshop) => (
                   <div
                     key={workshop.id}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded"
@@ -382,9 +416,11 @@ export default function DashboardPage() {
                         {workshop.phone || 'Chưa có SĐT'}
                       </p>
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {workshop.note || 'Không có ghi chú'}
-                    </span>
+                    <div className="text-right">
+                      <p className="font-semibold text-orange-600">
+                        {formatCurrency(workshop.debt)}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -396,7 +432,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* AP - Supplier Debts */}
+        {/* Supplier Debts */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -405,9 +441,9 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {data?.apSupplierTop && data.apSupplierTop.length > 0 ? (
+            {data?.supplierDebts && data.supplierDebts.length > 0 ? (
               <div className="space-y-3">
-                {data.apSupplierTop.map((supplier) => (
+                {data.supplierDebts.map((supplier) => (
                   <div
                     key={supplier.id}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded"
@@ -418,9 +454,11 @@ export default function DashboardPage() {
                         {supplier.phone || 'Chưa có SĐT'}
                       </p>
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {supplier.note || 'Không có ghi chú'}
-                    </span>
+                    <div className="text-right">
+                      <p className="font-semibold text-orange-600">
+                        {formatCurrency(supplier.debt)}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
