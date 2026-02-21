@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { fetchJson, resolveProductImage, uploadFile } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 import { Product } from '@tran-go-hoang-gia/shared';
+import { useToast } from '@/components/toast-provider';
 
 // Types for the modal
 interface DraftAttributeGroup {
@@ -113,6 +114,7 @@ function AccordionSection({
 
 export function CreateProductModal({ open, onOpenChange, onSuccess }: CreateProductModalProps) {
   const { token } = useAuth();
+  const { showSuccess } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -527,7 +529,7 @@ export function CreateProductModal({ open, onOpenChange, onSuccess }: CreateProd
       console.log('[CreateProduct] Success!');
       onSuccess();
       onOpenChange(false);
-      alert('Tạo sản phẩm thành công!');
+      showSuccess('Tạo sản phẩm thành công');
 
     } catch (err: any) {
       console.error('[CreateProduct] Error:', err);

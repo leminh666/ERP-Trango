@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { apiClient } from '@/lib/api';
+import { apiClient }from '@/lib/api';
+import { useToast } from '@/components/toast-provider';
 
 interface UserItem {
   id: string;
@@ -72,11 +73,11 @@ export default function SettingsUserProfilePage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-
-  const [loading, setLoading] = useState(true);
+  const { showSuccess, showError } = useToast();
   const [user, setUser] = useState<UserItem | null>(null);
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [savingPermissions, setSavingPermissions] = useState(false);
+  const [confirmResetPassword, setConfirmResetPassword] = useState(false);
 
   // Permissions state
   const [permissions, setPermissions] = useState<Record<string, { view: boolean; edit: boolean; delete: boolean }>>({});
@@ -116,14 +117,13 @@ export default function SettingsUserProfilePage() {
   };
 
   const handleResetPassword = async () => {
-    if (!confirm(`Đặt lại mật khẩu của ${user?.name} về '123456'?`)) return;
-
     try {
       await apiClient(`/users/${id}/reset-password`, { method: 'POST' });
-      setBanner({ type: 'success', message: 'Đã reset mật khẩu về 123456' });
-    } catch (error) {
+      setConfirmResetPassword(false);
+      showSuccess('Đã reset mật khẩu về 123456');
+    }catch (error) {
       console.error('Failed to reset password:', error);
-      setBanner({ type: 'error', message: error instanceof Error ? error.message : 'Lỗi' });
+      showError('Lỗi', error instanceof Error ? error.message : 'Có lỗi xảy ra');
     }
   };
 
@@ -273,7 +273,7 @@ export default function SettingsUserProfilePage() {
 
                   <div className="flex gap-2 mt-6 border-t pt-4">
                     <Button onClick={() => router.push('/settings/users')}>Về danh sách</Button>
-                    <Button variant="outline" onClick={handleResetPassword} disabled={user.id === actor?.id}>
+                    <Button variant="outline" onClick={() => setConfirmResetPassword(true)}disabled={user.id === actor?.id}>
                       Reset mật khẩu
                     </Button>
                   </div>
@@ -353,6 +353,24 @@ export default function SettingsUserProfilePage() {
           </Tabs>
         )}
       </div>
+
+      {/* Confirm Reset Password Dialog */}
+      {confirmResetPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>Xác nhận reset mật khẩu?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">Mật khẩu của <strong>{user?.name}</strong> sẽ được đặt lại về <strong>123456</strong>.</p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setConfirmResetPassword(false)}>Hủy</Button>
+                <Button variant="destructive" onClick={handleResetPassword}>Xác nhận</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </AuthGuard>
   );
 }

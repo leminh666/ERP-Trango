@@ -56,6 +56,7 @@ export default function SettingsUsersPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<UserItem | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
@@ -208,10 +209,9 @@ export default function SettingsUsersPage() {
   };
 
   const handleDelete = async (u: UserItem) => {
-    if (!confirm(`Xoá nhân viên ${u.name}?`)) return;
-
     try {
       await apiClient(`/users/${u.id}`, { method: 'DELETE' });
+      setConfirmDeleteUser(null);
       setBanner({ type: 'success', message: 'Đã xoá nhân viên' });
       await fetchUsers();
     } catch (error) {
@@ -377,7 +377,7 @@ export default function SettingsUsersPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleDelete(u)}
+                                onClick={() => setConfirmDeleteUser(u)}
                                 disabled={u.id === user?.id}
                                 className="text-red-600 hover:text-red-700"
                               >
@@ -398,6 +398,24 @@ export default function SettingsUsersPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Confirm Delete Dialog */}
+        {confirmDeleteUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <Card className="w-full max-w-sm">
+              <CardHeader>
+                <CardTitle>Xác nhận xóa?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-4">Bạn có chắc muốn xoá nhân viên <strong>{confirmDeleteUser.name}</strong>?</p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setConfirmDeleteUser(null)}>Hủy</Button>
+                  <Button variant="destructive" onClick={() => handleDelete(confirmDeleteUser)}>Xóa</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Modal */}
         {showModal && (

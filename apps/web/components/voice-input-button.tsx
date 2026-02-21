@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, Square, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/toast-provider';
 
 interface VoiceInputButtonProps {
   mode: 'income' | 'expense';
@@ -11,6 +12,7 @@ interface VoiceInputButtonProps {
 }
 
 export function VoiceInputButton({ mode, onTranscript, className }: VoiceInputButtonProps) {
+  const { showError } = useToast();
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ export function VoiceInputButton({ mode, onTranscript, className }: VoiceInputBu
       } else if (event.error === 'not-allowed') {
         message = 'Quyền truy cập microphone bị từ chối.';
       }
-      alert(message);
+      showError('Lỗi microphone', message);
     };
 
     recognition.onresult = (event: any) => {
@@ -94,7 +96,7 @@ export function VoiceInputButton({ mode, onTranscript, className }: VoiceInputBu
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) {
-      alert('Trình duyệt không hỗ trợ nhận giọng nói. Vui lòng dùng Chrome hoặc Edge.');
+      showError('Không hỗ trợ', 'Trình duyệt không hỗ trợ nhận giọng nói. Vui lòng dùng Chrome hoặc Edge.');
       return;
     }
 
@@ -110,7 +112,7 @@ export function VoiceInputButton({ mode, onTranscript, className }: VoiceInputBu
     } catch (err) {
       console.error('Failed to start recognition:', err);
       setIsLoading(false);
-      alert('Không thể bắt đầu nhận giọng nói.');
+      showError('Lỗi', 'Không thể bắt đầu nhận giọng nói.');
     }
   }, [isListening]);
 

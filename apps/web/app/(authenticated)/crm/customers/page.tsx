@@ -52,6 +52,7 @@ export default function CrmCustomersPage() {
 
   // Modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [confirmDeleteItem, setConfirmDeleteItem] = useState<CrmCustomer | null>(null);
 
   const isAdmin = user?.role === 'ADMIN';
 
@@ -64,12 +65,16 @@ export default function CrmCustomersPage() {
 
   const handleDelete = async (e: React.MouseEvent, item: CrmCustomer) => {
     e.stopPropagation();
-    if (!confirm(`Xóa khách hàng "${item.customer?.name}"? Hành động này không thể hoàn tác.`)) return;
+    setConfirmDeleteItem(item);
+  };
+
+  const doDelete = async (item: CrmCustomer) => {
     try {
       await del(`/customers/${item.customerId}`);
+      setConfirmDeleteItem(null);
       showSuccess('Đã xóa', `Đã xóa khách hàng ${item.customer?.name}`);
       fetchCustomers();
-    } catch (error: any) {
+    }catch (error: any) {
       showError('Lỗi', error.message || 'Không thể xóa khách hàng');
     }
   };
@@ -325,13 +330,27 @@ export default function CrmCustomersPage() {
       )}
 
       {/* Create Customer Modal */}
-      <CreateCustomerModal 
+      <CreateCustomerModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCreated={fetchCustomers}
         userRole={user?.role}
         userId={user?.id}
       />
+
+      {/* Confirm Delete Dialog */}
+      {confirmDeleteItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold mb-2">Xác nhận xóa?</h3>
+            <p className="text-sm text-gray-600 mb-4">Bạn có chắc muốn xóa khách hàng <strong>{confirmDeleteItem.customer?.name}</strong>? Hành động này không thể hoàn tác.</p>
+            <div className="flex justify-end gap-2">
+              <button className="px-4 py-2 text-sm border rounded hover:bg-gray-50" onClick={() => setConfirmDeleteItem(null)}>Hủy</button>
+              <button className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700" onClick={() => doDelete(confirmDeleteItem)}>Xóa</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

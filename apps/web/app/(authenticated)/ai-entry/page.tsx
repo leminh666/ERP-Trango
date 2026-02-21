@@ -12,6 +12,7 @@ import { Wallet, IncomeCategory, ExpenseCategory, Project } from '@tran-go-hoang
 import { AiDraftModal } from '@/components/ai-draft-modal';
 import { buildIncomeCreatePayload, buildExpenseCreatePayload } from '@/lib/transactions';
 import { apiClient, getToken, buildApiUrl } from '@/lib/api';
+import { useToast } from '@/components/toast-provider';
 
 interface DraftData {
   type: 'INCOME' | 'EXPENSE';
@@ -49,6 +50,7 @@ export default function AiEntryPage() {
 
   const [isCreatingDraft, setIsCreatingDraft] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
+  const { showSuccess, showError, showWarning }= useToast();
 
   useEffect(() => {
     if (!authLoading && !token) {
@@ -178,7 +180,7 @@ export default function AiEntryPage() {
   const handleCreateTransaction = async (d: DraftData) => {
     const errs = validateBeforeCreate(d);
     if (errs.length > 0) {
-      alert(`Thiếu thông tin: ${errs.join(', ')}`);
+      showWarning('Thiếu thông tin', errs.join(', '));
       return;
     }
 
@@ -217,11 +219,11 @@ export default function AiEntryPage() {
       setSelectedFile(null);
       setAttachmentUrl(null);
 
-      alert('Tạo phiếu thành công!');
+      showSuccess('Tạo phiếu thành công');
       router.push(d.type === 'INCOME' ? '/cashbook/income' : '/cashbook/expense');
     } catch (error) {
       console.error('Failed to create transaction:', error);
-      alert('Lỗi kết nối server');
+      showError('Lỗi kết nối server');
     }
   };
 

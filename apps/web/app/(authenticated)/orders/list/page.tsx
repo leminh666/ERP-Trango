@@ -20,6 +20,7 @@ import { SkeletonTable } from '@/components/skeleton';
 import { CreateOrderModal } from '@/components/create-order-modal';
 import { EditOrderModal } from '@/components/edit-order-modal';
 import { ResponsiveTable } from '@/components/responsive-table';
+import { useToast }from '@/components/toast-provider';
 
 const STAGES = [
   { value: '', label: 'Tất cả giai đoạn' },
@@ -34,6 +35,7 @@ const STAGES = [
 export default function OrdersListPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { showError } = useToast();
 
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [customers, setCustomers] = useState<Array<{ id: string; name: string }>>([]);
@@ -130,7 +132,7 @@ export default function OrdersListPage() {
       setShowEditModal(true);
     } catch (error) {
       console.error('Failed to fetch order details:', error);
-      alert('Có lỗi khi tải thông tin đơn hàng');
+      showError('Lỗi', 'Có lỗi khi tải thông tin đơn hàng');
     }
   };
 

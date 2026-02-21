@@ -11,12 +11,14 @@ import { Input } from '@/components/ui/input';
 import { Product } from '@tran-go-hoang-gia/shared';
 import { Plus, Search, Edit, Trash2, RotateCcw, AlertCircle, Package, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CreateProductModal } from '@/components/create-product-modal';
-import { EditProductModal } from '@/components/edit-product-modal';
+import { CreateProductModal }from '@/components/create-product-modal';
+import { EditProductModal }from '@/components/edit-product-modal';
+import { useToast }from '@/components/toast-provider';
 
 export default function ProductsPage() {
   const router = useRouter();
   const { token } = useAuth();
+  const { showSuccess, showError, showWarning } = useToast();
   const [items, setItems] = useState<Product[]>([]);
   const [variantCounts, setVariantCounts] = useState<Record<string, number>>({});
   const [attributeCounts, setAttributeCounts] = useState<Record<string, number>>({});
@@ -94,11 +96,11 @@ export default function ProductsPage() {
         token,
       });
       setShowConfirmDelete(null);
-      fetchItems();
-      alert('Xóa thành công!');
-    } catch (error) {
+      setItems(prev => prev.filter(p => p.id !== item.id));
+      showSuccess('Xóa thành công', `Đã xóa sản phẩm "${item.name}"`);
+    } catch (error: any) {
       console.error('Failed to delete:', error);
-      alert('Có lỗi xảy ra');
+      showError('Xóa thất bại', error?.message || 'Có lỗi xảy ra, vui lòng thử lại');
     }
   };
 
@@ -109,10 +111,10 @@ export default function ProductsPage() {
         token,
       });
       fetchItems();
-      alert('Khôi phục thành công!');
-    } catch (error) {
+      showSuccess('Khôi phục thành công');
+    } catch (error: any) {
       console.error('Failed to restore:', error);
-      alert('Có lỗi xảy ra');
+      showError('Khôi phục thất bại', error?.message || 'Có lỗi xảy ra, vui lòng thử lại');
     }
   };
 
@@ -160,11 +162,11 @@ export default function ProductsPage() {
       if (result.url) {
         setFormData((prev: any) => ({ ...prev, imageUrl: result.url }));
       } else {
-        alert(result.error || 'Upload failed');
+        showError('Upload thất bại', result.error || 'Không thể tải lên file');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload failed:', error);
-      alert('Upload thất bại');
+      showError('Upload thất bại', error?.message || 'Có lỗi xảy ra khi tải lên');
     } finally {
       setUploading(false);
     }
@@ -172,15 +174,15 @@ export default function ProductsPage() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      alert('Vui lòng nhập tên sản phẩm');
+      showWarning('Thiếu thông tin', 'Vui lòng nhập tên sản phẩm');
       return;
     }
     if (!formData.unit.trim()) {
-      alert('Vui lòng nhập đơn vị tính');
+      showWarning('Thiếu thông tin', 'Vui lòng nhập đơn vị tính');
       return;
     }
     if (!formData.imageUrl) {
-      alert('Vui lòng tải lên logo sản phẩm');
+      showWarning('Thiếu thông tin', 'Vui lòng tải lên logo sản phẩm');
       return;
     }
 
@@ -207,10 +209,10 @@ export default function ProductsPage() {
       setFormData({ name: '', unit: 'm2', productType: 'CEILING_WOOD', imageUrl: '' });
       setEditingItem(null);
       fetchItems();
-      alert(editingItem ? 'Cập nhật thành công!' : 'Tạo mới thành công!');
-    } catch (error) {
+      showSuccess(editingItem ? 'Cập nhật thành công' : 'Tạo mới thành công');
+    } catch (error: any) {
       console.error('Failed to save:', error);
-      alert('Có lỗi xảy ra');
+      showError('Lưu thất bại', error?.message || 'Có lỗi xảy ra, vui lòng thử lại');
     }
   };
 

@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/select';
 import { apiClient } from '@/lib/api';
 import { Customer } from '@tran-go-hoang-gia/shared';
 import { X } from 'lucide-react';
+import { useToast } from '@/components/toast-provider';
 
 interface EditOrderModalProps {
   order: {
@@ -24,6 +25,7 @@ interface EditOrderModalProps {
 }
 
 export function EditOrderModal({ order, customers, onClose, onSaved }: EditOrderModalProps) {
+  const { showError, showWarning }= useToast();
   const [form, setForm] = useState({
     name: order.name || '',
     customerId: order.customerId || '',
@@ -35,11 +37,11 @@ export function EditOrderModal({ order, customers, onClose, onSaved }: EditOrder
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      alert('Vui lòng nhập tên đơn hàng');
+      showWarning('Thiếu thông tin', 'Vui lòng nhập tên đơn hàng');
       return;
     }
     if (!form.customerId) {
-      alert('Vui lòng chọn khách hàng');
+      showWarning('Thiếu thông tin', 'Vui lòng chọn khách hàng');
       return;
     }
 
@@ -58,7 +60,7 @@ export function EditOrderModal({ order, customers, onClose, onSaved }: EditOrder
       onSaved(updated);
     } catch (error: any) {
       console.error('Failed to update order:', error);
-      alert(error.message || 'Có lỗi xảy ra khi cập nhật đơn hàng');
+      showError('Cập nhật thất bại', error.message || 'Có lỗi xảy ra khi cập nhật đơn hàng');
     } finally {
       setLoading(false);
     }

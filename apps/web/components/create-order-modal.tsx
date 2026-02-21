@@ -10,6 +10,7 @@ import { Product, ProductVariant, Customer } from '@tran-go-hoang-gia/shared';
 import { VisualType } from '@tran-go-hoang-gia/shared';
 import { ProductPicker } from '@/components/product-picker';
 import { Plus, X, Calculator, UserPlus, Package } from 'lucide-react';
+import { useToast }from '@/components/toast-provider';
 
 interface CreateOrderModalProps {
   customers: Array<{ id: string; name: string }>;
@@ -37,6 +38,7 @@ interface NewCustomerData {
 }
 
 export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCreated, lockedCustomerId }: CreateOrderModalProps) {
+  const { showError, showWarning }= useToast();
   const [customerList, setCustomerList] = useState(customers);
   const [form, setForm] = useState({
     name: '',
@@ -252,11 +254,11 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      alert('Vui lòng nhập tên đơn hàng');
+      showWarning('Thiếu thông tin', 'Vui lòng nhập tên đơn hàng');
       return;
     }
     if (!form.customerId) {
-      alert('Vui lòng chọn khách hàng');
+      showWarning('Thiếu thông tin', 'Vui lòng chọn khách hàng');
       return;
     }
 
@@ -294,7 +296,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
       onCreated(project);
     }catch (error: any) {
       console.error('Failed to create order:', error);
-      alert(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+      showError('Tạo đơn hàng thất bại', error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
     }finally {
       setLoading(false);
     }

@@ -12,6 +12,7 @@ import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Trash2, RefreshCw, ArrowLeft, Plus, X } from 'lucide-react';
 import { MoneyInput } from '@/components/common/money-input';
+import { useToast } from '@/components/toast-provider';
 
 interface Wallet {
   id: string;
@@ -34,6 +35,7 @@ export default function TransfersPage() {
   const { user } = useAuth();
   const router = useRouter();
   const isAdmin = user?.role === 'ADMIN';
+  const { showSuccess, showError, showWarning } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
@@ -43,6 +45,7 @@ export default function TransfersPage() {
   const [walletToId, setWalletToId] = useState('');
 
   const [showModal, setShowModal] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     walletId: '',
@@ -84,12 +87,12 @@ export default function TransfersPage() {
 
   const handleCreate = async () => {
     if (!formData.walletId || !formData.walletToId || !formData.amount) {
-      alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+      showWarning('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
     if (formData.walletId === formData.walletToId) {
-      alert('Ví nguồn và ví đích phải khác nhau');
+      showWarning('Không hợp lệ', 'Ví nguồn và ví đích phải khác nhau');
       return;
     }
 
@@ -115,22 +118,24 @@ export default function TransfersPage() {
         note: '',
       });
       fetchTransfers();
+      showSuccess('Chuyển khoản thành công');
     } catch (error: any) {
       console.error('Failed to create transfer:', error);
-      alert(error.message || 'Có lỗi xảy ra');
+      showError('Chuyển khoản thất bại', error.message || 'Có lỗi xảy ra');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa chuyển khoản này?')) return;
-
     try {
       await apiClient(`/transfers/${id}`, { method: 'DELETE' });
+      setConfirmDeleteId(null);
       fetchTransfers();
-    } catch (error) {
+      showSuccess('Xóa thành công');
+    } catch (error: any) {
       console.error('Failed to delete transfer:', error);
+      showError('Xóa thất bại', (error as any)?.message || 'Có lỗi xảy ra');
     }
   };
 
@@ -269,7 +274,7 @@ export default function TransfersPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(transfer.id)}
+                            onClick={() => setConfirmDeleteId(transfer.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -283,6 +288,24 @@ export default function TransfersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Confirm Delete Dialog */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>Xác nhận xóa?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">Bạn có chắc muốn xóa chuyển khoản này?</p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Hủy</Button>
+                <Button variant="destructive" onClick={() => handleDelete(confirmDeleteId)}>Xóa</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Custom Modal */}
       {showModal && (

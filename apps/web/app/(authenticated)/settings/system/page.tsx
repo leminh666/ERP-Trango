@@ -13,6 +13,7 @@ import { Select } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
 import { Loader2, Mic, Save, AlertCircle, CheckCircle } from 'lucide-react';
 import { VoiceTestModal } from './voice-test-modal';
+import { useToast } from '@/components/toast-provider';
 
 interface AiConfig {
   enabled: boolean;
@@ -84,6 +85,7 @@ const LANGUAGES = [
 export default function SystemSettingsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { showSuccess, showError }= useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<'ai' | 'reminders' | 'voice' | 'auth' | null>(null);
   const [settings, setSettings] = useState<SystemSettings>({
@@ -162,10 +164,10 @@ export default function SystemSettingsPage() {
       });
 
       await fetchSettings();
-      alert('Lưu thành công!');
-    } catch (error) {
+      showSuccess('Lưu thành công');
+    } catch (error: any) {
       console.error('Failed to save settings:', error);
-      alert('Lỗi khi lưu cấu hình');
+      showError('Lỗi khi lưu cấu hình', error?.message || 'Vui lòng thử lại');
     } finally {
       setSaving(null);
     }

@@ -12,6 +12,7 @@ import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Trash2, RefreshCw, ArrowLeft, Plus, Minus, X } from 'lucide-react';
 import { MoneyInput } from '@/components/common/money-input';
+import { useToast } from '@/components/toast-provider';
 
 interface Wallet {
   id: string;
@@ -29,9 +30,10 @@ interface Adjustment {
 }
 
 export default function AdjustmentsPage() {
-  const { token, user } = useAuth();
+  const { token, user }= useAuth();
   const router = useRouter();
   const isAdmin = user?.role === 'ADMIN';
+  const { showSuccess, showError, showWarning } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [adjustments, setAdjustments] = useState<Adjustment[]>([]);
@@ -40,6 +42,7 @@ export default function AdjustmentsPage() {
   const [walletId, setWalletId] = useState('');
 
   const [showModal, setShowModal] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     walletId: '',
@@ -80,7 +83,7 @@ export default function AdjustmentsPage() {
 
   const handleCreate = async () => {
     if (!formData.walletId || !formData.amount) {
-      alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+      showWarning('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -108,22 +111,23 @@ export default function AdjustmentsPage() {
         note: '',
       });
       fetchAdjustments();
-    } catch (error: any) {
+    }catch (error: any) {
       console.error('Failed to create adjustment:', error);
-      alert(error.message || 'Có lỗi xảy ra');
+      showError('Tạo thất bại', error.message || 'Có lỗi xảy ra');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa điều chỉnh này?')) return;
-
     try {
       await apiClient(`/adjustments/${id}`, { method: 'DELETE' });
+      setConfirmDeleteId(null);
       fetchAdjustments();
-    } catch (error) {
+      showSuccess('Xóa thành công');
+    } catch (error: any) {
       console.error('Failed to delete adjustment:', error);
+      showError('Xóa thất bại', (error as any)?.message || 'Có lỗi xảy ra');
     }
   };
 
@@ -253,7 +257,7 @@ export default function AdjustmentsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(adj.id)}
+                            onClick={() => setConfirmDeleteId(adj.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -267,6 +271,24 @@ export default function AdjustmentsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Confirm Delete Dialog */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>Xác nhận xóa?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">Bạn có chắc muốn xóa điều chỉnh này?</p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Hủy</Button>
+                <Button variant="destructive" onClick={() => handleDelete(confirmDeleteId)}>Xóa</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Custom Modal */}
       {showModal && (
