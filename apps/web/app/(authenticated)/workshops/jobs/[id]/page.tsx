@@ -670,7 +670,7 @@ export default function WorkshopJobDetailPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="info">Thông tin phiếu</TabsTrigger>
-          <TabsTrigger value="payments">Thanh toán</TabsTrigger>
+          <TabsTrigger value="payments">Phiếu chi gia công</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info">
@@ -927,6 +927,15 @@ export default function WorkshopJobDetailPage() {
                           </tr>
                         ))}
                       </tbody>
+                      <tfoot>
+                        <tr className="bg-red-50">
+                          <td colSpan={isAdmin ? 4 : 5} className="p-3 text-right font-medium">Tổng đã chi:</td>
+                          <td className="p-3 text-right font-bold text-red-600">
+                            {formatCurrency(paymentsData.payments.reduce((sum, p) => sum + p.amount, 0))}
+                          </td>
+                          {isAdmin && <td></td>}
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
                 )}

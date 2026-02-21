@@ -242,22 +242,22 @@ export default function OrdersListPage() {
 
       {/* KPI Summary Box */}
       <div className="grid gap-2 sm:grid-cols-3 mb-4">
-        <Card className="bg-green-50 border-green-200">
+        <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-green-100 rounded-full shrink-0">
-                <ArrowDownCircle className="h-4 w-4 text-green-600" />
+              <div className="p-1.5 bg-blue-100 rounded-full shrink-0">
+                <ArrowDownCircle className="h-4 w-4 text-blue-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1">
-                  <p className="text-xs text-green-700 truncate">Tổng thu</p>
+                  <p className="text-xs text-blue-700 truncate">Tổng thu</p>
                   <MetricInfo
                     metricKey={METRIC_KEYS.order_summary_totalIncome}
                     iconSize={14}
-                    iconClassName="text-green-500 hover:text-green-700 cursor-help shrink-0"
+                    iconClassName="text-blue-500 hover:text-blue-700 cursor-help shrink-0"
                   />
                 </div>
-                <p className="text-base sm:text-lg font-bold text-green-600 truncate">{formatCurrency(totals.incomeTotal)}</p>
+                <p className="text-base sm:text-lg font-bold text-blue-700 truncate">{formatCurrency(totals.incomeTotal)}</p>
               </div>
             </div>
           </CardContent>

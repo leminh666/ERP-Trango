@@ -212,6 +212,7 @@ export default function WalletDetailPage() {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
+  // KPI summary: always lifetime — only re-fetch when wallet id changes
   useEffect(() => {
     if (params.id) {
       fetchWallet();
@@ -219,6 +220,12 @@ export default function WalletDetailPage() {
       fetchSummary();
       fetchAdjustments();
       fetchTransfers();
+    }
+  }, [params.id]);
+
+  // Transaction lists: re-fetch when timeFilter changes
+  useEffect(() => {
+    if (params.id) {
       fetchIncomes();
       fetchExpenses();
     }
@@ -243,37 +250,10 @@ export default function WalletDetailPage() {
     }
   };
 
+  // KPI summary is always lifetime — no date filter
   const fetchSummary = async () => {
     try {
-      const searchParams = new URLSearchParams();
-      if (timeFilter !== 'all') {
-        const now = new Date();
-        let from: Date;
-        let to: Date = new Date();
-
-        switch (timeFilter) {
-          case 'this_month':
-            from = new Date(now.getFullYear(), now.getMonth(), 1);
-            break;
-          case 'last_month':
-            from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            to = new Date(now.getFullYear(), now.getMonth(), 0);
-            break;
-          case 'this_year':
-            from = new Date(now.getFullYear(), 0, 1);
-            break;
-          case 'last_year':
-            from = new Date(now.getFullYear() - 1, 0, 1);
-            to = new Date(now.getFullYear(), 0, 0);
-            break;
-          default:
-            from = new Date(0);
-        }
-        searchParams.append('from', from.toISOString());
-        searchParams.append('to', to.toISOString());
-      }
-
-      const data = await apiClient<WalletUsageSummary>(`/wallets/${params.id}/usage/summary?${searchParams}`);
+      const data = await apiClient<WalletUsageSummary>(`/wallets/${params.id}/usage/summary`);
       setSummary(data);
     } catch (error) {
       console.error('Failed to fetch summary:', error);
@@ -303,10 +283,40 @@ export default function WalletDetailPage() {
     }
   };
 
+  // Build date range from timeFilter string
+  const buildDateRange = () => {
+    if (timeFilter === 'all') return { from: '', to: '' };
+    const now = new Date();
+    let from: Date;
+    let to: Date = new Date();
+    switch (timeFilter) {
+      case 'this_month':
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'last_month':
+        from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        to = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        break;
+      case 'this_year':
+        from = new Date(now.getFullYear(), 0, 1);
+        break;
+      case 'last_year':
+        from = new Date(now.getFullYear() - 1, 0, 1);
+        to = new Date(now.getFullYear(), 0, 0, 23, 59, 59, 999);
+        break;
+      default:
+        from = new Date(0);
+    }
+    return { from: from.toISOString(), to: to.toISOString() };
+  };
+
   const fetchIncomes = async () => {
     setLoadingIncomes(true);
     try {
-      const data = await apiClient<any[]>(`/transactions?walletId=${params.id}&type=INCOME`);
+      const { from, to }= buildDateRange();
+      const q = new URLSearchParams({ walletId: params.id, type: 'INCOME' });
+      if (from) { q.append('from', from); q.append('to', to); }
+      const data = await apiClient<any[]>(`/transactions?${q}`);
       const formatted = (data || []).map(tx => ({
         id: tx.id,
         code: tx.code || '',
@@ -332,7 +342,10 @@ export default function WalletDetailPage() {
   const fetchExpenses = async () => {
     setLoadingExpenses(true);
     try {
-      const data = await apiClient<any[]>(`/transactions?walletId=${params.id}&type=EXPENSE`);
+      const { from, to }= buildDateRange();
+      const q = new URLSearchParams({ walletId: params.id, type: 'EXPENSE' });
+      if (from) { q.append('from', from); q.append('to', to); }
+      const data = await apiClient<any[]>(`/transactions?${q}`);
       const formatted = (data || []).map(tx => ({
         id: tx.id,
         code: tx.code || '',

@@ -1603,11 +1603,6 @@ export default function OrderDetailPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-red-600">Chi phí công trình</CardTitle>
-                {nonWorkshopExpenses.length > 0 && (
-                  <span className="text-sm font-medium text-red-600">
-                    Tổng: {formatCurrency(totalExpense)}
-                  </span>
-                )}
               </CardHeader>
               <CardContent>
                 {nonWorkshopExpenses.length === 0 ? (
@@ -1648,9 +1643,9 @@ export default function OrderDetailPage() {
                       </tbody>
                       <tfoot>
                         <tr className="bg-red-50">
-                          <td colSpan={3} className="p-3 text-right font-medium">Tổng chi:</td>
+                          <td colSpan={3}className="p-3 text-right font-medium">Tổng chi:</td>
                           <td colSpan={3} className="p-3 font-bold text-red-600 text-right">
-                            {formatCurrency(totalExpense)}
+                            {formatCurrency(nonWorkshopExpenses.reduce((sum, t) => sum + Number(t.amount || 0), 0))}
                           </td>
                         </tr>
                       </tfoot>

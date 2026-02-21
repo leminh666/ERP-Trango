@@ -618,20 +618,21 @@ export class CrmService {
   // ========== KPI FOR CUSTOMER ==========
   
   async getCustomerKpi(customerId: string) {
-    // Get all projects for this customer
+    // Get all projects for this customer (including discountAmount)
     const projects = await this.prisma.project.findMany({
       where: { customerId, deletedAt: null },
       include: {
-        orderItems: true,
+        orderItems: { where: { deletedAt: null }},
       },
     });
 
-    // Calculate total amount from projects (sum of orderItems.amount)
+    // totalAmount = sum(orderItems.amount) - project.discountAmount (after discount)
     const totalAmount = projects.reduce((sum, project) => {
-      const projectTotal = project.orderItems.reduce((itemSum, item) => {
+      const rawTotal = project.orderItems.reduce((itemSum, item) => {
         return itemSum + Number(item.amount || 0);
       }, 0);
-      return sum + projectTotal;
+      const discount = Number(project.discountAmount || 0);
+      return sum + Math.max(0, rawTotal - discount);
     }, 0);
 
     // Get all income transactions (đã thanh toán)
