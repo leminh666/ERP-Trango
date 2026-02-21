@@ -1,14 +1,16 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { Select } from '@/components/ui/select';
 import { apiClient, unwrapItems } from '@/lib/api';
 import { Product, ProductVariant } from '@tran-go-hoang-gia/shared';
 import { ProductPicker } from '@/components/product-picker';
 import { useToast } from '@/components/toast-provider';
+import { MoneyInput, formatVnd } from '@/components/common/money-input';
 import { Plus, X, Calculator, Package } from 'lucide-react';
 
 interface ProjectOption {
@@ -110,21 +112,15 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
     return items.reduce((sum, item) => sum + calculateItemAmount(item), 0);
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = formatVnd;
 
   const handleSubmit = async () => {
     if (!form.projectId) {
-      showError('Thiếu thông tin', 'Vui lòng chọn đơn hàng');
+      showError('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng chá»n Ä‘Æ¡n hÃ ng');
       return;
     }
     if (!form.workshopId) {
-      showError('Thiếu thông tin', 'Vui lòng chọn xưởng gia công');
+      showError('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng chá»n xÆ°á»Ÿng gia cÃ´ng');
       return;
     }
 
@@ -152,11 +148,11 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
         },
       });
 
-      showSuccess('Thành công', 'Đã tạo phiếu gia công mới');
+      showSuccess('ThÃ nh cÃ´ng', 'ÄÃ£ táº¡o phiáº¿u gia cÃ´ng má»›i');
       onCreated();
     } catch (error: any) {
       console.error('Failed to create workshop job:', error);
-      showError('Lỗi', error.message || 'Có lỗi xảy ra khi tạo phiếu gia công');
+      showError('Lá»—i', error.message || 'CÃ³ lá»—i xáº£y ra khi táº¡o phiáº¿u gia cÃ´ng');
     } finally {
       setLoading(false);
     }
@@ -166,7 +162,7 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Tạo phiếu gia công mới</CardTitle>
+          <CardTitle>Táº¡o phiáº¿u gia cÃ´ng má»›i</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -175,13 +171,13 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
           {/* General Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Đơn hàng *</label>
+              <label className="block text-sm font-medium mb-1">ÄÆ¡n hÃ ng *</label>
               <Select
                 value={form.projectId}
                 onChange={(e) => setForm({ ...form, projectId: e.target.value })}
                 className="w-full"
               >
-                <option value="">Chọn đơn hàng...</option>
+                <option value="">Chá»n Ä‘Æ¡n hÃ ng...</option>
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.code} - {p.name} {p.customerName ? `(${p.customerName})` : ''}
@@ -190,41 +186,40 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Xưởng gia công *</label>
+              <label className="block text-sm font-medium mb-1">XÆ°á»Ÿng gia cÃ´ng *</label>
               <Select
                 value={form.workshopId}
                 onChange={(e) => setForm({ ...form, workshopId: e.target.value })}
                 className="w-full"
               >
-                <option value="">Chọn xưởng...</option>
+                <option value="">Chá»n xÆ°á»Ÿng...</option>
                 {workshops.map((w) => (
                   <option key={w.id} value={w.id}>{w.name}</option>
                 ))}
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Ngày bắt đầu</label>
-              <Input
-                type="date"
+              <label className="block text-sm font-medium mb-1">NgÃ y báº¯t Ä‘áº§u</label>
+              <DateInput
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
                 className="w-full"
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Tiêu đề</label>
+              <label className="block text-sm font-medium mb-1">TiÃªu Ä‘á»</label>
               <Input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Ví dụ: Gia công trần gỗ tầng 1"
+                placeholder="VÃ­ dá»¥: Gia cÃ´ng tráº§n gá»— táº§ng 1"
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Ghi chú</label>
+              <label className="block text-sm font-medium mb-1">Ghi chÃº</label>
               <Input
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
-                placeholder="Nhập ghi chú..."
+                placeholder="Nháº­p ghi chÃº..."
               />
             </div>
           </div>
@@ -234,19 +229,19 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Calculator className="h-5 w-5 text-blue-600" />
-                <span className="font-medium">Hạng mục/ Sản phẩm</span>
+                <span className="font-medium">Háº¡ng má»¥c/ Sáº£n pháº©m</span>
               </div>
               <Button variant="outline" size="sm" onClick={addItem}>
                 <Plus className="h-4 w-4 mr-1" />
-                Thêm sản phẩm
+                ThÃªm sáº£n pháº©m
               </Button>
             </div>
 
             {items.length === 0 ? (
               <div className="border rounded-lg p-8 text-center text-gray-500">
                 <Package className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                <p>Chưa có sản phẩm nào</p>
-                <p className="text-sm">Nhấp &quot;Thêm sản phẩm&quot; để bắt đầu</p>
+                <p>ChÆ°a cÃ³ sáº£n pháº©m nÃ o</p>
+                <p className="text-sm">Nháº¥p &quot;ThÃªm sáº£n pháº©m&quot; Ä‘á»ƒ báº¯t Ä‘áº§u</p>
               </div>
             ) : (
               <div className="border rounded-lg overflow-hidden">
@@ -254,11 +249,11 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="text-left p-3 font-medium w-10">#</th>
-                      <th className="text-left p-3 font-medium">Sản phẩm *</th>
-                      <th className="text-left p-3 font-medium w-24">ĐVT *</th>
+                      <th className="text-left p-3 font-medium">Sáº£n pháº©m *</th>
+                      <th className="text-left p-3 font-medium w-24">ÄVT *</th>
                       <th className="text-left p-3 font-medium w-24">SL</th>
-                      <th className="text-left p-3 font-medium w-28">Đơn giá</th>
-                      <th className="text-right p-3 font-medium w-32">Thành tiền</th>
+                      <th className="text-left p-3 font-medium w-28">ÄÆ¡n giÃ¡</th>
+                      <th className="text-right p-3 font-medium w-32">ThÃ nh tiá»n</th>
                       <th className="text-left p-3 font-medium w-10"></th>
                     </tr>
                   </thead>
@@ -278,7 +273,7 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
                               className="h-8"
                             >
                               <Package className="h-4 w-4 mr-1" />
-                              {item.name || 'Chọn sản phẩm...'}
+                              {item.name || 'Chá»n sáº£n pháº©m...'}
                             </Button>
                           </div>
                         </td>
@@ -286,7 +281,7 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
                           <Input
                             value={item.unit}
                             onChange={(e) => updateItem(index, { unit: e.target.value })}
-                            placeholder="ĐVT"
+                            placeholder="ÄVT"
                             className="h-8"
                           />
                         </td>
@@ -301,11 +296,9 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
                           />
                         </td>
                         <td className="p-3">
-                          <Input
-                            type="number"
-                            min="0"
-                            value={item.unitPrice}
-                            onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
+                          <MoneyInput
+                            value={parseFloat(item.unitPrice) || 0}
+                            onChange={(val) => updateItem(index, { unitPrice: String(val) })}
                             placeholder="0"
                             className="h-8"
                           />
@@ -328,7 +321,7 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
                   </tbody>
                   <tfoot className="bg-gray-50">
                     <tr>
-                      <td colSpan={5} className="p-3 text-right font-medium">Tổng tiền:</td>
+                      <td colSpan={5} className="p-3 text-right font-medium">Tá»•ng tiá»n:</td>
                       <td className="p-3 text-right font-bold text-blue-600 text-lg">
                         {formatCurrency(calculateTotal())}
                       </td>
@@ -343,10 +336,10 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={onClose} disabled={loading}>
-              Hủy
+              Há»§y
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? 'Đang tạo...' : 'Tạo mới'}
+              {loading ? 'Äang táº¡o...' : 'Táº¡o má»›i'}
             </Button>
           </div>
         </CardContent>
@@ -369,4 +362,5 @@ export function CreateWorkshopJobModal({ projects, workshops, onClose, onCreated
     </div>
   );
 }
+
 

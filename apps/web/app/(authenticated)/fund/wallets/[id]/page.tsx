@@ -8,6 +8,7 @@ import { apiClient } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
@@ -1382,8 +1383,7 @@ export default function WalletDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={editingTransaction.date}
                   onChange={(e) => setEditingTransaction(prev => prev ? ({
                     ...prev,
@@ -1446,8 +1446,7 @@ export default function WalletDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={editingTransfer.date}
                   onChange={(e) => setEditingTransfer(prev => prev ? ({
                     ...prev,
@@ -1510,8 +1509,7 @@ export default function WalletDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={editingAdjustment.date}
                   onChange={(e) => setEditingAdjustment(prev => prev ? ({
                     ...prev,
@@ -1587,8 +1585,7 @@ export default function WalletDetailPage() {
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày *</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={editIncomeForm.date}
                   onChange={(e) => setEditIncomeForm({ ...editIncomeForm, date: e.target.value })}
                 />
@@ -1636,8 +1633,7 @@ export default function WalletDetailPage() {
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày *</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={editExpenseForm.date}
                   onChange={(e) => setEditExpenseForm({ ...editExpenseForm, date: e.target.value })}
                 />
@@ -1733,8 +1729,7 @@ export default function WalletDetailPage() {
               <div className="space-y-4">
                 <div>
                   <Label>Ngày *</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     value={transferFormData.date}
                     onChange={(e) => setTransferFormData({ ...transferFormData, date: e.target.value })}
                   />
@@ -1811,8 +1806,7 @@ export default function WalletDetailPage() {
               <div className="space-y-4">
                 <div>
                   <Label>Ngày *</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     value={adjustmentFormData.date}
                     onChange={(e) => setAdjustmentFormData({ ...adjustmentFormData, date: e.target.value })}
                   />

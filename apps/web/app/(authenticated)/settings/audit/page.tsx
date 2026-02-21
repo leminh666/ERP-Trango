@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -234,9 +234,8 @@ export default function SettingsAuditPage() {
 
               <div className="w-full sm:w-auto">
                 <Label htmlFor="fromDate">Từ ngày</Label>
-                <Input
+                <DateInput
                   id="fromDate"
-                  type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
                 />
@@ -244,9 +243,8 @@ export default function SettingsAuditPage() {
 
               <div className="w-full sm:w-auto">
                 <Label htmlFor="toDate">Đến ngày</Label>
-                <Input
+                <DateInput
                   id="toDate"
-                  type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
                 />

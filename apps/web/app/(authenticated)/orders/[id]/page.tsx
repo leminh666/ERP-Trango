@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { Select } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OrderItem, Product, ProductVariant, ProjectSummary, Transaction, Wallet, ExpenseCategory, IncomeCategory, VisualType } from '@tran-go-hoang-gia/shared';
@@ -1704,12 +1705,9 @@ export default function OrderDetailPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Đơn giá (VND)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="1000"
-                    value={formData.unitPrice || '0'}
-                    onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
+                  <MoneyInput
+                    value={parseFloat(formData.unitPrice) || 0}
+                    onChange={(val) => setFormData({ ...formData, unitPrice: String(val) })}
                     placeholder="0"
                   />
                 </div>
@@ -1775,8 +1773,7 @@ export default function OrderDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày *</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={editingTransaction ? editExpenseForm.date : expenseForm.date}
                   onChange={(e) => editingTransaction
                     ? setEditExpenseForm({ ...editExpenseForm, date: e.target.value })
@@ -1787,14 +1784,14 @@ export default function OrderDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Số tiền (VND) *</label>
-                <Input
-                  type="number"
-                  value={editingTransaction ? editExpenseForm.amount : expenseForm.amount}
-                  onChange={(e) => editingTransaction
-                    ? setEditExpenseForm({ ...editExpenseForm, amount: e.target.value })
-                    : setExpenseForm({ ...expenseForm, amount: e.target.value })
+                <MoneyInput
+                  value={parseFloat(editingTransaction ? editExpenseForm.amount : expenseForm.amount) || 0}
+                  onChange={(val) => editingTransaction
+                    ? setEditExpenseForm({ ...editExpenseForm, amount: String(val) })
+                    : setExpenseForm({ ...expenseForm, amount: String(val) })
                   }
                   placeholder="0"
+                  required
                 />
               </div>
 
@@ -1892,8 +1889,7 @@ export default function OrderDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày *</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={editingTransaction ? editIncomeForm.date : incomeForm.date}
                   onChange={(e) => editingTransaction
                     ? setEditIncomeForm({ ...editIncomeForm, date: e.target.value })
@@ -1904,14 +1900,14 @@ export default function OrderDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Số tiền (VND) *</label>
-                <Input
-                  type="number"
-                  value={editingTransaction ? editIncomeForm.amount : incomeForm.amount}
-                  onChange={(e) => editingTransaction
-                    ? setEditIncomeForm({ ...editIncomeForm, amount: e.target.value })
-                    : setIncomeForm({ ...incomeForm, amount: e.target.value })
+                <MoneyInput
+                  value={parseFloat(editingTransaction ? editIncomeForm.amount : incomeForm.amount) || 0}
+                  onChange={(val) => editingTransaction
+                    ? setEditIncomeForm({ ...editIncomeForm, amount: String(val) })
+                    : setIncomeForm({ ...incomeForm, amount: String(val) })
                   }
                   placeholder="0"
+                  required
                 />
               </div>
 
@@ -2104,12 +2100,11 @@ export default function OrderDetailPage() {
                                 />
                               </td>
                               <td className="p-2">
-                                <Input
-                                  type="number"
-                                  value={item.unitPrice}
-                                  onChange={(e) => {
+                                <MoneyInput
+                                  value={parseFloat(item.unitPrice) || 0}
+                                  onChange={(val) => {
                                     const newItems = [...workshopJobItems];
-                                    newItems[index].unitPrice = e.target.value;
+                                    newItems[index].unitPrice = String(val);
                                     setWorkshopJobItems(newItems);
                                   }}
                                   placeholder="0"
@@ -2200,8 +2195,7 @@ export default function OrderDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày bắt đầu</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={workshopJobForm.startDate}
                   onChange={(e) =>
                     setWorkshopJobForm({ ...workshopJobForm, startDate: e.target.value })
@@ -2212,13 +2206,11 @@ export default function OrderDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Số tiền gia công (VND) *</label>
-                <Input
-                  type="number"
-                  value={workshopJobForm.amount}
-                  onChange={(e) =>
-                    setWorkshopJobForm({ ...workshopJobForm, amount: e.target.value })
-                  }
+                <MoneyInput
+                  value={parseFloat(workshopJobForm.amount) || 0}
+                  onChange={(val) => setWorkshopJobForm({ ...workshopJobForm, amount: String(val) })}
                   placeholder="0"
+                  required
                 />
               </div>
 

@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma }from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 
 @Injectable()
@@ -196,18 +196,48 @@ export class WorkshopsService {
   }
 
   async create(data: Prisma.WorkshopCreateInput, userId?: string, userEmail?: string) {
-    const lastWorkshop = await this.prisma.workshop.findFirst({
-      orderBy: { code: 'desc' },
+    const rawName = (data.name as string) || '';
+    const normalizedName = rawName.trim().replace(/\s+/g, ' ');
+
+    if (!normalizedName) {
+      throw new ConflictException('Tên xưởng không được để trống');
+    }
+
+    // Check for duplicate name (active records only — soft-deleted are ignored)
+    const duplicate = await this.prisma.workshop.findFirst({
+      where: {
+        name: { equals: normalizedName, mode: 'insensitive' },
+        deletedAt: null,
+      },
+      select: { id: true, name: true },
     });
 
-    const lastCode = lastWorkshop ? parseInt(lastWorkshop.code.replace('X', '')) : 0;
-    const newCode = `X${String(lastCode + 1).padStart(3, '0')}`;
+    if (duplicate) {
+      throw new ConflictException(`Tên xưởng "${duplicate.name}" đã tồn tại`);
+    }
+
+    // Generate code from active records only to avoid gaps from deleted ones
+    const lastWorkshop = await this.prisma.workshop.findFirst({
+      where: { deletedAt: null },
+      orderBy: { code: 'desc' },
+      select: { code: true },
+    });
+
+    const lastCode = lastWorkshop ? parseInt(lastWorkshop.code.replace('X', '')) || 0 : 0;
+
+    // Find the true max across ALL records (including deleted) to avoid code collisions
+    const allLast = await this.prisma.workshop.findFirst({
+      orderBy: { code: 'desc' },
+      select: { code: true },
+    });
+    const allLastCode = allLast ? parseInt(allLast.code.replace('X', '')) || 0 : 0;
+
+    const newCode = `X${String(Math.max(lastCode, allLastCode) + 1).padStart(3, '0')}`;
 
     const result = await this.prisma.workshop.create({
-      data: { ...data, code: newCode },
+      data: { ...data, name: normalizedName, code: newCode },
     });
 
-    // Audit log for CREATE
     await this.auditService.log({
       entity: 'Workshop',
       entityId: result.id,
@@ -225,12 +255,30 @@ export class WorkshopsService {
     const existing = await this.findOne(id);
     const beforeJson = existing as any;
 
+    // If name is being changed, check for duplicates
+    if (data.name && typeof data.name === 'string') {
+      const normalizedName = data.name.trim().replace(/\s+/g, ' ');
+      data = { ...data, name: normalizedName };
+
+      const duplicate = await this.prisma.workshop.findFirst({
+        where: {
+          name: { equals: normalizedName, mode: 'insensitive' },
+          deletedAt: null,
+          NOT: { id },
+        },
+        select: { id: true, name: true },
+      });
+
+      if (duplicate) {
+        throw new ConflictException(`Tên xưởng "${duplicate.name}" đã tồn tại`);
+      }
+    }
+
     const result = await this.prisma.workshop.update({
       where: { id },
       data,
     });
 
-    // Audit log for UPDATE
     await this.auditService.log({
       entity: 'Workshop',
       entityId: result.id,

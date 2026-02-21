@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,7 +7,8 @@ import { apiClient } from '@/lib/api';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input }from '@/components/ui/input';
+import { DateInput } from '@/components/common/date-input';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Trash2, RefreshCw, ArrowLeft, Plus, X } from 'lucide-react';
@@ -87,12 +88,12 @@ export default function TransfersPage() {
 
   const handleCreate = async () => {
     if (!formData.walletId || !formData.walletToId || !formData.amount) {
-      showWarning('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin bắt buộc');
+      showWarning('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng Ä‘iá»n Ä‘áº§y Ä‘á»§ thÃ´ng tin báº¯t buá»™c');
       return;
     }
 
     if (formData.walletId === formData.walletToId) {
-      showWarning('Không hợp lệ', 'Ví nguồn và ví đích phải khác nhau');
+      showWarning('KhÃ´ng há»£p lá»‡', 'VÃ­ nguá»“n vÃ  vÃ­ Ä‘Ã­ch pháº£i khÃ¡c nhau');
       return;
     }
 
@@ -118,10 +119,10 @@ export default function TransfersPage() {
         note: '',
       });
       fetchTransfers();
-      showSuccess('Chuyển khoản thành công');
+      showSuccess('Chuyá»ƒn khoáº£n thÃ nh cÃ´ng');
     } catch (error: any) {
       console.error('Failed to create transfer:', error);
-      showError('Chuyển khoản thất bại', error.message || 'Có lỗi xảy ra');
+      showError('Chuyá»ƒn khoáº£n tháº¥t báº¡i', error.message || 'CÃ³ lá»—i xáº£y ra');
     } finally {
       setSubmitting(false);
     }
@@ -132,10 +133,10 @@ export default function TransfersPage() {
       await apiClient(`/transfers/${id}`, { method: 'DELETE' });
       setConfirmDeleteId(null);
       fetchTransfers();
-      showSuccess('Xóa thành công');
+      showSuccess('XÃ³a thÃ nh cÃ´ng');
     } catch (error: any) {
       console.error('Failed to delete transfer:', error);
-      showError('Xóa thất bại', (error as any)?.message || 'Có lỗi xảy ra');
+      showError('XÃ³a tháº¥t báº¡i', (error as any)?.message || 'CÃ³ lá»—i xáº£y ra');
     }
   };
 
@@ -161,26 +162,26 @@ export default function TransfersPage() {
       <div className="mb-6">
         <Button variant="ghost" onClick={() => router.push('/fund/wallets')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Quay lại Sổ quỹ
+          Quay láº¡i Sá»• quá»¹
         </Button>
       </div>
 
       <PageHeader
-        title="Chuyển khoản nội bộ"
-        description="Quản lý chuyển tiền giữa các ví"
+        title="Chuyá»ƒn khoáº£n ná»™i bá»™"
+        description="Quáº£n lÃ½ chuyá»ƒn tiá»n giá»¯a cÃ¡c vÃ­"
       />
 
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-4">
             <div className="w-full sm:w-auto">
-              <Label>Từ ví</Label>
+              <Label>Tá»« vÃ­</Label>
               <Select
                 value={walletId}
                 onChange={(e) => setWalletId(e.target.value)}
                 className="w-full"
               >
-                <option value="">Tất cả ví nguồn</option>
+                <option value="">Táº¥t cáº£ vÃ­ nguá»“n</option>
                 {wallets.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.name}
@@ -189,13 +190,13 @@ export default function TransfersPage() {
               </Select>
             </div>
             <div className="w-full sm:w-auto">
-              <Label>Đến ví</Label>
+              <Label>Äáº¿n vÃ­</Label>
               <Select
                 value={walletToId}
                 onChange={(e) => setWalletToId(e.target.value)}
                 className="w-full"
               >
-                <option value="">Tất cả ví đích</option>
+                <option value="">Táº¥t cáº£ vÃ­ Ä‘Ã­ch</option>
                 {wallets.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.name}
@@ -207,7 +208,7 @@ export default function TransfersPage() {
               <div className="ml-auto">
                 <Button onClick={() => setShowModal(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Chuyển nội bộ
+                  Chuyá»ƒn ná»™i bá»™
                 </Button>
               </div>
             )}
@@ -225,18 +226,18 @@ export default function TransfersPage() {
             </div>
           ) : transfers.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              Chưa có chuyển khoản nội bộ
+              ChÆ°a cÃ³ chuyá»ƒn khoáº£n ná»™i bá»™
             </div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">Ngày</th>
-                  <th className="text-left py-3 px-4 font-medium">Từ ví</th>
-                  <th className="text-left py-3 px-4 font-medium">Đến ví</th>
-                  <th className="text-left py-3 px-4 font-medium">Số tiền</th>
-                  <th className="text-left py-3 px-4 font-medium">Ghi chú</th>
-                  <th className="text-left py-3 px-4 font-medium">Trạng thái</th>
+                  <th className="text-left py-3 px-4 font-medium">NgÃ y</th>
+                  <th className="text-left py-3 px-4 font-medium">Tá»« vÃ­</th>
+                  <th className="text-left py-3 px-4 font-medium">Äáº¿n vÃ­</th>
+                  <th className="text-left py-3 px-4 font-medium">Sá»‘ tiá»n</th>
+                  <th className="text-left py-3 px-4 font-medium">Ghi chÃº</th>
+                  <th className="text-left py-3 px-4 font-medium">Tráº¡ng thÃ¡i</th>
                   {isAdmin && <th className="text-left py-3 px-4 font-medium"></th>}
                 </tr>
               </thead>
@@ -251,11 +252,11 @@ export default function TransfersPage() {
                     <td className="py-3 px-4">
                       {transfer.deletedAt ? (
                         <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700">
-                          Đã xóa
+                          ÄÃ£ xÃ³a
                         </span>
                       ) : (
                         <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">
-                          Hoạt động
+                          Hoáº¡t Ä‘á»™ng
                         </span>
                       )}
                     </td>
@@ -268,7 +269,7 @@ export default function TransfersPage() {
                             onClick={() => handleRestore(transfer.id)}
                           >
                             <RefreshCw className="h-4 w-4 mr-1" />
-                            Khôi phục
+                            KhÃ´i phá»¥c
                           </Button>
                         ) : (
                           <Button
@@ -294,13 +295,13 @@ export default function TransfersPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-sm">
             <CardHeader>
-              <CardTitle>Xác nhận xóa?</CardTitle>
+              <CardTitle>XÃ¡c nháº­n xÃ³a?</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">Bạn có chắc muốn xóa chuyển khoản này?</p>
+              <p className="text-sm text-gray-600 mb-4">Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a chuyá»ƒn khoáº£n nÃ y?</p>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Hủy</Button>
-                <Button variant="destructive" onClick={() => handleDelete(confirmDeleteId)}>Xóa</Button>
+                <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Há»§y</Button>
+                <Button variant="destructive" onClick={() => handleDelete(confirmDeleteId)}>XÃ³a</Button>
               </div>
             </CardContent>
           </Card>
@@ -312,7 +313,7 @@ export default function TransfersPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Chuyển nội bộ</CardTitle>
+              <CardTitle>Chuyá»ƒn ná»™i bá»™</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => setShowModal(false)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -320,21 +321,20 @@ export default function TransfersPage() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <Label>Ngày *</Label>
-                  <Input
-                    type="date"
+                  <Label>NgÃ y *</Label>
+                  <DateInput
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>Từ ví *</Label>
+                  <Label>Tá»« vÃ­ *</Label>
                   <Select
                     value={formData.walletId}
                     onChange={(e) => setFormData({ ...formData, walletId: e.target.value })}
                     className="w-full"
                   >
-                    <option value="">Chọn ví nguồn</option>
+                    <option value="">Chá»n vÃ­ nguá»“n</option>
                     {wallets.map((w) => (
                       <option key={w.id} value={w.id}>
                         {w.name}
@@ -343,13 +343,13 @@ export default function TransfersPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Đến ví *</Label>
+                  <Label>Äáº¿n vÃ­ *</Label>
                   <Select
                     value={formData.walletToId}
                     onChange={(e) => setFormData({ ...formData, walletToId: e.target.value })}
                     className="w-full"
                   >
-                    <option value="">Chọn ví đích</option>
+                    <option value="">Chá»n vÃ­ Ä‘Ã­ch</option>
                     {wallets
                       .filter((w) => w.id !== formData.walletId)
                       .map((w) => (
@@ -360,29 +360,29 @@ export default function TransfersPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Số tiền *</Label>
+                  <Label>Sá»‘ tiá»n *</Label>
                   <MoneyInput
                     value={formData.amount ? parseFloat(formData.amount) : 0}
                     onChange={(val) => setFormData({ ...formData, amount: String(val) })}
-                    placeholder="Nhập số tiền"
+                    placeholder="Nháº­p sá»‘ tiá»n"
                     required
                   />
                 </div>
                 <div>
-                  <Label>Ghi chú</Label>
+                  <Label>Ghi chÃº</Label>
                   <Input
                     type="text"
                     value={formData.note}
                     onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                    placeholder="Nhập ghi chú (tùy chọn)"
+                    placeholder="Nháº­p ghi chÃº (tÃ¹y chá»n)"
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setShowModal(false)}>
-                    Hủy
+                    Há»§y
                   </Button>
                   <Button onClick={handleCreate} disabled={submitting}>
-                    {submitting ? 'Đang tạo...' : 'Tạo chuyển khoản'}
+                    {submitting ? 'Äang táº¡o...' : 'Táº¡o chuyá»ƒn khoáº£n'}
                   </Button>
                 </div>
               </div>
@@ -393,3 +393,4 @@ export default function TransfersPage() {
     </div>
   );
 }
+

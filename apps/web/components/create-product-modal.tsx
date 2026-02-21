@@ -15,6 +15,7 @@ import { fetchJson, resolveProductImage, uploadFile } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 import { Product } from '@tran-go-hoang-gia/shared';
 import { useToast } from '@/components/toast-provider';
+import { MoneyInput } from '@/components/common/money-input';
 
 // Types for the modal
 interface DraftAttributeGroup {
@@ -889,10 +890,9 @@ export function CreateProductModal({ open, onOpenChange, onSuccess }: CreateProd
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div>
                         <Label>Giá riêng (VND)</Label>
-                        <Input
-                          type="number"
-                          value={newVariant.price}
-                          onChange={(e) => setNewVariant(prev => ({ ...prev, price: e.target.value }))}
+                        <MoneyInput
+                          value={parseFloat(newVariant.price) || 0}
+                          onChange={(val) => setNewVariant(prev => ({ ...prev, price: String(val) }))}
                           placeholder="0"
                         />
                       </div>

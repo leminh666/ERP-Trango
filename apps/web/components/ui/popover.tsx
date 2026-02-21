@@ -144,10 +144,10 @@ const PopoverContent = React.forwardRef<
   const nodeId = ctx.nodeId;
 
   // Build placement string from side and align (e.g., 'bottom-start', 'bottom-end')
-  const placement = align === 'start' 
-    ? side 
-    : align === 'end' 
-      ? `${side}-end` 
+  const placement = align === 'start'
+    ? `${side}-start`
+    : align === 'end'
+      ? `${side}-end`
       : side;
 
   // Find trigger element by nodeId
@@ -155,22 +155,15 @@ const PopoverContent = React.forwardRef<
 
   React.useEffect(() => {
     if (!ctx.open) return;
-    
-    // Find trigger element using data attribute
-    const findTrigger = () => {
-      const trigger = document.querySelector(
-        `[data-popover-trigger="${nodeId}"], [data-popover-node-id="${nodeId}"]`
-      ) as HTMLElement | null;
-      return trigger;
-    };
-
-    const trigger = findTrigger();
-    if (trigger) {
-      setTriggerElement(trigger);
-    }
+    const trigger = document.querySelector(
+      `[data-popover-trigger="${nodeId}"], [data-popover-node-id="${nodeId}"]`
+    ) as HTMLElement | null;
+    if (trigger) setTriggerElement(trigger);
   }, [ctx.open, nodeId]);
 
-  // Floating UI configuration with proper reference handling
+  // strategy:'fixed' escapes overflow:hidden modal containers.
+  // On iOS Safari the visual viewport can differ from layout viewport when the
+  // keyboard is open; shift with generous padding keeps the popover on-screen.
   const {
     refs,
     floatingStyles,
@@ -183,27 +176,20 @@ const PopoverContent = React.forwardRef<
       offset(sideOffset),
       flip({
         fallbackPlacements: [
-          'top',
-          'bottom',
-          'left',
-          'right',
-          'top-start',
-          'top-end',
-          'bottom-start',
-          'bottom-end',
-          'left-start',
-          'left-end',
-          'right-start',
-          'right-end',
+          'top-start', 'top-end', 'top',
+          'bottom-start', 'bottom-end', 'bottom',
+          'left-start', 'right-start',
         ],
-        padding: 8,
+        // Extra padding so the calendar never clips the viewport edge on mobile
+        padding: 12,
       }),
       shift({
-        padding: 8,
+        // 16px breathing room from every viewport edge (safe-area aware)
+        padding: 16,
       }),
     ],
     whileElementsMounted: ctx.open ? autoUpdate : undefined,
-    strategy: 'fixed', // Use fixed to avoid scroll container issues
+    strategy: 'fixed',
   });
 
   // Update reference when trigger element changes
@@ -236,14 +222,21 @@ const PopoverContent = React.forwardRef<
       <div
         ref={handleFloatingRef}
         className={cn(
-          'z-[99999] w-auto min-w-[280px] max-w-sm max-w-[90vw]',
+          // z-index above modal overlays (modal is typically z-50)
+          'z-[99999] w-auto',
+          // Constrain width to viewport on mobile — prevents horizontal overflow
+          'max-w-[min(90vw,_560px)]',
           'rounded-md border bg-white shadow-2xl',
-          'max-h-[80vh] overflow-y-auto',
+          // Allow internal scroll if calendar is taller than available space
+          'max-h-[min(80vh,_520px)] overflow-y-auto overflow-x-hidden',
           'pointer-events-auto',
           className,
         )}
         style={{
           ...floatingStyles,
+          // Respect iOS safe-area insets so the popover never hides behind
+          // the home indicator or notch
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           ...style,
         }}
         data-popover-content={nodeId}

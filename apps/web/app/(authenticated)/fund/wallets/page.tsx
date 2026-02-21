@@ -12,7 +12,8 @@ import { IconSelectField } from '@/components/icon-select-field';
 import { MetricInfo } from '@/components/ui/metric-info';
 import { METRIC_KEYS } from '@/lib/metrics/metric-keys';
 import { Wallet, WalletType, VisualType } from '@tran-go-hoang-gia/shared';
-import { useToast } from '@/components/toast-provider';
+import { useToast }from '@/components/toast-provider';
+import { MoneyInput } from '@/components/common/money-input';
  import { Plus, Search, Edit, Trash2, RotateCcw, AlertCircle, TrendingUp, TrendingDown, Landmark, Upload, X } from 'lucide-react';
  import { apiClient, uploadFile, getToken } from '@/lib/api';
 
@@ -311,7 +312,11 @@ export default function WalletsPage() {
               {!editingItem && (
                 <div>
                   <label className="block text-sm font-medium mb-1">Số dư ban đầu (VND)</label>
-                  <Input type="number" value={formData.openingBalance || ''}onChange={(e) => setFormData(p => ({ ...p, openingBalance: parseFloat(e.target.value) || 0 }))}placeholder="0" min="0" />
+                  <MoneyInput
+                    value={formData.openingBalance || 0}
+                    onChange={(val) => setFormData(p => ({ ...p, openingBalance: val }))}
+                    placeholder="0"
+                  />
                   <p className="text-xs text-gray-500 mt-1">Để 0 nếu chưa có số dư</p>
                 </div>
               )}

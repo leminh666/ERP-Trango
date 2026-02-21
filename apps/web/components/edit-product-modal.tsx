@@ -14,6 +14,7 @@ import { fetchJson, resolveProductImage, uploadFile } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 import { Product, ProductAttributeGroup, ProductAttributeValue, ProductVariant } from '@tran-go-hoang-gia/shared';
 import { useToast } from '@/components/toast-provider';
+import { MoneyInput } from '@/components/common/money-input';
 
 // Colors for attribute groups (same as product detail page)
 const ATTRIBUTE_GROUP_COLORS = [
@@ -950,10 +951,9 @@ export function EditProductModal({ open, onOpenChange, product, onSuccess }: Edi
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div>
                         <Label>Giá riêng (VND)</Label>
-                        <Input
-                          type="number"
-                          value={newVariant.price}
-                          onChange={(e) => setNewVariant(prev => ({ ...prev, price: e.target.value }))}
+                        <MoneyInput
+                          value={parseFloat(newVariant.price) || 0}
+                          onChange={(val) => setNewVariant(prev => ({ ...prev, price: String(val) }))}
                           placeholder="0"
                         />
                       </div>
@@ -1182,10 +1182,9 @@ export function EditProductModal({ open, onOpenChange, product, onSuccess }: Edi
                 </div>
                 <div>
                   <Label>Giá riêng (VND)</Label>
-                  <Input
-                    type="number"
-                    value={editVariantPrice}
-                    onChange={(e) => setEditVariantPrice(e.target.value)}
+                  <MoneyInput
+                    value={parseFloat(editVariantPrice) || 0}
+                    onChange={(val) => setEditVariantPrice(String(val))}
                     placeholder="0"
                   />
                 </div>

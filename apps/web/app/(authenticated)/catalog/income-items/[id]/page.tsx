@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { VisualRenderer } from '@/components/visual-selector';
 import { ArrowLeft, Calendar, DollarSign, FileText, RefreshCw } from 'lucide-react';
 import { IncomeCategory, Transaction } from '@tran-go-hoang-gia/shared';
@@ -140,8 +141,7 @@ export default function IncomeCategoryDetailPage() {
           <div className="flex flex-wrap gap-4 items-end">
             <div>
               <label className="block text-sm font-medium mb-1">Từ ngày</label>
-              <Input
-                type="date"
+              <DateInput
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
                 className="w-40"
@@ -149,8 +149,7 @@ export default function IncomeCategoryDetailPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Đến ngày</label>
-              <Input
-                type="date"
+              <DateInput
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 className="w-40"

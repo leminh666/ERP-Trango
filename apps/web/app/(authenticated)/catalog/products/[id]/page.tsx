@@ -15,7 +15,8 @@ import {
   AlertCircle, Image as ImageIcon, DollarSign, HelpCircle, Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/toast-provider';
+import { useToast }from '@/components/toast-provider';
+import { MoneyInput } from '@/components/common/money-input';
 
 // Colors for attribute groups (cycling through these colors)
 const ATTRIBUTE_GROUP_COLORS = [
@@ -769,10 +770,9 @@ export default function ProductDetailPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Giá riêng (VND)</label>
-                  <Input
-                    type="number"
-                    value={newVariantPrice}
-                    onChange={(e) => setNewVariantPrice(e.target.value)}
+                  <MoneyInput
+                    value={parseFloat(newVariantPrice) || 0}
+                    onChange={(val) => setNewVariantPrice(String(val))}
                     placeholder="0"
                   />
                 </div>
@@ -1080,10 +1080,9 @@ export default function ProductDetailPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Giá riêng (VND)</label>
-                  <Input
-                    type="number"
-                    value={editVariantPrice}
-                    onChange={(e) => setEditVariantPrice(e.target.value)}
+                  <MoneyInput
+                    value={parseFloat(editVariantPrice) || 0}
+                    onChange={(val) => setEditVariantPrice(String(val))}
                     placeholder="0"
                   />
                 </div>

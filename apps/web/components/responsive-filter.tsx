@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Filter, Search, X } from 'lucide-react';
+import { DateInput }from '@/components/common/date-input';
 
 interface FilterField {
   key: string;
@@ -80,15 +81,13 @@ export function ResponsiveFilter({
 
           {field.type === 'daterange' && (
             <div className="flex items-center gap-2">
-              <input
-                type="date"
+              <DateInput
                 value={values[`${field.key}From`] || ''}
                 onChange={(e) => onChange(`${field.key}From`, e.target.value)}
                 className="w-full h-9 px-3 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <span className="text-gray-400">-</span>
-              <input
-                type="date"
+              <DateInput
                 value={values[`${field.key}To`] || ''}
                 onChange={(e) => onChange(`${field.key}To`, e.target.value)}
                 className="w-full h-9 px-3 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -218,14 +217,12 @@ export function ResponsiveFilter({
 
                   {field.type === 'daterange' && (
                     <div className="space-y-2">
-                      <input
-                        type="date"
+                      <DateInput
                         value={values[`${field.key}From`] || ''}
                         onChange={(e) => onChange(`${field.key}From`, e.target.value)}
                         className="w-full h-10 px-3 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <input
-                        type="date"
+                      <DateInput
                         value={values[`${field.key}To`] || ''}
                         onChange={(e) => onChange(`${field.key}To`, e.target.value)}
                         className="w-full h-10 px-3 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

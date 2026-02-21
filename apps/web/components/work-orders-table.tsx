@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/components/toast-provider';
+import { MoneyInput, formatVnd } from '@/components/common/money-input';
 import { ProductPicker } from '@/components/product-picker';
 import { Product, ProductVariant } from '@tran-go-hoang-gia/shared';
 import { Plus, Edit, Trash2, Eye, X, Factory, Package, ChevronRight, ChevronDown, Loader2, Percent } from 'lucide-react';
@@ -153,9 +154,7 @@ export function WorkOrdersTable({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  };
+  const formatCurrency = formatVnd;
 
   const formatDate = (date: string | null) => {
     if (!date) return '-';
@@ -911,11 +910,9 @@ export function WorkOrdersTable({
                               />
                             </td>
                             <td className="p-2">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={item.unitPrice}
-                                onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
+                              <MoneyInput
+                                value={parseFloat(item.unitPrice) || 0}
+                                onChange={(val) => updateItem(index, { unitPrice: String(val) })}
                                 placeholder="0"
                                 className="h-8"
                               />
@@ -1139,11 +1136,9 @@ export function WorkOrdersTable({
 
               <div>
                 <label className="block text-sm font-medium mb-1">Đơn giá (VND)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={editItemForm.unitPrice}
-                  onChange={(e) => setEditItemForm({ ...editItemForm, unitPrice: e.target.value })}
+                <MoneyInput
+                  value={parseFloat(editItemForm.unitPrice) || 0}
+                  onChange={(val) => setEditItemForm({ ...editItemForm, unitPrice: String(val) })}
                   className="w-full"
                 />
               </div>

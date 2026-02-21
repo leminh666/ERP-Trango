@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/common/date-input';
 import { Select } from '@/components/ui/select';
 import { Transaction, Wallet, IncomeCategory, TransactionType, VisualType, Project } from '@tran-go-hoang-gia/shared';
 import { Plus, Search, Edit, Trash2, RotateCcw, AlertCircle, Calendar, DollarSign, Mic, Filter, Link } from 'lucide-react';
@@ -523,8 +524,7 @@ export default function IncomePage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày *</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
@@ -649,3 +649,4 @@ export default function IncomePage() {
     </div>
   );
 }
+

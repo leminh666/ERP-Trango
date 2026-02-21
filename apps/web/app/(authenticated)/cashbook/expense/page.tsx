@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { Transaction, Wallet, ExpenseCategory, Project, VisualType } from '@tran-go-hoang-gia/shared';
 import { Plus, Search, Edit, Trash2, RotateCcw, AlertCircle, DollarSign, Building2, ClipboardList, Link } from 'lucide-react';
 import { VisualRenderer } from '@/components/visual-selector';
@@ -637,8 +638,7 @@ export default function ExpensePage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày *</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
@@ -875,4 +875,5 @@ export default function ExpensePage() {
     </div>
   );
 }
+
 

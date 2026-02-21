@@ -1,42 +1,31 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-interface MoneyInputProps {
-  value: number | null | undefined | any;
+export interface MoneyInputProps {
+  value: number | null | undefined;
   onChange: (value: number) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
   required?: boolean;
+  allowNegative?: boolean;
 }
 
-/**
- * Format a number to Vietnamese currency format (e.g., 1.000.000)
- */
-export function formatVnd(amount: number): string {
-  if (amount === null || amount === undefined) return '';
-  return new Intl.NumberFormat('vi-VN', {
-    maximumFractionDigits: 0,
-  }).format(amount);
+export function formatVnd(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined || isNaN(Number(amount))) return '';
+  return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Number(amount));
 }
 
-/**
- * Parse a string to number, handling various formats:
- * "1.000.000", "1,000,000", "1000000", ""
- */
 export function parseMoney(value: string): number {
   if (!value || !value.trim()) return 0;
-  
-  // Remove all separators (dots, commas, spaces)
-  const cleaned = value
-    .replace(/[.,\s]/g, '')
-    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (m) => '0123456789'[m.charCodeAt(0) - 0x2070]);
-  
-  const num = parseFloat(cleaned);
-  return isNaN(num) ? 0 : num;
+  const isNeg = value.trim().startsWith('-');
+  const digits = value.replace(/[.,\s]/g, '').replace(/[^\d]/g, '');
+  const num = parseFloat(digits);
+  if (isNaN(num)) return 0;
+  return isNeg ? -num : num;
 }
 
 export function MoneyInput({
@@ -46,63 +35,51 @@ export function MoneyInput({
   disabled = false,
   className,
   required = false,
+  allowNegative = false,
 }: MoneyInputProps) {
   const [displayValue, setDisplayValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Update display value when value changes from outside
   useEffect(() => {
-    if (!isFocused && value !== null && value !== undefined) {
-      setDisplayValue(formatVnd(value));
+    if (!isFocused) {
+      const num = Number(value);
+      setDisplayValue(
+        value !== null && value !== undefined && !isNaN(num) && num !== 0
+          ? formatVnd(num)
+          : ''
+      );
     }
   }, [value, isFocused]);
 
   const handleFocus = () => {
     setIsFocused(true);
-    // Show raw number without formatting when focused
-    setDisplayValue(value ? String(value) : '');
-    // Select all text for easy editing
+    const num = Number(value);
+    setDisplayValue(
+      value !== null && value !== undefined && !isNaN(num) && num !== 0
+        ? String(num)
+        : ''
+    );
     setTimeout(() => inputRef.current?.select(), 0);
   };
 
   const handleBlur = () => {
     setIsFocused(false);
     const num = parseMoney(displayValue);
-    
-    // Only call onChange if the value actually changed
-    if (num !== value) {
-      onChange(num);
+    const finalNum = allowNegative ? num : Math.abs(num);
+    if (finalNum !== Number(value)) {
+      onChange(finalNum);
     }
-    
-    // Format for display
-    if (num !== 0) {
-      setDisplayValue(formatVnd(num));
-    } else {
-      setDisplayValue('');
-    }
+    setDisplayValue(finalNum !== 0 ? formatVnd(finalNum) : '');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    
-    // Allow only digits, dots, commas, and minus sign
-    const cleaned = inputValue.replace(/[^\d.,\-\s]/g, '');
-    
-    // For display, convert commas to dots temporarily for parsing
-    const tempForParse = cleaned.replace(/,/g, '.');
-    // Remove multiple dots
-    const normalized = tempForParse.replace(/\.{2,}/g, '.').replace(/\.(?=\d*\.)/g, '');
-    
-    // Update display
-    setDisplayValue(cleaned);
-    
-    // Live parse for validation (optional, can be used to show error state)
-    const num = parseMoney(cleaned);
+    const raw = e.target.value;
+    const pattern = allowNegative ? /[^\d.,-]/g : /[^\d.,]/g;
+    setDisplayValue(raw.replace(pattern, ''));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow Enter to blur (submit form)
     if (e.key === 'Enter') {
       e.preventDefault();
       inputRef.current?.blur();
@@ -114,7 +91,7 @@ export function MoneyInput({
       <Input
         ref={inputRef}
         type="text"
-        inputMode="decimal"
+        inputMode="numeric"
         value={displayValue}
         onChange={handleChange}
         onFocus={handleFocus}
@@ -122,17 +99,12 @@ export function MoneyInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
-        className={cn(
-          'text-right font-medium pr-12',
-          className
-        )}
+        required={required}
+        className={cn('text-right font-medium pr-8', className)}
       />
-      {!disabled && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
-          ₫
-        </span>
-      )}
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none select-none">
+        &#8363;
+      </span>
     </div>
   );
 }
-

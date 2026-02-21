@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { Label } from '@/components/ui/label';
 import { 
   TrendingUp, Users, Phone, Calendar, CheckCircle, 
@@ -102,8 +103,7 @@ export default function CrmReportsPage() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex items-center gap-2">
               <Label className="whitespace-nowrap">Từ ngày:</Label>
-              <Input
-                type="date"
+              <DateInput
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 className="w-40"
@@ -111,8 +111,7 @@ export default function CrmReportsPage() {
             </div>
             <div className="flex items-center gap-2">
               <Label className="whitespace-nowrap">Đến ngày:</Label>
-              <Input
-                type="date"
+              <DateInput
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
                 className="w-40"

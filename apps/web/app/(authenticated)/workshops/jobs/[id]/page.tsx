@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -6,12 +6,14 @@ import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { Select } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ProductPicker } from '@/components/product-picker';
 import { Product, ProductVariant } from '@tran-go-hoang-gia/shared';
-import { useToast } from '@/components/toast-provider';
+import { useToast }from '@/components/toast-provider';
+import { MoneyInput } from '@/components/common/money-input';
 import { KpiTooltip } from '@/components/ui/info-tooltip';
 import { METRIC_KEYS } from '@/lib/metrics/metric-keys';
 import { MetricInfo } from '@/components/ui/metric-info';
@@ -1015,11 +1017,9 @@ export default function WorkshopJobDetailPage() {
                             />
                           </td>
                           <td className="p-3">
-                            <Input
-                              type="number"
-                              min="0"
-                              value={item.unitPrice}
-                              onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
+                            <MoneyInput
+                              value={parseFloat(item.unitPrice) || 0}
+                              onChange={(val) => updateItem(index, { unitPrice: String(val) })}
                               placeholder="0"
                               className="h-8"
                             />
@@ -1110,8 +1110,7 @@ export default function WorkshopJobDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày *</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={payForm.date}
                   onChange={(e) => setPayForm({ ...payForm, date: e.target.value })}
                 />
@@ -1119,11 +1118,11 @@ export default function WorkshopJobDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Số tiền (VND) *</label>
-                <Input
-                  type="number"
-                  value={payForm.amount}
-                  onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })}
+                <MoneyInput
+                  value={parseFloat(payForm.amount) || 0}
+                  onChange={(val) => setPayForm({ ...payForm, amount: String(val) })}
                   placeholder="0"
+                  required
                 />
               </div>
 
@@ -1200,8 +1199,7 @@ export default function WorkshopJobDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Ngày *</label>
-                <Input
-                  type="date"
+                <DateInput
                   value={editPayForm.date}
                   onChange={(e) => setEditPayForm({ ...editPayForm, date: e.target.value })}
                 />
@@ -1209,11 +1207,11 @@ export default function WorkshopJobDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Số tiền (VND) *</label>
-                <Input
-                  type="number"
-                  value={editPayForm.amount}
-                  onChange={(e) => setEditPayForm({ ...editPayForm, amount: e.target.value })}
+                <MoneyInput
+                  value={parseFloat(editPayForm.amount) || 0}
+                  onChange={(val) => setEditPayForm({ ...editPayForm, amount: String(val) })}
                   placeholder="0"
+                  required
                 />
               </div>
 
@@ -1339,12 +1337,9 @@ export default function WorkshopJobDetailPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Số tiền chiết khấu (VND)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="1000"
-                  value={discountForm.discountAmount?.toString() || '0'}
-                  onChange={(e) => setDiscountForm(prev => ({ ...prev, discountAmount: parseFloat(e.target.value) || 0 }))}
+                <MoneyInput
+                  value={discountForm.discountAmount || 0}
+                  onChange={(val) => setDiscountForm(prev => ({ ...prev, discountAmount: val }))}
                   placeholder="0"
                 />
                 <p className="text-xs text-gray-500 mt-1">

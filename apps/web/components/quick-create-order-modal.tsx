@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { apiClient } from '@/lib/api';
 import { X, FileText, Phone } from 'lucide-react';
 
@@ -35,7 +36,7 @@ export function QuickCreateOrderModal({
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      setError('Vui lòng nhập tên đơn hàng');
+      setError('Vui lÃ²ng nháº­p tÃªn Ä‘Æ¡n hÃ ng');
       return;
     }
 
@@ -57,7 +58,7 @@ export function QuickCreateOrderModal({
       onCreated(project.id, project.name);
     } catch (err: any) {
       console.error('Failed to create order:', err);
-      setError(err.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+      setError(err.message || 'CÃ³ lá»—i xáº£y ra khi táº¡o Ä‘Æ¡n hÃ ng');
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ export function QuickCreateOrderModal({
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-blue-600" />
-            Tạo đơn hàng mới
+            Táº¡o Ä‘Æ¡n hÃ ng má»›i
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -79,7 +80,7 @@ export function QuickCreateOrderModal({
           {/* Customer Info - Readonly */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-blue-700">Khách hàng</span>
+              <span className="text-sm font-medium text-blue-700">KhÃ¡ch hÃ ng</span>
             </div>
             <p className="font-semibold text-gray-900">{customerName}</p>
             {customerPhone && (
@@ -101,33 +102,32 @@ export function QuickCreateOrderModal({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">
-                Tên đơn hàng / Dự án <span className="text-red-500">*</span>
+                TÃªn Ä‘Æ¡n hÃ ng / Dá»± Ã¡n <span className="text-red-500">*</span>
               </label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Nhập tên đơn hàng..."
+                placeholder="Nháº­p tÃªn Ä‘Æ¡n hÃ ng..."
                 autoFocus
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Địa chỉ thi công
+                Äá»‹a chá»‰ thi cÃ´ng
               </label>
               <Input
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
-                placeholder="Nhập địa chỉ thi công..."
+                placeholder="Nháº­p Ä‘á»‹a chá»‰ thi cÃ´ng..."
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Ngày hẹn thi công
+                NgÃ y háº¹n thi cÃ´ng
               </label>
-              <Input
-                type="date"
+              <DateInput
                 value={form.deadline}
                 onChange={(e) => setForm({ ...form, deadline: e.target.value })}
               />
@@ -135,13 +135,13 @@ export function QuickCreateOrderModal({
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Ghi chú
+                Ghi chÃº
               </label>
               <textarea
                 className="w-full px-3 py-2 border rounded-md text-sm min-h-[80px]"
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
-                placeholder="Nhập ghi chú..."
+                placeholder="Nháº­p ghi chÃº..."
               />
             </div>
           </div>
@@ -149,10 +149,10 @@ export function QuickCreateOrderModal({
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={onClose} disabled={loading}>
-              Hủy
+              Há»§y
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? 'Đang tạo...' : 'Tạo đơn hàng'}
+              {loading ? 'Äang táº¡o...' : 'Táº¡o Ä‘Æ¡n hÃ ng'}
             </Button>
           </div>
         </CardContent>
@@ -160,4 +160,5 @@ export function QuickCreateOrderModal({
     </div>
   );
 }
+
 

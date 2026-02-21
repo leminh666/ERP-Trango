@@ -1,23 +1,25 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect }from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input }from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { Select } from '@/components/ui/select';
 import { apiClient, unwrapItems } from '@/lib/api';
 import { Product, ProductVariant, Customer } from '@tran-go-hoang-gia/shared';
 import { VisualType } from '@tran-go-hoang-gia/shared';
 import { ProductPicker } from '@/components/product-picker';
 import { Plus, X, Calculator, UserPlus, Package } from 'lucide-react';
-import { useToast }from '@/components/toast-provider';
+import { useToast } from '@/components/toast-provider';
+import { MoneyInput, formatVnd }from '@/components/common/money-input';
 
 interface CreateOrderModalProps {
   customers: Array<{ id: string; name: string }>;
   onClose: () => void;
   onCreated: (order: { id: string; name: string }) => void;
   onCustomerCreated?: (customer: { id: string; name: string }) => void;
-  /** Khi truyền vào, khách hàng sẽ được chọn sẵn và không thể thay đổi */
+  /** Khi truyá»n vÃ o, khÃ¡ch hÃ ng sáº½ Ä‘Æ°á»£c chá»n sáºµn vÃ  khÃ´ng thá»ƒ thay Ä‘á»•i */
   lockedCustomerId?: string;
 }
 
@@ -134,18 +136,12 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
     return items.reduce((sum, item) => sum + calculateItemAmount(item), 0);
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = formatVnd;
 
   // Handle create new customer
   const handleCreateCustomer = async () => {
     if (!newCustomer.name.trim()) {
-      setCustomerError('Vui lòng nhập tên khách hàng');
+      setCustomerError('Vui lÃ²ng nháº­p tÃªn khÃ¡ch hÃ ng');
       return;
     }
 
@@ -181,7 +177,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
       setNewCustomer({ name: '', phone: '', address: '' });
     } catch (error: any) {
       console.error('Failed to create customer:', error);
-      setCustomerError(error.message || 'Có lỗi xảy ra khi tạo khách hàng');
+      setCustomerError(error.message || 'CÃ³ lá»—i xáº£y ra khi táº¡o khÃ¡ch hÃ ng');
     } finally {
       setCreatingCustomer(false);
     }
@@ -190,11 +186,11 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
   // Handle create new product
   const handleCreateProduct = async () => {
     if (!newProduct.name.trim()) {
-      setProductError('Vui lòng nhập tên sản phẩm');
+      setProductError('Vui lÃ²ng nháº­p tÃªn sáº£n pháº©m');
       return;
     }
     if (!newProduct.unit.trim()) {
-      setProductError('Vui lòng nhập đơn vị tính');
+      setProductError('Vui lÃ²ng nháº­p Ä‘Æ¡n vá»‹ tÃ­nh');
       return;
     }
 
@@ -246,7 +242,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
       setNewProduct({ name: '', unit: '', defaultSalePrice: '', iconKey: 'package' });
     } catch (error: any) {
       console.error('Failed to create product:', error);
-      setProductError(error.message || 'Có lỗi xảy ra khi tạo sản phẩm');
+      setProductError(error.message || 'CÃ³ lá»—i xáº£y ra khi táº¡o sáº£n pháº©m');
     }finally {
       setCreatingProduct(false);
     }
@@ -254,11 +250,11 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      showWarning('Thiếu thông tin', 'Vui lòng nhập tên đơn hàng');
+      showWarning('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng nháº­p tÃªn Ä‘Æ¡n hÃ ng');
       return;
     }
     if (!form.customerId) {
-      showWarning('Thiếu thông tin', 'Vui lòng chọn khách hàng');
+      showWarning('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng chá»n khÃ¡ch hÃ ng');
       return;
     }
 
@@ -296,7 +292,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
       onCreated(project);
     }catch (error: any) {
       console.error('Failed to create order:', error);
-      showError('Tạo đơn hàng thất bại', error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+      showError('Táº¡o Ä‘Æ¡n hÃ ng tháº¥t báº¡i', error.message || 'CÃ³ lá»—i xáº£y ra khi táº¡o Ä‘Æ¡n hÃ ng');
     }finally {
       setLoading(false);
     }
@@ -307,7 +303,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Tạo đơn hàng mới</CardTitle>
+            <CardTitle>Táº¡o Ä‘Æ¡n hÃ ng má»›i</CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
@@ -316,22 +312,22 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Tên đơn hàng *</label>
+                <label className="block text-sm font-medium mb-1">TÃªn Ä‘Æ¡n hÃ ng *</label>
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Nhập tên đơn hàng"
+                  placeholder="Nháº­p tÃªn Ä‘Æ¡n hÃ ng"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Khách hàng *</label>
+                <label className="block text-sm font-medium mb-1">KhÃ¡ch hÃ ng *</label>
                 <div className="relative">
                   {lockedCustomerId ? (
                     <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-gray-50 text-sm text-gray-700">
                       <span className="flex-1">
-                        {customerList.find(c => c.id === lockedCustomerId)?.name || 'Khách hàng đã chọn'}
+                        {customerList.find(c => c.id === lockedCustomerId)?.name || 'KhÃ¡ch hÃ ng Ä‘Ã£ chá»n'}
                       </span>
-                      <span className="text-xs text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded">Cố định</span>
+                      <span className="text-xs text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded">Cá»‘ Ä‘á»‹nh</span>
                     </div>
                   ) : (
                   <Select
@@ -345,29 +341,28 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                     }}
                     className="w-full"
                   >
-                    <option value="">Chọn khách hàng...</option>
+                    <option value="">Chá»n khÃ¡ch hÃ ng...</option>
                     {customerList.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                     <option value="__create_new__" className="text-blue-600 font-medium bg-blue-50">
-                      + Tạo khách hàng mới
+                      + Táº¡o khÃ¡ch hÃ ng má»›i
                     </option>
                   </Select>
                   )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Địa chỉ thi công</label>
+                <label className="block text-sm font-medium mb-1">Äá»‹a chá»‰ thi cÃ´ng</label>
                 <Input
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  placeholder="Nhập địa chỉ"
+                  placeholder="Nháº­p Ä‘á»‹a chá»‰"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Lịch hẹn thi công</label>
-                <Input
-                  type="date"
+                <label className="block text-sm font-medium mb-1">Lá»‹ch háº¹n thi cÃ´ng</label>
+                <DateInput
                   value={form.deadline}
                   onChange={(e) => setForm({ ...form, deadline: e.target.value })}
                 />
@@ -376,20 +371,20 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
 
             {/* Note */}
             <div>
-              <label className="block text-sm font-medium mb-1">Ghi chú</label>
+              <label className="block text-sm font-medium mb-1">Ghi chÃº</label>
               <textarea
                 className="w-full px-3 py-2 border rounded-md text-sm"
                 rows={2}
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
-                placeholder="Ghi chú thêm..."
+                placeholder="Ghi chÃº thÃªm..."
               />
             </div>
 
             {/* Order Items */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Hạng mục / Sản phẩm</label>
+                <label className="text-sm font-medium">Háº¡ng má»¥c / Sáº£n pháº©m</label>
                 <div className="flex gap-2">
                       <Button
                     variant="outline"
@@ -402,11 +397,11 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                     }}
                   >
                     <Package className="h-3 w-3 mr-1" />
-                    Chọn SP
+                    Chá»n SP
                   </Button>
                   <Button variant="outline" size="sm" onClick={addItem}>
                     <Plus className="h-3 w-3 mr-1" />
-                    Thêm dòng
+                    ThÃªm dÃ²ng
                       </Button>
                 </div>
               </div>
@@ -416,11 +411,11 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="text-left p-2 font-medium">Tên hạng mục</th>
-                        <th className="text-left p-2 font-medium w-16">ĐVT</th>
+                        <th className="text-left p-2 font-medium">TÃªn háº¡ng má»¥c</th>
+                        <th className="text-left p-2 font-medium w-16">ÄVT</th>
                         <th className="text-right p-2 font-medium w-16">SL</th>
-                        <th className="text-right p-2 font-medium w-28">Đơn giá</th>
-                        <th className="text-right p-2 font-medium w-28">Thành tiền</th>
+                        <th className="text-right p-2 font-medium w-28">ÄÆ¡n giÃ¡</th>
+                        <th className="text-right p-2 font-medium w-28">ThÃ nh tiá»n</th>
                         <th className="w-8"></th>
                       </tr>
                     </thead>
@@ -431,7 +426,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                           <Input
                             value={item.name}
                               onChange={(e) => updateItem(index, { name: e.target.value })}
-                              placeholder="Tên hạng mục"
+                              placeholder="TÃªn háº¡ng má»¥c"
                               className="h-7 text-xs"
                           />
                           </td>
@@ -439,7 +434,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                         <Input
                           value={item.unit}
                           onChange={(e) => updateItem(index, { unit: e.target.value })}
-                              placeholder="m²"
+                              placeholder="mÂ²"
                               className="h-7 text-xs"
                         />
                           </td>
@@ -452,12 +447,11 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                         />
                           </td>
                           <td className="p-1">
-                      <Input
-                        type="number"
-                              value={item.unitPrice}
-                              onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
-                              className="h-7 text-xs text-right"
-                      />
+                            <MoneyInput
+                              value={parseFloat(item.unitPrice) || 0}
+                              onChange={(val) => updateItem(index, { unitPrice: String(val) })}
+                              className="h-7 text-xs"
+                            />
                           </td>
                           <td className="p-2 text-right text-xs font-medium">
                         {formatCurrency(calculateItemAmount(item))}
@@ -479,7 +473,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                       <tr>
                         <td colSpan={4}className="p-2 text-right text-sm font-medium">
                           <Calculator className="inline h-4 w-4 mr-1" />
-                          Tổng cộng:
+                          Tá»•ng cá»™ng:
                         </td>
                         <td className="p-2 text-right font-bold text-blue-600">
                           {formatCurrency(calculateTotal())}
@@ -494,9 +488,9 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={onClose}>Hủy</Button>
+              <Button variant="outline" onClick={onClose}>Há»§y</Button>
               <Button onClick={handleSubmit} disabled={loading}>
-                {loading ? 'Đang tạo...' : 'Tạo đơn hàng'}
+                {loading ? 'Äang táº¡o...' : 'Táº¡o Ä‘Æ¡n hÃ ng'}
               </Button>
             </div>
           </CardContent>
@@ -524,7 +518,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
           <Card className="w-full max-w-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">Tạo khách hàng mới</CardTitle>
+              <CardTitle className="text-base">Táº¡o khÃ¡ch hÃ ng má»›i</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => setShowCreateCustomer(false)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -536,16 +530,16 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium mb-1">Tên khách hàng *</label>
+                <label className="block text-sm font-medium mb-1">TÃªn khÃ¡ch hÃ ng *</label>
                 <Input
                   value={newCustomer.name}
                   onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                  placeholder="Nhập tên khách hàng"
+                  placeholder="Nháº­p tÃªn khÃ¡ch hÃ ng"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Số điện thoại</label>
+                <label className="block text-sm font-medium mb-1">Sá»‘ Ä‘iá»‡n thoáº¡i</label>
                 <Input
                   value={newCustomer.phone}
                   onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
@@ -554,19 +548,19 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Địa chỉ</label>
+                <label className="block text-sm font-medium mb-1">Äá»‹a chá»‰</label>
                 <Input
                   value={newCustomer.address}
                   onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                  placeholder="Địa chỉ khách hàng"
+                  placeholder="Äá»‹a chá»‰ khÃ¡ch hÃ ng"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-1">
                 <Button variant="outline" size="sm" onClick={() => setShowCreateCustomer(false)}>
-                  Hủy
+                  Há»§y
                 </Button>
                 <Button size="sm" onClick={handleCreateCustomer} disabled={creatingCustomer}>
-                  {creatingCustomer ? 'Đang tạo...' : 'Tạo khách hàng'}
+                  {creatingCustomer ? 'Äang táº¡o...' : 'Táº¡o khÃ¡ch hÃ ng'}
                 </Button>
               </div>
             </CardContent>
@@ -579,7 +573,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
           <Card className="w-full max-w-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">Tạo sản phẩm mới</CardTitle>
+              <CardTitle className="text-base">Táº¡o sáº£n pháº©m má»›i</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => setShowCreateProduct(false)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -591,37 +585,36 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium mb-1">Tên sản phẩm *</label>
+                <label className="block text-sm font-medium mb-1">TÃªn sáº£n pháº©m *</label>
                 <Input
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  placeholder="Nhập tên sản phẩm"
+                  placeholder="Nháº­p tÃªn sáº£n pháº©m"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Đơn vị tính *</label>
+                <label className="block text-sm font-medium mb-1">ÄÆ¡n vá»‹ tÃ­nh *</label>
                 <Input
                   value={newProduct.unit}
                   onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
-                  placeholder="m², cái, bộ..."
+                  placeholder="mÂ², cÃ¡i, bá»™..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Giá bán mặc định</label>
-                <Input
-                  type="number"
-                  value={newProduct.defaultSalePrice}
-                  onChange={(e) => setNewProduct({ ...newProduct, defaultSalePrice: e.target.value })}
+                <label className="block text-sm font-medium mb-1">GiÃ¡ bÃ¡n máº·c Ä‘á»‹nh</label>
+                <MoneyInput
+                  value={parseFloat(newProduct.defaultSalePrice) || 0}
+                  onChange={(val) => setNewProduct({ ...newProduct, defaultSalePrice: String(val) })}
                   placeholder="0"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-1">
                 <Button variant="outline" size="sm" onClick={() => setShowCreateProduct(false)}>
-                  Hủy
+                  Há»§y
                 </Button>
                 <Button size="sm" onClick={handleCreateProduct} disabled={creatingProduct}>
-                  {creatingProduct ? 'Đang tạo...' : 'Tạo sản phẩm'}
+                  {creatingProduct ? 'Äang táº¡o...' : 'Táº¡o sáº£n pháº©m'}
                 </Button>
               </div>
             </CardContent>
@@ -631,3 +624,4 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
     </>
   );
 }
+

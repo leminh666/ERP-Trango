@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput }from '@/components/common/date-input';
 import { Select } from '@/components/ui/select';
 import { apiClient } from '@/lib/api';
 import { Customer } from '@tran-go-hoang-gia/shared';
@@ -37,11 +38,11 @@ export function EditOrderModal({ order, customers, onClose, onSaved }: EditOrder
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      showWarning('Thiếu thông tin', 'Vui lòng nhập tên đơn hàng');
+      showWarning('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng nháº­p tÃªn Ä‘Æ¡n hÃ ng');
       return;
     }
     if (!form.customerId) {
-      showWarning('Thiếu thông tin', 'Vui lòng chọn khách hàng');
+      showWarning('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng chá»n khÃ¡ch hÃ ng');
       return;
     }
 
@@ -60,7 +61,7 @@ export function EditOrderModal({ order, customers, onClose, onSaved }: EditOrder
       onSaved(updated);
     } catch (error: any) {
       console.error('Failed to update order:', error);
-      showError('Cập nhật thất bại', error.message || 'Có lỗi xảy ra khi cập nhật đơn hàng');
+      showError('Cáº­p nháº­t tháº¥t báº¡i', error.message || 'CÃ³ lá»—i xáº£y ra khi cáº­p nháº­t Ä‘Æ¡n hÃ ng');
     } finally {
       setLoading(false);
     }
@@ -70,29 +71,29 @@ export function EditOrderModal({ order, customers, onClose, onSaved }: EditOrder
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Sửa đơn hàng</CardTitle>
+          <CardTitle>Sá»­a Ä‘Æ¡n hÃ ng</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Tên đơn hàng *</label>
+            <label className="block text-sm font-medium mb-1">TÃªn Ä‘Æ¡n hÃ ng *</label>
             <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Nhập tên đơn hàng"
+              placeholder="Nháº­p tÃªn Ä‘Æ¡n hÃ ng"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Khách hàng *</label>
+            <label className="block text-sm font-medium mb-1">KhÃ¡ch hÃ ng *</label>
             <Select
               value={form.customerId}
               onChange={(e) => setForm({ ...form, customerId: e.target.value })}
               className="w-full"
             >
-              <option value="">Chọn khách hàng...</option>
+              <option value="">Chá»n khÃ¡ch hÃ ng...</option>
               {customers.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -100,37 +101,36 @@ export function EditOrderModal({ order, customers, onClose, onSaved }: EditOrder
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Địa chỉ thi công</label>
+            <label className="block text-sm font-medium mb-1">Äá»‹a chá»‰ thi cÃ´ng</label>
             <Input
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
-              placeholder="Nhập địa chỉ"
+              placeholder="Nháº­p Ä‘á»‹a chá»‰"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Lịch hẹn thi công</label>
-            <Input
-              type="date"
+            <label className="block text-sm font-medium mb-1">Lá»‹ch háº¹n thi cÃ´ng</label>
+            <DateInput
               value={form.deadline}
               onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-              placeholder="Chọn ngày"
+              placeholder="Chá»n ngÃ y"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Ghi chú</label>
+            <label className="block text-sm font-medium mb-1">Ghi chÃº</label>
             <Input
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
-              placeholder="Nhập ghi chú..."
+              placeholder="Nháº­p ghi chÃº..."
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>Hủy</Button>
+            <Button variant="outline" onClick={onClose}>Há»§y</Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? 'Đang lưu...' : 'Lưu'}
+              {loading ? 'Äang lÆ°u...' : 'LÆ°u'}
             </Button>
           </div>
         </CardContent>
@@ -138,4 +138,5 @@ export function EditOrderModal({ order, customers, onClose, onSaved }: EditOrder
     </div>
   );
 }
+
 
