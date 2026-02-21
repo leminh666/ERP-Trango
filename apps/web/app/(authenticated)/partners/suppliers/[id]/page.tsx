@@ -250,6 +250,7 @@ export default function SupplierDetailPage() {
         name: supplier.name || '',
         phone: supplier.phone || '',
         address: supplier.address || '',
+        addressLine: supplier.addressLine || '',
         region: supplier.region || '',
         provinceCode: supplier.provinceCode || '',
         provinceName: supplier.provinceName || '',
@@ -674,8 +675,13 @@ export default function SupplierDetailPage() {
                   addressLine={editForm.addressLine}
                   onChange={(data) => setEditForm({
                     ...editForm,
-                    ...data,
-                    // Map addressLine to address for legacy field
+                    provinceCode: data.provinceCode || '',
+                    provinceName: data.provinceName || '',
+                    districtCode: data.districtCode || '',
+                    districtName: data.districtName || '',
+                    wardCode: data.wardCode || '',
+                    wardName: data.wardName || '',
+                    addressLine: data.addressLine || '',
                     address: data.addressLine || '',
                   })}
                 />

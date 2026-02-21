@@ -1,4 +1,4 @@
-// @ts-nocheck - Pre-existing type errors with Transaction.project property
+﻿// @ts-nocheck - Pre-existing type errors with Transaction.project property
 // This is a legacy type mismatch between frontend types and backend response
 'use client';
 
@@ -16,7 +16,6 @@ import { VoiceInputButton } from '@/components/voice-input-button';
 import { AiDraftModal } from '@/components/ai-draft-modal';
 import { MoneyInput } from '@/components/common/money-input';
 import { apiClient } from '@/lib/api';
-import { refreshAfterFinancialMutation } from '@/lib/financial-refresh';
 import { useDefaultTimeFilter } from '@/lib/hooks';
 import { useToast } from '@/components/toast-provider';
 import { TimeFilter, TimeFilterValue } from '@/components/time-filter';
@@ -159,12 +158,7 @@ export default function IncomePage() {
         setTransactions(prev => [result as Transaction, ...prev]);
       }
       // Refresh all related data
-      await refreshAfterFinancialMutation({
-        walletId: formData.walletId,
-        orderId: formData.hasProject ? formData.projectId : undefined,
-        transactionType: 'INCOME',
-        transactionWalletId: formData.walletId,
-      });
+      fetchData();
       showSuccess('Thành công', editingItem ? 'Cập nhật thành công!' : 'Tạo mới thành công!');
     } catch (error: any) {
       console.error('Failed to save:', error);
@@ -179,13 +173,7 @@ export default function IncomePage() {
       // Optimistic update
       setTransactions(prev => prev.filter(t => t.id !== item.id));
       // Refresh all related data
-      await refreshAfterFinancialMutation({
-        walletId: item.walletId,
-        orderId: item.projectId || undefined,
-        transactionId: item.id,
-        transactionType: 'INCOME',
-        transactionWalletId: item.walletId,
-      });
+      fetchData();
       showSuccess('Thành công', 'Đã xóa phiếu thu');
     } catch (error: any) {
       console.error('Failed to delete:', error);

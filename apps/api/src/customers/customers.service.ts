@@ -258,9 +258,6 @@ export class CustomersService {
       const lastCode = lastCustomer ? parseInt(lastCustomer.code.replace('KH', '')) : 0;
       const newCode = `KH${String(lastCode + 1).padStart(4, '0')}`;
 
-
-      console.log('data', data);
-
       // Create Customer and CrmCustomer in a transaction
       const result = await this.prisma.$transaction(async (tx) => {
         // Create Customer

@@ -286,5 +286,5 @@ export const transactionItemService = {
 // Exports
 // =============================================================================
 
-export type { Product, ProductCreate, ProductUpdate, ProductCategory, ProductListParams, PaginatedResponse, IncomeItem };
+// Types already exported above — no re-export needed
 

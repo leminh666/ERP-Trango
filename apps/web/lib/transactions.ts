@@ -99,7 +99,10 @@ export function buildIncomeUpdatePayload(input: IncomeUpdateInput) {
     isCommonCost: false,
   };
 
-  if (input.date) payload.date = input.date;
+  if (input.date) {
+    const d = input.date.includes('T') ? input.date : `${input.date}T00:00:00.000Z`;
+    payload.date = d;
+  }
   if (input.amount !== undefined) payload.amount = typeof input.amount === 'string' ? parseFloat(input.amount) : input.amount;
   if (input.walletId) payload.wallet = { connect: { id: input.walletId } };
   if (input.incomeCategoryId) payload.incomeCategory = { connect: { id: input.incomeCategoryId } };
@@ -118,7 +121,11 @@ export function buildExpenseUpdatePayload(input: ExpenseUpdateInput) {
   };
 
   if (input.type) payload.type = input.type;
-  if (input.date) payload.date = input.date;
+  if (input.date) {
+    // Always send full ISO string to avoid Prisma "premature end of input" error
+    const d = input.date.includes('T') ? input.date : `${input.date}T00:00:00.000Z`;
+    payload.date = d;
+  }
   if (input.amount !== undefined) payload.amount = typeof input.amount === 'string' ? parseFloat(input.amount) : input.amount;
   if (input.walletId) payload.wallet = { connect: { id: input.walletId } };
   if (input.expenseCategoryId) payload.expenseCategory = { connect: { id: input.expenseCategoryId } };

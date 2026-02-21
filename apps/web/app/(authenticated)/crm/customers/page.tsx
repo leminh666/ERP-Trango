@@ -7,14 +7,15 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Search, Phone, Calendar, UserCheck, 
-  Plus, ChevronRight, Filter
-} from 'lucide-react';
+import {
+  Search, Phone, Calendar, UserCheck,
+  Plus, ChevronRight, Filter, Trash2
+}from 'lucide-react';
 import { crmService, CrmCustomerFilters } from '@/src/services/crm.service';
 import { CrmCustomer, CrmStage, SourceChannel } from '@tran-go-hoang-gia/shared';
-import { useToast } from '@/components/toast-provider';
+import { useToast }from '@/components/toast-provider';
 import { CreateCustomerModal } from '@/src/components/crm/CreateCustomerModal';
+import { del }from '@/lib/api';
 
 // Stage colors
 const STAGE_COLORS: Record<CrmStage, { bg: string; text: string; label: string }> = {
@@ -41,7 +42,7 @@ const SOURCE_LABELS: Record<SourceChannel, string> = {
 export default function CrmCustomersPage() {
   const { token, user } = useAuth();
   const router = useRouter();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   
   const [customers, setCustomers] = useState<CrmCustomer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,25 @@ export default function CrmCustomersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const isAdmin = user?.role === 'ADMIN';
+
+  // Zalo link helper
+  const buildZaloLink = (phone: string) => {
+    const normalized = phone.replace(/\s+/g, '');
+    const num = normalized.startsWith('0') ? '84' + normalized.slice(1) : normalized.replace(/^\+/, '');
+    return `https://zalo.me/${num}`;
+  };
+
+  const handleDelete = async (e: React.MouseEvent, item: CrmCustomer) => {
+    e.stopPropagation();
+    if (!confirm(`Xóa khách hàng "${item.customer?.name}"? Hành động này không thể hoàn tác.`)) return;
+    try {
+      await del(`/customers/${item.customerId}`);
+      showSuccess('Đã xóa', `Đã xóa khách hàng ${item.customer?.name}`);
+      fetchCustomers();
+    } catch (error: any) {
+      showError('Lỗi', error.message || 'Không thể xóa khách hàng');
+    }
+  };
 
   useEffect(() => {
     fetchCustomers();
@@ -180,8 +200,7 @@ export default function CrmCustomersPage() {
             return (
               <Card
                 key={item.id}
-                className="cursor-pointer transition-all hover:shadow-md"
-                onClick={() => router.push(`/crm/customers/${item.customerId}`)}
+                className="transition-all hover:shadow-md"
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -191,9 +210,12 @@ export default function CrmCustomersPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-lg font-semibold truncate">
+                          <button
+                            className="text-lg font-semibold truncate hover:text-blue-600 transition-colors text-left"
+                            onClick={() => router.push(`/crm/customers/${item.customerId}`)}
+                          >
                             {item.customer?.name || 'Khách hàng'}
-                          </span>
+                          </button>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${stageColor.bg} ${stageColor.text}`}>
                             {stageColor.label}
                           </span>
@@ -225,27 +247,64 @@ export default function CrmCustomersPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {/* Follow-up countdown */}
                       {followUpInfo ? (
-                        <div className={`text-sm ${followUpInfo.isOverdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                        <div className={`text-sm mr-1 ${followUpInfo.isOverdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            {followUpInfo.text}
+                            <span className="hidden sm:inline">{followUpInfo.text}</span>
                             {nextActivity?.nextFollowUpAt && (
-                              <span className="text-xs ml-1">
+                              <span className="text-xs hidden md:inline">
                                 ({new Date(nextActivity.nextFollowUpAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})
                               </span>
                             )}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded">
+                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded hidden sm:inline">
                           Chưa hẹn
                         </span>
                       )}
-                      
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
+
+                      {/* Action icons */}
+                      {item.customer?.phone && (
+                        <a
+                          href={"tel:" + item.customer.phone}
+                          title="Gọi điện"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 bg-white hover:bg-green-50 hover:text-green-600 hover:border-green-300 text-gray-500 transition-colors"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                        </a>
+                      )}
+                      {item.customer?.phone && (
+                        <a
+                          href={buildZaloLink(item.customer.phone)}
+                          target="_blank" rel="noopener noreferrer"
+                          title="Nhắn Zalo"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-colors overflow-hidden"
+                        >
+                          <img src="/icons/zalo.svg" alt="Zalo" className="h-4 w-4" />
+                        </a>
+                      )}
+                      <button
+                        title="Xem chi tiết"
+                        onClick={() => router.push(`/crm/customers/${item.customerId}`)}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 transition-colors"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                      {isAdmin && (
+                        <button
+                          title="Xóa khách hàng"
+                          onClick={(e) => handleDelete(e, item)}
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-red-100 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-300 text-gray-400 transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
 

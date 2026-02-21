@@ -59,7 +59,6 @@ export class ProductsController {
     },
     @Request() req?: { user: { id: string; email?: string } },
   ) {
-    console.log('[CREATE_PRODUCT_CONTROLLER] Received body:', JSON.stringify(data, null, 2));
     return this.service.create(data as any, req?.user?.id, req?.user?.email);
   }
 

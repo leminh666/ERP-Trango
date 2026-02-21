@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect }from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input }from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { apiClient, unwrapItems } from '@/lib/api';
 import { Product, ProductVariant, Customer } from '@tran-go-hoang-gia/shared';
@@ -16,6 +16,8 @@ interface CreateOrderModalProps {
   onClose: () => void;
   onCreated: (order: { id: string; name: string }) => void;
   onCustomerCreated?: (customer: { id: string; name: string }) => void;
+  /** Khi truyền vào, khách hàng sẽ được chọn sẵn và không thể thay đổi */
+  lockedCustomerId?: string;
 }
 
 interface OrderItemInput {
@@ -34,11 +36,11 @@ interface NewCustomerData {
   address: string;
 }
 
-export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCreated }: CreateOrderModalProps) {
+export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCreated, lockedCustomerId }: CreateOrderModalProps) {
   const [customerList, setCustomerList] = useState(customers);
   const [form, setForm] = useState({
     name: '',
-    customerId: '',
+    customerId: lockedCustomerId || '',
     address: '',
     deadline: '',
     note: '',
@@ -240,7 +242,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
     } catch (error: any) {
       console.error('Failed to create product:', error);
       setProductError(error.message || 'Có lỗi xảy ra khi tạo sản phẩm');
-    } finally {
+    }finally {
       setCreatingProduct(false);
     }
   };
@@ -287,10 +289,10 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
       }
 
       onCreated(project);
-    } catch (error: any) {
+    }catch (error: any) {
       console.error('Failed to create order:', error);
       alert(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
-    } finally {
+    }finally {
       setLoading(false);
     }
   };
@@ -319,6 +321,14 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
               <div>
                 <label className="block text-sm font-medium mb-1">Khách hàng *</label>
                 <div className="relative">
+                  {lockedCustomerId ? (
+                    <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-gray-50 text-sm text-gray-700">
+                      <span className="flex-1">
+                        {customerList.find(c => c.id === lockedCustomerId)?.name || 'Khách hàng đã chọn'}
+                      </span>
+                      <span className="text-xs text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded">Cố định</span>
+                    </div>
+                  ) : (
                   <Select
                     value={form.customerId}
                     onChange={(e) => {
@@ -335,10 +345,10 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                     <option value="__create_new__" className="text-blue-600 font-medium bg-blue-50">
-                      <UserPlus className="inline h-4 w-4 mr-1" />
                       + Tạo khách hàng mới
                     </option>
                   </Select>
+                  )}
                 </div>
               </div>
               <div>
@@ -355,114 +365,129 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                   type="date"
                   value={form.deadline}
                   onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-                  placeholder="Chọn ngày"
                 />
               </div>
             </div>
 
+            {/* Note */}
             <div>
               <label className="block text-sm font-medium mb-1">Ghi chú</label>
-              <Input
+              <textarea
+                className="w-full px-3 py-2 border rounded-md text-sm"
+                rows={2}
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
-                placeholder="Nhập ghi chú..."
+                placeholder="Ghi chú thêm..."
               />
             </div>
 
-            {/* Items Section */}
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Calculator className="h-5 w-5 text-blue-600" />
-                  <span className="font-medium">Sản phẩm / Hạng mục</span>
-                </div>
-                <Button onClick={addItem} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Thêm sản phẩm
-                </Button>
-              </div>
-
-              {items.length === 0 ? (
-                <div className="py-8 text-center text-gray-500 border rounded-md">
-                  Chưa có sản phẩm nào. Nhấp &quot;Thêm sản phẩm&quot; để bắt đầu.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 border rounded-md bg-gray-50">
+            {/* Order Items */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium">Hạng mục / Sản phẩm</label>
+                <div className="flex gap-2">
                       <Button
-                        variant="ghost"
+                    variant="outline"
                         size="sm"
                         onClick={() => {
-                          setEditingItemIndex(index);
+                      setEditingItemIndex(items.length);
                           setShowProductPicker(true);
-                        }}
-                        className="w-8 h-8 p-0"
-                        title="Chọn sản phẩm từ danh mục"
-                      >
-                        <span className="text-lg">📦</span>
+                      addItem();
+                    }}
+                  >
+                    <Package className="h-3 w-3 mr-1" />
+                    Chọn SP
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={addItem}>
+                    <Plus className="h-3 w-3 mr-1" />
+                    Thêm dòng
                       </Button>
-                      <div className="flex-1 grid grid-cols-4 gap-2">
-                        <div className="relative col-span-2">
+                </div>
+              </div>
+
+              {items.length > 0 && (
+                <div className="border rounded-md overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left p-2 font-medium">Tên hạng mục</th>
+                        <th className="text-left p-2 font-medium w-16">ĐVT</th>
+                        <th className="text-right p-2 font-medium w-16">SL</th>
+                        <th className="text-right p-2 font-medium w-28">Đơn giá</th>
+                        <th className="text-right p-2 font-medium w-28">Thành tiền</th>
+                        <th className="w-8"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((item, index) => (
+                        <tr key={index} className="border-t">
+                          <td className="p-1">
                           <Input
-                            placeholder="Nhấp để chọn sản phẩm..."
                             value={item.name}
-                            readOnly
-                            onClick={() => {
-                              setEditingItemIndex(index);
-                              setShowProductPicker(true);
-                            }}
-                            className="cursor-pointer col-span-2 bg-white"
+                              onChange={(e) => updateItem(index, { name: e.target.value })}
+                              placeholder="Tên hạng mục"
+                              className="h-7 text-xs"
                           />
-                          {item.product && (
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-blue-600">
-                              ✓ {item.product.code}
-                            </div>
-                          )}
-                        </div>
+                          </td>
+                          <td className="p-1">
                         <Input
-                          placeholder="ĐVT"
                           value={item.unit}
                           onChange={(e) => updateItem(index, { unit: e.target.value })}
+                              placeholder="m²"
+                              className="h-7 text-xs"
                         />
+                          </td>
+                          <td className="p-1">
                         <Input
                           type="number"
-                          placeholder="Đơn giá"
-                          value={item.unitPrice}
-                          onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
+                              value={item.qty}
+                              onChange={(e) => updateItem(index, { qty: e.target.value })}
+                              className="h-7 text-xs text-right"
                         />
-                      </div>
+                          </td>
+                          <td className="p-1">
                       <Input
                         type="number"
-                        placeholder="SL"
-                        value={item.qty}
-                        onChange={(e) => updateItem(index, { qty: e.target.value })}
-                        className="w-20"
+                              value={item.unitPrice}
+                              onChange={(e) => updateItem(index, { unitPrice: e.target.value })}
+                              className="h-7 text-xs text-right"
                       />
-                      <div className="w-28 text-right font-medium">
+                          </td>
+                          <td className="p-2 text-right text-xs font-medium">
                         {formatCurrency(calculateItemAmount(item))}
-                      </div>
+                          </td>
+                          <td className="p-1">
                       <Button
                         variant="ghost"
-                        size="sm"
+                              size="icon"
+                              className="h-7 w-7 text-red-400 hover:text-red-600"
                         onClick={() => removeItem(index)}
-                        className="text-red-500"
                       >
-                        <X className="h-4 w-4" />
+                              <X className="h-3 w-3" />
                       </Button>
-                    </div>
+                          </td>
+                        </tr>
                   ))}
-                  <div className="flex justify-end pt-2">
-                    <div className="text-lg font-medium">
-                      Tổng: <span className="text-blue-600">{formatCurrency(calculateTotal())}</span>
-                    </div>
-                  </div>
+                    </tbody>
+                    <tfoot className="bg-gray-50 border-t">
+                      <tr>
+                        <td colSpan={4}className="p-2 text-right text-sm font-medium">
+                          <Calculator className="inline h-4 w-4 mr-1" />
+                          Tổng cộng:
+                        </td>
+                        <td className="p-2 text-right font-bold text-blue-600">
+                          {formatCurrency(calculateTotal())}
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               )}
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2 pt-4 border-t">
+            <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={onClose}>Hủy</Button>
               <Button onClick={handleSubmit} disabled={loading}>
                 {loading ? 'Đang tạo...' : 'Tạo đơn hàng'}
@@ -470,77 +495,72 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Product Picker */}
+      {/* Product Picker Modal */}
         {showProductPicker && (
           <ProductPicker
-            value={editingItemIndex !== null ? { product: items[editingItemIndex].product || null, variant: null } : { product: null, variant: null }}
-            onChange={handleSelectProduct}
+          products={products}
+          onSelect={handleSelectProduct}
             onClose={() => {
               setShowProductPicker(false);
               setEditingItemIndex(null);
             }}
-            onCreateNew={() => {
+          onCreateProduct={() => {
               setShowProductPicker(false);
               setShowCreateProduct(true);
             }}
           />
         )}
-      </div>
 
       {/* Create Customer Modal */}
       {showCreateCustomer && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-blue-600" />
-                Tạo khách hàng mới
-              </CardTitle>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+          <Card className="w-full max-w-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base">Tạo khách hàng mới</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => setShowCreateCustomer(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {customerError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
                   {customerError}
                 </div>
               )}
-              
               <div>
                 <label className="block text-sm font-medium mb-1">Tên khách hàng *</label>
                 <Input
                   value={newCustomer.name}
                   onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                  placeholder="Nhập tên..."
+                  placeholder="Nhập tên khách hàng"
+                  autoFocus
                 />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium mb-1">Số điện thoại</label>
                 <Input
                   value={newCustomer.phone}
                   onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                  placeholder="Nhập SĐT..."
+                  placeholder="0xxx xxx xxx"
+                  type="tel"
                 />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium mb-1">Địa chỉ</label>
                 <Input
                   value={newCustomer.address}
                   onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                  placeholder="Nhập địa chỉ..."
+                  placeholder="Địa chỉ khách hàng"
                 />
               </div>
-              
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => setShowCreateCustomer(false)}>
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="outline" size="sm" onClick={() => setShowCreateCustomer(false)}>
                   Hủy
                 </Button>
-                <Button onClick={handleCreateCustomer} disabled={creatingCustomer}>
-                  {creatingCustomer ? 'Đang tạo...' : 'Lưu'}
+                <Button size="sm" onClick={handleCreateCustomer} disabled={creatingCustomer}>
+                  {creatingCustomer ? 'Đang tạo...' : 'Tạo khách hàng'}
                 </Button>
               </div>
             </CardContent>
@@ -550,44 +570,39 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
 
       {/* Create Product Modal */}
       {showCreateProduct && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5 text-blue-600" />
-                Tạo sản phẩm mới
-              </CardTitle>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+          <Card className="w-full max-w-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base">Tạo sản phẩm mới</CardTitle>
               <Button variant="ghost" size="sm" onClick={() => setShowCreateProduct(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {productError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
                   {productError}
                 </div>
               )}
-
               <div>
                 <label className="block text-sm font-medium mb-1">Tên sản phẩm *</label>
                 <Input
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  placeholder="Nhập tên..."
+                  placeholder="Nhập tên sản phẩm"
+                  autoFocus
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">Đơn vị tính *</label>
                 <Input
                   value={newProduct.unit}
                   onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
-                  placeholder="m2, cái, bộ..."
+                  placeholder="m², cái, bộ..."
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium mb-1">Đơn giá (VND)</label>
+                <label className="block text-sm font-medium mb-1">Giá bán mặc định</label>
                 <Input
                   type="number"
                   value={newProduct.defaultSalePrice}
@@ -595,13 +610,12 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                   placeholder="0"
                 />
               </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => setShowCreateProduct(false)}>
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="outline" size="sm" onClick={() => setShowCreateProduct(false)}>
                   Hủy
                 </Button>
-                <Button onClick={handleCreateProduct} disabled={creatingProduct}>
-                  {creatingProduct ? 'Đang tạo...' : 'Lưu'}
+                <Button size="sm" onClick={handleCreateProduct} disabled={creatingProduct}>
+                  {creatingProduct ? 'Đang tạo...' : 'Tạo sản phẩm'}
                 </Button>
               </div>
             </CardContent>

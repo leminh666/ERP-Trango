@@ -19,6 +19,8 @@ interface OrderItem {
   qty: number;
   unitPrice: number;
   productId: string | null;
+  acceptedQty?: number | null;
+  acceptedUnitPrice?: number | null;
   product?: {
     id: string;
     name: string;

@@ -111,7 +111,7 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
  */
 export interface ApiRequestOptions {
   method?: HttpMethod;
-  body?: Record<string, unknown> | unknown[] | string | null;
+  body?: Record<string, unknown> | unknown[] | string | null | object;
   headers?: Record<string, string>;
   timeout?: number;
   token?: string | null;
@@ -547,7 +547,8 @@ export function toArray<T>(data: T | T[] | undefined | null): T[] {
 // Exports
 // =============================================================================
 
-export type { ApiRequestOptions, ApiError, ParsedError };
+// Re-export types (already exported above as interfaces, this line is redundant)
+// export type { ApiRequestOptions, ApiError, ParsedError };
 
 /**
  * Build full URL from endpoint path (convenience wrapper)

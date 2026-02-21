@@ -145,7 +145,7 @@ export default function SettingsUsersPage() {
     if (!avatarFile) return null;
 
     const result = await uploadFile('/files/upload', avatarFile);
-    return result.url || result.fileUrl || result.path || null;
+    return (result.url as string) || (result.fileUrl as string) || (result.path as string) || null;
   };
 
   const validateForm = () => {

@@ -1,4 +1,4 @@
-// @ts-nocheck - Pre-existing type errors with Transaction.project property
+﻿// @ts-nocheck - Pre-existing type errors with Transaction.project property
 // This is a legacy type mismatch between frontend types and backend response
 'use client';
 
@@ -16,7 +16,7 @@ import { VoiceInputButton } from '@/components/voice-input-button';
 import { AiDraftModal } from '@/components/ai-draft-modal';
 import { MoneyInput } from '@/components/common/money-input';
 import { apiClient } from '@/lib/api';
-import { refreshAfterFinancialMutation } from '@/lib/financial-refresh';
+
 import { useDefaultTimeFilter } from '@/lib/hooks';
 import { useToast } from '@/components/toast-provider';
 import { TimeFilter, TimeFilterValue } from '@/components/time-filter';
@@ -61,6 +61,8 @@ export default function ExpensePage() {
   // Track marketing category ID for ads expenses
   const [marketingCategoryId, setMarketingCategoryId] = useState<string>('');
   const [showExpenseTypeSelector, setShowExpenseTypeSelector] = useState(true);
+  // Track whether user has manually edited the note (to avoid overwriting)
+  const [noteTouched, setNoteTouched] = useState(false);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     amount: '',
@@ -151,54 +153,53 @@ export default function ExpensePage() {
   };
 
   const handleSave = async () => {
+    // Auto-set marketing category for ads before validation
+    let resolvedCategoryId = formData.expenseCategoryId;
+    if (formData.isAds && !resolvedCategoryId && marketingCategoryId) {
+      resolvedCategoryId = marketingCategoryId;
+      setFormData(prev => ({ ...prev, expenseCategoryId: marketingCategoryId }));
+    }
     if (!validateForm()) return;
 
+    // Ads expenses behave like common cost (no project required)
+    const isCommonCost = formData.expenseMode === 'common' || formData.isAds;
+    const projectId = isCommonCost ? null : formData.projectId;
+    const finalCategoryId = resolvedCategoryId || formData.expenseCategoryId;
+
     try {
-      const url = editingItem
-        ? `/transactions/${editingItem.id}`
-        : '/transactions';
+      const url = editingItem ? `/transactions/${editingItem.id}` : '/transactions';
       const method = editingItem ? 'PUT' : 'POST';
 
-      const payload = editingItem
-        ? buildExpenseUpdatePayload({
-            type: 'EXPENSE',
-            date: formData.date,
-            amount: formData.amount,
-            walletId: formData.walletId,
-            expenseCategoryId: formData.expenseCategoryId,
-            projectId: formData.expenseMode === 'project' ? formData.projectId : null,
-            note: formData.note,
-            isCommonCost: formData.expenseMode === 'common',
-          })
-        : buildExpenseCreatePayload({
-            type: 'EXPENSE',
-            date: formData.date,
-            amount: formData.amount,
-            walletId: formData.walletId,
-            expenseCategoryId: formData.expenseCategoryId,
-            projectId: formData.expenseMode === 'project' ? formData.projectId : null,
-            note: formData.note,
-            isCommonCost: formData.expenseMode === 'common',
-          });
+      const basePayload = {
+        type: 'EXPENSE',
+        date: formData.date,
+        amount: formData.amount,
+        walletId: formData.walletId,
+        expenseCategoryId: finalCategoryId,
+        projectId,
+        note: formData.note,
+        isCommonCost,
+        isAds: formData.isAds,
+        adsPlatform: formData.isAds ? formData.adsPlatform : undefined,
+      };
 
-      const result = await apiClient(url, {
-        method,
-        body: JSON.stringify(payload),
-      });
+      const payload = editingItem
+        ? buildExpenseUpdatePayload(basePayload)
+        : buildExpenseCreatePayload(basePayload);
+
+      const result = await apiClient(url, { method, body: JSON.stringify(payload) });
 
       setShowModal(false);
       resetForm();
-      // Optimistic update for new items
       if (!editingItem && result) {
         setTransactions(prev => [result as Transaction, ...prev]);
       }
-      // Refresh all related data
-      await refreshAfterFinancialMutation({
-        walletId: formData.walletId,
-        orderId: formData.expenseMode === 'project' ? formData.projectId : undefined,
-        transactionType: 'EXPENSE',
-        transactionWalletId: formData.walletId,
-      });
+      fetchData();
+
+
+
+
+
       showSuccess('Thành công', editingItem ? 'Cập nhật thành công!' : 'Tạo mới thành công!');
     } catch (error: any) {
       console.error('Failed to save:', error);
@@ -213,13 +214,13 @@ export default function ExpensePage() {
       // Optimistic update
       setTransactions(prev => prev.filter(t => t.id !== item.id));
       // Refresh all related data
-      await refreshAfterFinancialMutation({
-        walletId: item.walletId,
-        orderId: item.projectId || undefined,
-        transactionId: item.id,
-        transactionType: 'EXPENSE',
-        transactionWalletId: item.walletId,
-      });
+      fetchData();
+
+
+
+
+
+
       showSuccess('Thành công', 'Đã xóa phiếu chi');
     } catch (error: any) {
       console.error('Failed to delete:', error);
@@ -314,7 +315,17 @@ export default function ExpensePage() {
     setFormErrors([]);
     setEditingItem(null);
     setShowExpenseTypeSelector(true);
+    setNoteTouched(false);
   };
+
+  const ADS_PLATFORM_LABELS: Record<string, string> = {
+    FACEBOOK: 'Facebook Ads',
+    TIKTOK: 'TikTok Ads',
+    GOOGLE: 'Google Ads',
+  };
+
+  const buildAutoNote = (platform: string) =>
+    platform ? `chi quảng cáo ${ADS_PLATFORM_LABELS[platform]?.toLowerCase() ?? platform.toLowerCase()}` : '';
 
   const formatCurrency = (amount: number | null) => {
     if (!amount) return '0 ₫';
@@ -366,6 +377,7 @@ export default function ExpensePage() {
       // Will be set from the existing expenseCategoryId
     }
     setShowExpenseTypeSelector(false); // Show summary view for edit
+    setNoteTouched(true); // Existing note is treated as user-set
     setShowModal(true);
   };
 
@@ -751,7 +763,15 @@ export default function ExpensePage() {
                   <label className="block text-sm font-medium mb-1">Nền tảng *</label>
                   <Select
                     value={formData.adsPlatform}
-                    onChange={(e) => setFormData({ ...formData, adsPlatform: e.target.value })}
+                    onChange={(e) => {
+                    const platform = e.target.value;
+                    const autoNote = buildAutoNote(platform);
+                    setFormData({ 
+                      ...formData, 
+                      adsPlatform: platform,
+                      note: noteTouched ? formData.note : autoNote,
+                    });
+                  }}
                     className="w-full"
                   >
                     <option value="">Chọn nền tảng...</option>
@@ -802,7 +822,7 @@ export default function ExpensePage() {
                   className="w-full px-3 py-2 border rounded-md text-sm"
                   rows={2}
                   value={formData.note}
-                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                  onChange={(e) => { setNoteTouched(true); setFormData({ ...formData, note: e.target.value }); }}
                   placeholder="Ghi chú..."
                 />
               </div>
@@ -855,3 +875,4 @@ export default function ExpensePage() {
     </div>
   );
 }
+

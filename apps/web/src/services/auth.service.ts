@@ -212,5 +212,5 @@ export const authToken = {
 // Exports
 // =============================================================================
 
-export type { User, LoginRequest, LoginResponse, RegisterRequest, AuthSettings, AuthConfig };
+// Types already exported above as interfaces/types — no re-export needed
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -637,6 +637,7 @@ export default function OrderDetailPage() {
         note: '',
       });
       fetchTransactions();
+      fetchSummary();
       showSuccess('Thành công', 'Tạo phiếu chi thành công!');
     } catch (error) {
       console.error('Failed to save expense:', error);
@@ -680,6 +681,7 @@ export default function OrderDetailPage() {
         note: '',
       });
       fetchTransactions();
+      fetchSummary();
       showSuccess('Thành công', 'Tạo phiếu thu thành công!');
     } catch (error) {
       console.error('Failed to save income:', error);
@@ -716,6 +718,7 @@ export default function OrderDetailPage() {
       setEditingTransaction(null);
       setShowIncomeModal(false);
       fetchTransactions();
+      fetchSummary();
       showSuccess('Thành công', 'Cập nhật phiếu thu thành công!');
     } catch (error: any) {
       console.error('Failed to update income:', error);
@@ -752,6 +755,7 @@ export default function OrderDetailPage() {
       setEditingTransaction(null);
       setShowExpenseModal(false);
       fetchTransactions();
+      fetchSummary();
       showSuccess('Thành công', 'Cập nhật phiếu chi thành công!');
     } catch (error: any) {
       console.error('Failed to update expense:', error);
@@ -769,6 +773,7 @@ export default function OrderDetailPage() {
 
       setConfirmDeleteTransaction(null);
       fetchTransactions();
+      fetchSummary();
       showSuccess('Thành công', 'Xóa phiếu giao dịch thành công!');
     } catch (error: any) {
       console.error('Failed to delete transaction:', error);

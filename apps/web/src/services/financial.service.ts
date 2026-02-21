@@ -308,18 +308,5 @@ export const financialService = {
 // Exports
 // =============================================================================
 
-export type { 
-  Wallet, 
-  WalletType, 
-  Transaction, 
-  TransactionType,
-  TransactionCreate, 
-  TransactionUpdate,
-  TransferCreate,
-  AdjustmentCreate,
-  TransactionListParams,
-  PaginatedTransactions,
-  CashflowSummary,
-  WalletBalance
-};
+// Types already exported above as interfaces/types — no re-export needed
 

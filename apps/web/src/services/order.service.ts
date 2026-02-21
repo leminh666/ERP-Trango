@@ -233,14 +233,5 @@ export const orderService = {
 // Exports
 // =============================================================================
 
-export type { 
-  Order, 
-  OrderStatus, 
-  OrderItem, 
-  OrderCreate, 
-  OrderUpdate, 
-  OrderListParams, 
-  PaginatedOrders,
-  OrderSummary 
-};
+// Types already exported above — no re-export needed
 

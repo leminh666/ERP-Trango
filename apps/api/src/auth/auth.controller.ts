@@ -4,8 +4,6 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 
-console.log('[AUTH-CONTROLLER] Module loaded');
-
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {

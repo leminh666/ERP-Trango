@@ -115,11 +115,6 @@ export const menuConfig: MenuGroup[] = [
         icon: Wallet,
         href: '/fund/wallets',
       },
-      {
-        label: 'Dòng tiền',
-        icon: BarChart3,
-        href: '/fund/cashflow',
-      },
     ],
   },
   {

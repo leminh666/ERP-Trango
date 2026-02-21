@@ -195,9 +195,9 @@ export function CreateProductModal({ open, onOpenChange, onSuccess }: CreateProd
     try {
       const result = await uploadFile('/files/upload', file, { token });
       if (result.url) {
-        setGeneralInfo(prev => ({ ...prev, imageUrl: result.url }));
+        setGeneralInfo(prev => ({ ...prev, imageUrl: result.url as string }));
       } else {
-        setError(result.error || 'Upload thất bại');
+        setError((result.error as string) || 'Upload thất bại');
       }
     } catch (err) {
       setError('Upload thất bại');
@@ -306,7 +306,7 @@ export function CreateProductModal({ open, onOpenChange, onSuccess }: CreateProd
     try {
       const result = await uploadFile('/files/upload', file, { token });
       if (result.url) {
-        setNewVariant(prev => ({ ...prev, imageUrl: result.url }));
+        setNewVariant(prev => ({ ...prev, imageUrl: result.url as string }));
       }
     } finally {
       setVariantUploading(false);
@@ -656,7 +656,7 @@ export function CreateProductModal({ open, onOpenChange, onSuccess }: CreateProd
                       onError={(e) => {
                         // Fallback to placeholder on error
                         e.currentTarget.src = '/placeholder-product.png';
-                        e.currentTarget.onError = null; // Prevent infinite loop
+                        e.currentTarget.onerror = null; // Prevent infinite loop
                       }}
                     />
                     <div className="flex-1">

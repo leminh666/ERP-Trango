@@ -294,11 +294,5 @@ export const partnerService = {
 // Exports
 // =============================================================================
 
-export type { 
-  Partner, 
-  PartnerCreate, 
-  PartnerUpdate, 
-  PartnerListParams, 
-  PaginatedPartners 
-};
+// Types already exported above — no re-export needed
 

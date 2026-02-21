@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -451,9 +451,9 @@ export default function OrdersListPage() {
                   <tr className="border-b bg-gray-50">
                     <th className="text-left p-3 font-medium">Đơn hàng</th>
                     <th className="text-right p-3 font-medium">Tổng tiền</th>
-                    <th className="text-right p-3 font-medium bg-green-50 text-green-700">T. Thu</th>
+                    <th className="text-right p-3 font-medium bg-blue-50 text-blue-700">T. Thu</th>
                     <th className="text-right p-3 font-medium bg-red-50 text-red-700">T. Chi</th>
-                    <th className="text-right p-3 font-medium">Lợi nhuận</th>
+                    <th className="text-right p-3 font-medium bg-green-100 text-green-800">Lợi nhuận</th>
                     <th className="text-left p-3 font-medium w-24">Hành động</th>
                   </tr>
                 </thead>
@@ -476,13 +476,13 @@ export default function OrdersListPage() {
                       <td className="p-3 text-right font-medium truncate bg-gray-50/50">
                         {formatCurrency(order.estimatedTotal)}
                       </td>
-                      <td className="p-3 text-right font-medium text-green-700 bg-green-50/50 truncate">
+                      <td className="p-3 text-right font-medium text-blue-700 bg-blue-50 truncate">
                         {formatCurrency(order.incomeTotal)}
                       </td>
                       <td className="p-3 text-right font-medium text-red-700 bg-red-50/50 truncate">
                         {formatCurrency(order.expenseTotal)}
                       </td>
-                      <td className={`p-3 text-right font-medium ${order.profitL1 >= 0 ? 'bg-emerald-50/50 text-emerald-700' : 'bg-red-50/50 text-red-700'}`}>
+                      <td className={`p-3 text-right font-medium ${order.profitL1 >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50/50 text-red-700'}`}>
                         {order.profitL1 >= 0 ? '+' : ''}{formatCurrency(order.profitL1)}
                       </td>
                       <td className="p-3" onClick={(e) => e.stopPropagation()}>
@@ -520,9 +520,9 @@ export default function OrdersListPage() {
                   <tr className="bg-gray-100 font-medium">
                     <td colSpan={1} className="p-3 text-right">Tổng cộng:</td>
                     <td className="p-3 text-right">{formatCurrency(totals.estimatedTotal)}</td>
-                    <td className="p-3 text-right text-green-700 bg-green-50">{formatCurrency(totals.incomeTotal)}</td>
+                    <td className="p-3 text-right font-medium text-blue-700 bg-blue-50">{formatCurrency(totals.incomeTotal)}</td>
                     <td className="p-3 text-right text-red-700 bg-red-50">{formatCurrency(totals.expenseTotal)}</td>
-                    <td className={`p-3 text-right ${totals.profitL1 >= 0 ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'}`}>
+                    <td className={`p-3 text-right font-medium ${totals.profitL1 >= 0 ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-50'}`}>
                       {totals.profitL1 >= 0 ? '+' : ''}{formatCurrency(totals.profitL1)}
                     </td>
                     <td colSpan={1}></td>

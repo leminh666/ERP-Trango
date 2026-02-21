@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { apiClient } from '@/lib/api';
-import { refreshAfterFinancialMutation } from '@/lib/financial-refresh';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -400,7 +400,7 @@ export default function WalletDetailPage() {
           : tx
       ));
       // Refresh KPIs
-      await refreshAfterFinancialMutation({ walletId: params.id, transactionType: 'INCOME', transactionWalletId: params.id });
+      await Promise.all([fetchSummary(), fetchWallet()]);
     } catch (error: any) {
       console.error('Failed to update income:', error);
       showError('Lỗi', error.message || 'Không thể cập nhật phiếu thu');
@@ -411,10 +411,10 @@ export default function WalletDetailPage() {
     try {
       await apiClient(`/transactions/${id}`, { method: 'DELETE' });
       showSuccess('Thành công', 'Đã xóa phiếu thu');
-      // Optimistic update
+      // Optimistic update list
       setIncomes(prev => prev.filter(tx => tx.id !== id));
-      // Refresh KPIs
-      await refreshAfterFinancialMutation({ walletId: params.id, transactionType: 'INCOME', transactionWalletId: params.id });
+      // Refresh KPIs immediately
+      await Promise.all([fetchSummary(), fetchWallet()]);
     } catch (error: any) {
       console.error('Failed to delete income:', error);
       if (error.message?.includes('không tồn tại') || error.status === 404) {
@@ -462,7 +462,7 @@ export default function WalletDetailPage() {
           : tx
       ));
       // Refresh KPIs
-      await refreshAfterFinancialMutation({ walletId: params.id, transactionType: 'EXPENSE', transactionWalletId: params.id });
+      await Promise.all([fetchSummary(), fetchWallet()]);
     } catch (error: any) {
       console.error('Failed to update expense:', error);
       showError('Lỗi', error.message || 'Không thể cập nhật phiếu chi');
@@ -473,10 +473,10 @@ export default function WalletDetailPage() {
     try {
       await apiClient(`/transactions/${id}`, { method: 'DELETE' });
       showSuccess('Thành công', 'Đã xóa phiếu chi');
-      // Optimistic update
+      // Optimistic update list
       setExpenses(prev => prev.filter(tx => tx.id !== id));
-      // Refresh KPIs
-      await refreshAfterFinancialMutation({ walletId: params.id, transactionType: 'EXPENSE', transactionWalletId: params.id });
+      // Refresh KPIs immediately
+      await Promise.all([fetchSummary(), fetchWallet()]);
     } catch (error: any) {
       console.error('Failed to delete expense:', error);
       if (error.message?.includes('không tồn tại') || error.status === 404) {

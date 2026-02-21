@@ -228,14 +228,5 @@ export const workshopService = {
 // Exports
 // =============================================================================
 
-export type { 
-  WorkshopJob, 
-  JobStatus, 
-  JobItem, 
-  JobCreate, 
-  JobUpdate, 
-  JobListParams, 
-  PaginatedJobs,
-  JobSummary 
-};
+// Types already exported above — no re-export needed
 

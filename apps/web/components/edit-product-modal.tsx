@@ -276,9 +276,9 @@ export function EditProductModal({ open, onOpenChange, product, onSuccess }: Edi
     try {
       const result = await uploadFile('/files/upload', file, { token });
       if (result.url) {
-        setFormData(prev => ({ ...prev, imageUrl: result.url }));
+        setFormData(prev => ({ ...prev, imageUrl: result.url as string }));
       } else {
-        setError(result.error || 'Upload thất bại');
+        setError((result.error as string) || 'Upload thất bại');
       }
     } catch (err) {
       setError('Upload thất bại');
@@ -425,7 +425,7 @@ export function EditProductModal({ open, onOpenChange, product, onSuccess }: Edi
     try {
       const result = await uploadFile('/files/upload', file, { token });
       if (result.url) {
-        setNewVariant(prev => ({ ...prev, imageUrl: result.url }));
+        setNewVariant(prev => ({ ...prev, imageUrl: result.url as string }));
       }
     } finally {
       setVariantUploading(false);

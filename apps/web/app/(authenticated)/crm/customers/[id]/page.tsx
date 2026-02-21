@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { get, post, put } from '@/lib/api';
 import { crmService } from '@/src/services/crm.service';
 import { CrmCustomer, CrmActivity, CrmStage, CrmActivityType, FollowUpStatus, Priority, SourceChannel } from '@tran-go-hoang-gia/shared';
@@ -16,9 +15,10 @@ import { useToast } from '@/components/toast-provider';
 import { 
   ArrowLeft, Phone, MapPin, Calendar, UserCheck, 
   Plus, Clock, Edit, CheckCircle, XCircle, MessageSquare,
-  Filter, Search, FileText, Receipt, DollarSign, Eye, X
+  Filter, Search, FileText, Receipt, DollarSign, Eye, X, ShoppingBag
 } from 'lucide-react';
 import Link from 'next/link';
+import { CreateOrderModal } from '@/components/create-order-modal';
 
 // Stage colors
 const STAGE_COLORS: Record<CrmStage, { bg: string; text: string; label: string }> = {
@@ -103,7 +103,6 @@ export default function CrmCustomerDetailPage() {
   const [kpiLoading, setKpiLoading] = useState(false);
 
   // Form states
-  const [activeTab, setActiveTab] = useState('general');
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>('all');
   const [activitySearch, setActivitySearch] = useState('');
@@ -123,6 +122,7 @@ export default function CrmCustomerDetailPage() {
   // Local form state for needs (Nhu cầu)
   // Modal state for needs (Nhu cầu)
   const [showNeedsModal, setShowNeedsModal] = useState(false);
+  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
   
   const [needsForm, setNeedsForm] = useState({
     area: '',
@@ -203,39 +203,41 @@ export default function CrmCustomerDetailPage() {
   };
 
   const fetchRelatedData = async () => {
-    if (!customer?.id) return;
-    
+    // customer.customerId = core Customer ID (Project.customerId FK)
+    // customer.id         = CRM record ID — DO NOT use for project queries
+    if (!customer?.customerId) return;
+
     try {
       setRelatedLoading(true);
-      
-      // Fetch projects/orders for this customer (use customer.id - the actual Customer ID, not CRM ID)
-      const ordersData = await get<any[]>(`/projects?customerId=${customer.id}`);
+
+      // Use core Customer ID (customer.customerId) — matches Project.customerId FK
+      const ordersData = await get<any[]>(`/projects?customerId=${customer.customerId}`);
       setOrders((ordersData || []).slice(0, 5));
-      
-      // Fetch income receipts (transactions) for projects of this customer
-      const incomeData = await get<any[]>(`/transactions?type=INCOME&customerId=${customer.id}&take=5&orderBy=desc`);
+
+      // Transactions also keyed by core Customer ID via project relation
+      const incomeData = await get<any[]>(`/transactions?type=INCOME&customerId=${customer.customerId}&take=5&orderBy=desc`);
       setIncomeReceipts(incomeData || []);
-      
-      // Fetch expense receipts
-      const expenseData = await get<any[]>(`/transactions?type=EXPENSE&customerId=${customer.id}&take=5&orderBy=desc`);
+
+      const expenseData = await get<any[]>(`/transactions?type=EXPENSE&customerId=${customer.customerId}&take=5&orderBy=desc`);
       setExpenseReceipts(expenseData || []);
-    } catch (error: any) {
+    }catch (error: any) {
       console.error('Failed to fetch related data:', error);
-    } finally {
+    }finally {
       setRelatedLoading(false);
     }
   };
 
   // Fetch KPI data (total amount, paid, debt)
   const fetchKpiData = async () => {
-    if (!customer?.id) return;
-    
+    // KPI endpoint expects core Customer ID, not CRM record ID
+    if (!customer?.customerId) return;
+
     try {
       setKpiLoading(true);
-      
-      // Use optimized KPI endpoint
+
+      // Pass core Customer ID — backend queries Project.customerId with this value
       const kpiData = await get<{ totalAmount: number; paidAmount: number; debtAmount: number }>(
-        `/crm/customers/${customer.id}/kpi`
+        `/crm/customers/${customer.customerId}/kpi`
       );
       
       setKpiData({
@@ -252,11 +254,11 @@ export default function CrmCustomerDetailPage() {
 
   // Fetch related data when customer is loaded and tab is info
   useEffect(() => {
-    if (customer?.customerId && activeTab === 'general') {
+    if (customer?.customerId) {
       fetchRelatedData();
       fetchKpiData();
     }
-  }, [activeTab, customer?.customerId]);
+  }, [customer?.customerId]);
 
   const handleStageChange = async (newStage: CrmStage) => {
     if (!customer?.customerId) return;
@@ -458,185 +460,183 @@ export default function CrmCustomerDetailPage() {
 
   return (
     <div>
-      <PageHeader
-        title={customer.customer?.name || 'Khách hàng CRM'}
-        description="Chi tiết khách hàng và lịch sử chăm sóc"
-        action={
-          <Button variant="outline" onClick={() => router.push('/crm/customers')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Quay lại
-          </Button>
-        }
-      />
+      {/* ===== HEADER KHACH HANG ===== */}
+      <div className="mb-6 bg-white border rounded-xl shadow-sm overflow-hidden">
 
-      {/* Customer Header Card - Full Info */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          {/* Main Info Row */}
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-            {/* Left: Avatar + Name + Primary Contact */}
-            <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                <UserCheck className="h-8 w-8 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-lg">{customer.customer?.name}</h2>
-                
-                {/* Primary Contact Info Row */}
-                <div className="flex flex-wrap items-center gap-3 mt-1 text-sm">
-                  {customer.customer?.phone && (
-                    <span className="flex items-center gap-1 text-gray-700">
-                      <Phone className="h-4 w-4" />
-                      <a href={`tel:${customer.customer.phone}`} className="hover:text-blue-600">
-                        {customer.customer.phone}
-                      </a>
-                    </span>
-                  )}
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${stageColor.bg} ${stageColor.text}`}>
-                    {stageColor.label}
-                  </span>
-                </div>
-              </div>
+        {/* Row 1: Avatar + Tên + SĐT + Actions + Quay lại */}
+        <div className="px-5 pt-4 pb-3 flex items-start gap-3">
+          {/* Avatar */}
+          <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+            <UserCheck className="h-5 w-5 text-blue-600" />
+          </div>
+
+          {/* Tên + SĐT + Actions */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900 leading-tight">{customer.customer?.name}</h2>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${stageColor.bg} ${stageColor.text}`}>
+                {stageColor.label}
+              </span>
             </div>
-
-            {/* Right: Stage Selector */}
-            <div className="flex flex-col items-start lg:items-end gap-2">
-              <select
-                className="px-3 py-2 border rounded-md text-sm"
-                value={customer.stage}
-                onChange={(e) => handleStageChange(e.target.value as CrmStage)}
-                disabled={saving}
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+              {customer.customer?.phone && (
+                <span className="flex items-center gap-1 text-sm text-gray-600">
+                  <Phone className="h-3.5 w-3.5" />
+                  <a href={`tel:${customer.customer.phone}`} className="hover:text-blue-600 font-medium">
+                    {customer.customer.phone}
+                  </a>
+                </span>
+              )}
+              {customer.customer?.phone && (
+                <a
+                  href={"tel:" + customer.customer.phone}
+                  title="Gọi điện"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-gray-200 bg-white hover:bg-green-50 hover:text-green-600 hover:border-green-300 text-gray-500 transition-colors"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                </a>
+              )}
+              {customer.customer?.phone && (
+                <a
+                  href={"https://zalo.me/" + (customer.customer.phone.replace(/\s+/g, "").startsWith("0") ? "84" + customer.customer.phone.replace(/\s+/g, "").slice(1) : customer.customer.phone.replace(/\s+/g, "").replace(/^\+/, ""))}
+                  target="_blank" rel="noopener noreferrer" title="Nhắn Zalo"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-colors overflow-hidden"
+                >
+                  <img src="/icons/zalo.svg" alt="Zalo" className="h-4 w-4" />
+                </a>
+              )}
+              <button
+                onClick={() => setShowCreateOrderModal(true)}
+                title="Tạo đơn hàng"
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md border border-gray-200 bg-white hover:bg-accent text-xs font-medium text-gray-600 transition-colors"
               >
-                {Object.entries(STAGE_COLORS).map(([stage, { label }]) => (
-                  <option key={stage} value={stage}>{label}</option>
-                ))}
-              </select>
-              {customer.ownerUser && (
-                <span className="text-sm text-gray-500">
-                  NV phụ trách: <span className="font-medium">{customer.ownerUser.name}</span>
-                </span>
-              )}
+                <ShoppingBag className="h-3.5 w-3.5" />
+                <span>Tạo đơn</span>
+              </button>
             </div>
           </div>
 
-          {/* Secondary Info Row - Chips/Badges */}
-          <div className="mt-4 pt-4 border-t">
-            <div className="flex flex-wrap gap-2">
-              {/* Customer Code */}
-              {customer.customer?.code && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
-                  <FileText className="h-3 w-3" />
-                  Mã: <span className="font-medium">{customer.customer.code}</span>
-                </span>
-              )}
+          {/* Quay lại — top-right */}
+          <button
+            onClick={() => router.push('/crm/customers')}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors shrink-0 mt-1"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Quay lại</span>
+          </button>
+        </div>
 
-              {/* Source */}
-              {sourceLabel && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
-                  Nguồn: <span className="font-medium">{sourceLabel}</span>
-                  {customer.customer?.sourceDetail && (
-                    <span className="text-gray-500">({customer.customer.sourceDetail})</span>
-                  )}
-                </span>
-              )}
+        {/* Row 2: Chips thông tin + Dropdown trạng thái */}
+        <div className="px-5 pb-3 flex flex-wrap items-center gap-2">
+          {customer.customer?.code && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600">
+              <FileText className="h-3 w-3" />
+              Mã: <span className="font-medium">{customer.customer.code}</span>
+            </span>
+          )}
+          {sourceLabel && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600">
+              Nguồn: <span className="font-medium">{sourceLabel}</span>
+              {customer.customer?.sourceDetail && <span className="text-gray-400">({customer.customer.sourceDetail})</span>}
+            </span>
+          )}
+          {customer.customer?.createdAt && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600">
+              <Calendar className="h-3 w-3" />
+              Tạo: <span className="font-medium">{new Date(customer.customer.createdAt).toLocaleDateString('vi-VN')}</span>
+            </span>
+          )}
+          {customer.customer?.address && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600 max-w-[240px]">
+              <MapPin className="h-3 w-3 shrink-0" />
+              <span className="truncate">{customer.customer.address}</span>
+            </span>
+          )}
+          {customer.createdAt && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 rounded-full text-xs text-blue-600">
+              CRM từ: <span className="font-medium">{new Date(customer.createdAt).toLocaleDateString('vi-VN')}</span>
+            </span>
+          )}
 
-              {/* Created Date */}
-              {customer.customer?.createdAt && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
-                  <Calendar className="h-3 w-3" />
-                  Tạo: <span className="font-medium">
-                    {new Date(customer.customer.createdAt).toLocaleDateString('vi-VN')}
-                  </span>
-                </span>
-              )}
-
-              {/* Address */}
-              {customer.customer?.address && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs max-w-[300px] truncate">
-                  <MapPin className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{customer.customer.address}</span>
-                </span>
-              )}
-
-              {/* Created Date - CRM */}
-              {customer.createdAt && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 rounded text-xs text-blue-700">
-                  CRM từ: <span className="font-medium">
-                    {new Date(customer.createdAt).toLocaleDateString('vi-VN')}
-                  </span>
-                </span>
-              )}
-            </div>
+          {/* Dropdown trạng thái CRM — nằm cuối hàng chip */}
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            {customer.ownerUser && (
+              <span className="hidden md:inline text-xs text-gray-400 whitespace-nowrap">
+                {customer.ownerUser.name}
+              </span>
+            )}
+            <select
+              className="px-2.5 py-1 border rounded-md text-xs bg-white text-gray-700 cursor-pointer font-medium"
+              value={customer.stage}
+              onChange={(e) => handleStageChange(e.target.value as CrmStage)}
+              disabled={saving}
+              title="Cập nhật trạng thái CRM"
+            >
+              {Object.entries(STAGE_COLORS).map(([stage, { label }]) => (
+                <option key={stage} value={stage}>{label}</option>
+              ))}
+            </select>
           </div>
+        </div>
 
-          {/* KPI Cards - Financial Overview */}
-          <div className="mt-4 pt-4 border-t">
-            <div className="grid grid-cols-3 gap-4">
-              {/* Tổng tiền */}
-              <div className="bg-blue-50 rounded-lg p-3 text-center">
-                {kpiLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-4 bg-blue-200 rounded w-16 mx-auto mb-1"></div>
-                    <div className="h-6 bg-blue-200 rounded w-24 mx-auto"></div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-xs text-blue-600 font-medium">Tổng tiền</p>
-                    <p className="text-lg font-bold text-blue-700">
-                      {kpiData.totalAmount.toLocaleString('vi-VN')}đ
-                    </p>
-                  </>
-                )}
+        {/* Row 3: KPI 3 ô */}
+        <div className="border-t grid grid-cols-3 divide-x divide-gray-200 bg-gray-50">
+          <div className="px-4 py-3 text-center" title="Tổng giá trị các đơn hàng của khách">
+            {kpiLoading ? (
+              <div className="animate-pulse space-y-1">
+                <div className="h-3 bg-gray-200 rounded w-14 mx-auto" />
+                <div className="h-5 bg-gray-200 rounded w-20 mx-auto" />
               </div>
-
-              {/* Đã thanh toán */}
-              <div className="bg-green-50 rounded-lg p-3 text-center">
-                {kpiLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-4 bg-green-200 rounded w-20 mx-auto mb-1"></div>
-                    <div className="h-6 bg-green-200 rounded w-24 mx-auto"></div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-xs text-green-600 font-medium">Đã thanh toán</p>
-                    <p className="text-lg font-bold text-green-700">
-                      {kpiData.paidAmount.toLocaleString('vi-VN')}đ
-                    </p>
-                  </>
-                )}
-              </div>
-
-              {/* Công nợ */}
-              <div className="bg-red-50 rounded-lg p-3 text-center">
-                {kpiLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-4 bg-red-200 rounded w-16 mx-auto mb-1"></div>
-                    <div className="h-6 bg-red-200 rounded w-24 mx-auto"></div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-xs text-red-600 font-medium">Công nợ</p>
-                    <p className="text-lg font-bold text-red-700">
-                      {kpiData.debtAmount.toLocaleString('vi-VN')}đ
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 font-medium">Tổng tiền</p>
+                <p className="text-base font-bold text-blue-700 leading-tight tabular-nums mt-0.5">
+                  {kpiData.totalAmount.toLocaleString('vi-VN')}đ
+                </p>
+              </>
+            )}
           </div>
-        </CardContent>
-      </Card>
+          <div className="px-4 py-3 text-center" title="Tổng số tiền khách đã thanh toán (phiếu thu)">
+            {kpiLoading ? (
+              <div className="animate-pulse space-y-1">
+                <div className="h-3 bg-gray-200 rounded w-20 mx-auto" />
+                <div className="h-5 bg-gray-200 rounded w-20 mx-auto" />
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 font-medium">Đã thanh toán</p>
+                <p className="text-base font-bold text-green-700 leading-tight tabular-nums mt-0.5">
+                  {kpiData.paidAmount.toLocaleString('vi-VN')}đ
+                </p>
+              </>
+            )}
+          </div>
+          <div className="px-4 py-3 text-center" title="Công nợ = Tổng tiền - Đã thanh toán">
+            {kpiLoading ? (
+              <div className="animate-pulse space-y-1">
+                <div className="h-3 bg-gray-200 rounded w-12 mx-auto" />
+                <div className="h-5 bg-gray-200 rounded w-20 mx-auto" />
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 font-medium">Công nợ</p>
+                <p className={`text-base font-bold leading-tight tabular-nums mt-0.5 ${kpiData.debtAmount > 0 ? 'text-red-600' : 'text-gray-700'}`}>
+                  {kpiData.debtAmount.toLocaleString('vi-VN')}đ
+                </p>
+              </>
+            )}
+          </div>
+        </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="general">Thông tin chung</TabsTrigger>
-          <TabsTrigger value="care-log">Nhật ký chăm sóc</TabsTrigger>
-        </TabsList>
+      </div>
 
-        {/* Tab: Thông tin chung */}
-        <TabsContent value="general">
-          <div className="space-y-6">
+      {/* Layout 2 cột: Thông tin chung (2/3) + Nhật ký chăm sóc (1/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+        {/* Cột TRÁI: Thông tin chung (2/3) */}
+        <div className="lg:col-span-2 space-y-6">
             {/* Nhu cầu / Mong muốn của khách */}
             <Card>
               <CardHeader>
@@ -693,7 +693,7 @@ export default function CrmCustomerDetailPage() {
                   </div>
                 ) : (
                   <div className="text-center py-4 text-gray-500 text-sm">
-                    Chưa có thông tin nhu cầu. Bấm "Tạo nhu cầu" để nhập thông tin.
+                    Chưa có thông tin nhu cầu. Bấm &quot;Tạo nhu cầu&quot; để nhập thông tin.
                   </div>
                 )}
               </CardContent>
@@ -707,7 +707,7 @@ export default function CrmCustomerDetailPage() {
                     <FileText className="h-4 w-4" />
                     Đơn hàng ({orders.length})
                   </CardTitle>
-                  <Link href={`/orders?customerId=${customer.id}`}>
+                  <Link href={`/orders?customerId=${customer.customerId}`}>
                     <Button variant="outline" size="sm">
                       <Eye className="h-3 w-3 mr-1" />
                       Xem tất cả
@@ -835,20 +835,20 @@ export default function CrmCustomerDetailPage() {
                 )}
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
+        </div>
 
-        {/* Tab: Nhật ký chăm sóc (MERGED) */}
-        <TabsContent value="care-log">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Nhật ký chăm sóc</CardTitle>
-              <Button size="sm" onClick={() => setShowActivityForm(!showActivityForm)}>
-                <Plus className="h-4 w-4 mr-1" />
-                Thêm xử lý
-              </Button>
-            </CardHeader>
-            <CardContent>
+        {/* Cột PHẢI: Nhật ký chăm sóc (1/3) */}
+        <div className="lg:col-span-1">
+          <div className="lg:sticky lg:top-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="text-base">Nhật ký chăm sóc</CardTitle>
+                <Button size="sm" onClick={() => setShowActivityForm(!showActivityForm)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Thêm xử lý
+                </Button>
+              </CardHeader>
+              <CardContent className="max-h-[calc(100vh-200px)] overflow-y-auto">
               {/* Activity Form */}
               {showActivityForm && (
                 <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
@@ -1059,10 +1059,13 @@ export default function CrmCustomerDetailPage() {
                   Chưa có hoạt động nào
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+
 
       {/* Modal: Nhu cầu / Mong muốn */}
       {showNeedsModal && (
@@ -1167,6 +1170,21 @@ export default function CrmCustomerDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal: Tao don hang */}
+      {showCreateOrderModal && (
+        <CreateOrderModal
+          customers={customer.customer ? [{ id: customer.customer.id, name: customer.customer.name }] : []}
+          lockedCustomerId={customer.customer?.id}
+          onClose={() => setShowCreateOrderModal(false)}
+          onCreated={(_newOrder) => {
+            setShowCreateOrderModal(false);
+            // Refresh orders list + KPI — stay on page so user sees the new order
+            fetchRelatedData();
+            fetchKpiData();
+          }}
+        />
       )}
     </div>
   );

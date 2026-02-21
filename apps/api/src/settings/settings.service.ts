@@ -164,8 +164,23 @@ export class SettingsService {
   }
 
   async updateSettings(userId: string, payload: Partial<SystemSettings>, reqUserEmail?: string): Promise<any> {
-    // Skip all validation and DB for debugging - just return success
-    console.log('[DEBUG] updateSettings called, userId:', userId, 'payload:', JSON.stringify(payload).substring(0, 100));
+    const before = await this.getSettings(userId);
+
+    if (payload.ai !== undefined) {
+      await this.updateConfig('ai_config', payload.ai);
+    }
+    if (payload.reminders !== undefined) {
+      await this.updateConfig('reminder_config', payload.reminders);
+    }
+    if (payload.voice !== undefined) {
+      await this.updateConfig('voice_config', payload.voice);
+    }
+    if (payload.auth !== undefined) {
+      const validated = this.validateAuthConfig(payload.auth as AuthConfig);
+      await this.updateConfig('auth_config', validated);
+    }
+
+    await this.auditLog('system', before, payload, userId, reqUserEmail);
     return { success: true, message: 'Cập nhật cấu hình thành công' };
   }
 

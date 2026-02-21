@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { apiClient } from '@/lib/api';
-import { refreshAfterFinancialMutation } from '@/lib/financial-refresh';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -779,8 +779,13 @@ export default function CustomerDetailPage() {
                   addressLine={editForm.addressLine}
                   onChange={(data) => setEditForm({
                     ...editForm,
-                    ...data,
-                    // Map addressLine to address for legacy field
+                    provinceCode: data.provinceCode || '',
+                    provinceName: data.provinceName || '',
+                    districtCode: data.districtCode || '',
+                    districtName: data.districtName || '',
+                    wardCode: data.wardCode || '',
+                    wardName: data.wardName || '',
+                    addressLine: data.addressLine || '',
                     address: data.addressLine || '',
                   })}
                 />

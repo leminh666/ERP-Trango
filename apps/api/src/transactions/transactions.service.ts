@@ -126,14 +126,11 @@ export class TransactionsService {
       if (!isAds && !data.expenseCategory?.connect?.id) {
         throw new BadRequestException('Phiếu chi bắt buộc chọn Danh mục chi');
       }
-      // If ads, expense category is optional (not allowed)
-      if (isAds && data.expenseCategory?.connect?.id) {
-        throw new BadRequestException('Phiếu chi quảng cáo không được chọn Danh mục chi');
-      }
       // If ads, require adsPlatform
       if (isAds && !data.adsPlatform) {
         throw new BadRequestException('Phiếu chi quảng cáo bắt buộc chọn Nền tảng');
       }
+      // Ads expenses are treated as common cost — no project required
       if (data.incomeCategory?.connect?.id) {
         throw new BadRequestException('Phiếu chi không được chọn Danh mục thu');
       }
@@ -214,6 +211,12 @@ export class TransactionsService {
 
     const result = await this.prisma.transaction.create({
       data: createData,
+      include: {
+        wallet: true,
+        incomeCategory: true,
+        expenseCategory: true,
+        project: true,
+      },
     });
 
     // Audit log for CREATE
@@ -269,32 +272,60 @@ export class TransactionsService {
       const expenseCatId = (data.expenseCategory as any)?.connect?.id || existing.expenseCategoryId;
       const incomeCatId = (data.incomeCategory as any)?.connect?.id || existing.incomeCategoryId;
       const isCommonCost = (data.isCommonCost as boolean) ?? existing.isCommonCost;
+      const isAds = (data.isAds as boolean) ?? existing.isAds;
       const projectId = (data.project as any)?.connect?.id || existing.projectId;
 
       if (!walletId) {
         throw new BadRequestException('Phiếu chi bắt buộc chọn Ví');
       }
-      if (!expenseCatId) {
+      // Ads expenses don't require expense category (auto-set to marketing)
+      if (!isAds && !expenseCatId) {
         throw new BadRequestException('Phiếu chi bắt buộc chọn Danh mục chi');
       }
       if (incomeCatId) {
         throw new BadRequestException('Phiếu chi không được chọn Danh mục thu');
       }
       
-      if (!isCommonCost && !projectId) {
+      // Ads expenses are standalone (no project or common cost required)
+      if (!isAds && !isCommonCost && !projectId) {
         throw new BadRequestException('Phiếu chi phải gán đơn hàng hoặc chọn Chi phí chung');
       }
-      if (isCommonCost && projectId) {
+      if (!isAds && isCommonCost && projectId) {
         throw new BadRequestException('Chi phí chung không được gán đơn hàng');
       }
     }
 
+    // Normalize date: Prisma requires a full DateTime, not just "YYYY-MM-DD"
+    let normalizedDate: Date | undefined = undefined;
+    if (data.date !== undefined && data.date !== null) {
+      const rawDate = data.date as string | Date;
+      if (rawDate instanceof Date) {
+        normalizedDate = rawDate;
+      }else if (typeof rawDate === 'string' && rawDate.trim() !== '') {
+        // Handle "YYYY-MM-DD" → "YYYY-MM-DDT00:00:00.000Z"
+        const iso = rawDate.includes('T') ? rawDate : `${rawDate}T00:00:00.000Z`;
+        const parsed = new Date(iso);
+        if (isNaN(parsed.getTime())) {
+          throw new BadRequestException('Ngày không hợp lệ, vui lòng chọn lại');
+        }
+        normalizedDate = parsed;
+      }
+    }
+
+    const updateData: any = {
+      ...data,
+      updatedByUserId: userId,
+    };
+    if (normalizedDate !== undefined) {
+      updateData.date = normalizedDate;
+    } else {
+      // Don't overwrite date if not provided
+      delete updateData.date;
+    }
+
     const result = await this.prisma.transaction.update({
       where: { id },
-      data: {
-        ...data,
-        updatedByUserId: userId,
-      },
+      data: updateData,
     });
 
     // Audit log for UPDATE

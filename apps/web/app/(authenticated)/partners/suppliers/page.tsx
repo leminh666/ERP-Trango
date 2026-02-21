@@ -417,8 +417,13 @@ export default function SuppliersPage() {
                 addressLine={formData.addressLine}
                 onChange={(data) => setFormData({
                   ...formData,
-                  ...data,
-                  // Map addressLine to address for legacy field
+                  provinceCode: data.provinceCode || '',
+                  provinceName: data.provinceName || '',
+                  districtCode: data.districtCode || '',
+                  districtName: data.districtName || '',
+                  wardCode: data.wardCode || '',
+                  wardName: data.wardName || '',
+                  addressLine: data.addressLine || '',
                   address: data.addressLine || '',
                 })}
               />

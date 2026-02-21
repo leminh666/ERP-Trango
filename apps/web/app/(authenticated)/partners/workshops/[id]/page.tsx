@@ -258,6 +258,7 @@ export default function WorkshopDetailPage() {
         name: workshop.name || '',
         phone: workshop.phone || '',
         address: workshop.address || '',
+        addressLine: workshop.addressLine || '',
         provinceCode: workshop.provinceCode || '',
         provinceName: workshop.provinceName || '',
         districtCode: workshop.districtCode || '',
@@ -749,8 +750,13 @@ export default function WorkshopDetailPage() {
                   addressLine={editForm.addressLine}
                   onChange={(data) => setEditForm({
                     ...editForm,
-                    ...data,
-                    // Map addressLine to address for legacy field
+                    provinceCode: data.provinceCode || '',
+                    provinceName: data.provinceName || '',
+                    districtCode: data.districtCode || '',
+                    districtName: data.districtName || '',
+                    wardCode: data.wardCode || '',
+                    wardName: data.wardName || '',
+                    addressLine: data.addressLine || '',
                     address: data.addressLine || '',
                   })}
                 />

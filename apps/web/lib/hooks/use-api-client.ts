@@ -2,7 +2,9 @@
 
 import { useCallback } from 'react';
 import { useToast } from '@/components/toast-provider';
-import { apiClient, parseApiError, FetchOptions } from '@/lib/api';
+import { apiClient, parseApiError, ApiRequestOptions, HttpMethod } from '@/lib/api';
+
+type FetchOptions = ApiRequestOptions;
 
 /**
  * API Hook with automatic toast notifications
@@ -138,7 +140,7 @@ export function useApiClient() {
    * Generic request with custom method
    */
   const request = useCallback(async <T = unknown>(
-    method: string,
+    method: HttpMethod,
     endpoint: string,
     data?: Record<string, unknown> | unknown[] | string,
     options?: FetchOptions
@@ -204,7 +206,7 @@ export function useMutationApiClient() {
   const { showSuccess, showError } = useToast();
 
   const mutate = useCallback(async <T = unknown>(
-    method: string,
+    method: HttpMethod,
     endpoint: string,
     data?: Record<string, unknown> | unknown[] | string
   ): Promise<T> => {
@@ -219,16 +221,16 @@ export function useMutationApiClient() {
     }
   }, [showSuccess, showError]);
 
-  const create = useCallback((endpoint: string, data: Record<string, unknown>) =>
+  const create = useCallback(<T = unknown>(endpoint: string, data: Record<string, unknown>) =>
     mutate<T>('POST', endpoint, data), [mutate]);
 
-  const update = useCallback((endpoint: string, data: Record<string, unknown>) =>
+  const update = useCallback(<T = unknown>(endpoint: string, data: Record<string, unknown>) =>
     mutate<T>('PUT', endpoint, data), [mutate]);
 
-  const patch = useCallback((endpoint: string, data: Record<string, unknown>) =>
+  const patch = useCallback(<T = unknown>(endpoint: string, data: Record<string, unknown>) =>
     mutate<T>('PATCH', endpoint, data), [mutate]);
 
-  const remove = useCallback((endpoint: string) =>
+  const remove = useCallback(<T = unknown>(endpoint: string) =>
     mutate<T>('DELETE', endpoint), [mutate]);
 
   return { create, update, patch, remove, mutate };

@@ -97,9 +97,16 @@ export interface Customer {
   name: string;
   phone: string | null;
   address: string | null;
+  addressLine: string | null;
   region: string | null;
   city: string | null;
   district: string | null;
+  provinceCode: string | null;
+  provinceName: string | null;
+  districtCode: string | null;
+  districtName: string | null;
+  wardCode: string | null;
+  wardName: string | null;
   status: CustomerStatus;
   lostReason: string | null;
   nextFollowUpAt: Date | null;
@@ -118,7 +125,7 @@ export interface Customer {
   imageUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
-  owner?: { id: string; name: string; email: string } | null;
+  owner?: { id: string; name: string; email: string }| null;
   followUps?: CustomerFollowUp[];
   _count?: { followUps: number };
 }
@@ -142,9 +149,16 @@ export interface Supplier {
   name: string;
   phone: string | null;
   address: string | null;
+  addressLine: string | null;
   region: string | null;
   city: string | null;
   district: string | null;
+  provinceCode: string | null;
+  provinceName: string | null;
+  districtCode: string | null;
+  districtName: string | null;
+  wardCode: string | null;
+  wardName: string | null;
   note: string | null;
   isActive: boolean;
   deletedAt: Date | null;
@@ -161,6 +175,13 @@ export interface Workshop {
   name: string;
   phone: string | null;
   address: string | null;
+  addressLine: string | null;
+  provinceCode: string | null;
+  provinceName: string | null;
+  districtCode: string | null;
+  districtName: string | null;
+  wardCode: string | null;
+  wardName: string | null;
   note: string | null;
   isActive: boolean;
   deletedAt: Date | null;
@@ -573,6 +594,19 @@ export type TransactionCreateInput = z.infer<typeof TransactionCreateSchema>;
 
 // === PHASE 8: Dashboard Types ===
 
+export interface DashboardDebtItem {
+  id: string;
+  name: string;
+  phone: string | null;
+  note?: string | null;
+  debt: number;
+}
+
+export interface DashboardAdsByPlatform {
+  platform: string;
+  amount: number;
+}
+
 export interface DashboardData {
   revenueTotal: number;
   expenseTotal: number;
@@ -581,6 +615,15 @@ export interface DashboardData {
   arTop: CustomerARItem[];
   apWorkshopTop: WorkshopAPItem[];
   apSupplierTop: SupplierAPItem[];
+  // Extended debt fields
+  customerDebtTotal?: number;
+  customerDebts?: DashboardDebtItem[];
+  workshopDebtTotal?: number;
+  workshopDebts?: DashboardDebtItem[];
+  supplierDebtTotal?: number;
+  supplierDebts?: DashboardDebtItem[];
+  // Ads analytics
+  adsByPlatform?: DashboardAdsByPlatform[];
 }
 
 export interface DashboardSeriesItem {
