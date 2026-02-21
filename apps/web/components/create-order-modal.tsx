@@ -106,16 +106,19 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
   };
 
   const handleSelectProduct = (value: { product: Product | null; variant: ProductVariant | null }) => {
-    const { product, variant } = value;
-    if (editingItemIndex !== null && product) {
-      updateItem(editingItemIndex, {
-        product,
-        productId: product.id,
-        variantId: variant?.id || null,
-        name: variant?.name || product.name,
-        unit: product.unit,
-        unitPrice: variant?.price?.toString() || product.defaultSalePrice?.toString() || '0',
-      });
+    const { product, variant }= value;
+    if (editingItemIndex !== null) {
+      if (product) {
+        updateItem(editingItemIndex, {
+          product,
+          productId: product.id,
+          variantId: variant?.id || null,
+          name: variant?.name || product.name,
+          unit: product.unit || '',
+          unitPrice: variant?.price?.toString() || product.defaultSalePrice?.toString() || '0',
+        });
+      }
+      // if product is null (custom item), leave the empty row for manual input
     }
     setShowProductPicker(false);
     setEditingItemIndex(null);
@@ -390,9 +393,10 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
                     variant="outline"
                         size="sm"
                         onClick={() => {
-                      setEditingItemIndex(items.length);
-                          setShowProductPicker(true);
+                      const newIndex = items.length;
                       addItem();
+                      setEditingItemIndex(newIndex);
+                          setShowProductPicker(true);
                     }}
                   >
                     <Package className="h-3 w-3 mr-1" />
@@ -500,13 +504,13 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
       {/* Product Picker Modal */}
         {showProductPicker && (
           <ProductPicker
-          products={products}
-          onSelect={handleSelectProduct}
+          value={editingItemIndex !== null && items[editingItemIndex] ? { product: items[editingItemIndex].product || null, variant: null } : { product: null, variant: null }}
+          onChange={handleSelectProduct}
             onClose={() => {
               setShowProductPicker(false);
               setEditingItemIndex(null);
             }}
-          onCreateProduct={() => {
+          onCreateNew={() => {
               setShowProductPicker(false);
               setShowCreateProduct(true);
             }}
