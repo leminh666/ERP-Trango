@@ -46,6 +46,10 @@ jobs:
 
                       git pull origin main  # Pull latest code từ repository
                       npm install  # Cài đặt lại dependencies nếu có thay đổi
+                      cd /var/www/projects/ERP-Trango/apps/api
+                      npm run prisma:generate
+
+                      cd /var/www/projects/ERP-Trango
                       npm run build  # Xây dựng lại ứng dụng
                       pm2 restart api-erp.trangohoanggia.com  # Restart ứng dụng API với PM2
                       pm2 restart erp.trangohoanggia.com  # Restart ứng dụng Web với PM2
