@@ -343,9 +343,10 @@ export default function OrderDetailPage() {
             amount: Number(item.amount),
             // Acceptance data
             acceptedQty: acceptedQty,
-            rawAcceptedQty: acceptedQty === 0 ? '0' : acceptedQty.toString(), // Raw string for editing
+            // If no existing acceptance record → empty string so user must type; otherwise show the value
+            rawAcceptedQty: acceptance ? (acceptedQty === 0 ? '0' : acceptedQty.toString()) : '',
             unitPriceOverride: unitPriceOverride,
-            rawUnitPrice: unitPriceOverride === null ? '' : unitPriceOverride.toString(), // Raw string for VND input
+            rawUnitPrice: unitPriceOverride === null ? '' : unitPriceOverride.toString(),
             note: acceptance?.note || null,
           };
         });
@@ -405,13 +406,13 @@ export default function OrderDetailPage() {
     const newItems = [...acceptanceItems];
     if (field === 'acceptedQty') {
       // Store raw string value to preserve user input (e.g., "13," or "13.1")
-      const strValue = (value as string) || '0';
+      const strValue = (value as string) ?? '';
       // Sanitize: only allow digits, dots, and commas
-      const sanitized:any = strValue.replace(/[^\d.,]/g, '');
+      const sanitized: any = strValue.replace(/[^\d.,]/g, '');
       newItems[index] = { ...newItems[index], rawAcceptedQty: sanitized } as any;
     } else if (field === 'unitPriceOverride') {
       // Store raw string for VND input (preserve dots for display)
-      const strValue = (value as string) || '';
+      const strValue = (value as string) ?? '';
       // Sanitize: allow digits, dots, and commas
       const sanitized = strValue.replace(/[^\d.,]/g, '');
       newItems[index] = { ...newItems[index], rawUnitPrice: sanitized } as any;
@@ -425,81 +426,115 @@ export default function OrderDetailPage() {
   const handleAcceptanceBlur = (index: number, field: 'acceptedQty' | 'unitPriceOverride', value: string) => {
     const newItems = [...acceptanceItems];
     if (field === 'acceptedQty') {
-      const rawValue = value || '0';
-      // Normalize: replace commas with dots, limit to 2 decimal places
-      const normalized = rawValue.replace(/,/g, '.');
-      const parts = normalized.split('.');
-      let finalValue = parts[0];
-      if (parts[1] && parts[1].length > 0) {
-        finalValue += '.' + parts[1].slice(0, 2); // Max 2 decimal places
+      // If empty, keep empty (don't coerce to 0)
+      if (!value || value.trim() === '') {
+        newItems[index] = { ...newItems[index], acceptedQty: 0, rawAcceptedQty: '' } as any;
+      } else {
+        const normalized = value.replace(/,/g, '.');
+        const parts = normalized.split('.');
+        let finalValue = parts[0];
+        if (parts[1] && parts[1].length > 0) {
+          finalValue += '.' + parts[1].slice(0, 2);
+        }
+        const numValue = parseFloat(finalValue) || 0;
+        newItems[index] = {
+          ...newItems[index],
+          acceptedQty: numValue,
+          rawAcceptedQty: numValue.toString(),
+        } as any;
       }
-      const numValue = parseFloat(finalValue) || 0;
-      // Update both raw (for display) and number (for saving)
-      newItems[index] = {
-        ...newItems[index],
-        acceptedQty: numValue,
-        rawAcceptedQty: numValue === 0 ? '0' : numValue.toString()
-      } as any;
-    } else if (field === 'unitPriceOverride') {
-      // Parse VND format: remove all dots/commas and convert to number
-      const rawValue = value || '0';
+    }else if (field === 'unitPriceOverride') {
+      const rawValue = value || '';
       const cleaned = rawValue.replace(/[.,]/g, '');
       const numValue = parseFloat(cleaned) || 0;
       newItems[index] = {
         ...newItems[index],
         unitPriceOverride: numValue > 0 ? numValue : null,
-        rawUnitPrice: numValue > 0 ? numValue.toString() : ''
+        rawUnitPrice: numValue > 0 ? numValue.toString() : '',
       } as any;
     }
     setAcceptanceItems(newItems);
   };
 
   const handleSaveAcceptance = async () => {
-    // Validate: SL_NT is required and >= 0
-    const validationErrors: Record<number, string> = {};
+    // Validate: SLNT must be provided (not empty) and non-negative
+    const validationErrors: number[] = [];
     for (let i = 0; i < acceptanceItems.length; i++) {
-      const item = acceptanceItems[i];
-      if (item.acceptedQty < 0) {
-        validationErrors[i] = 'Số lượng nghiệm thu không được âm';
+      const item = acceptanceItems[i] as any;
+      const rawQty = item.rawAcceptedQty;
+      // Empty string means user hasn't entered anything → required
+      if (rawQty === '' || rawQty === undefined || rawQty === null) {
+        validationErrors.push(i);
+        continue;
       }
-      // Validate unitPriceOverride if provided
+      if (item.acceptedQty < 0) {
+        validationErrors.push(i);
+        continue;
+      }
       if (item.unitPriceOverride !== null && item.unitPriceOverride < 0) {
-        validationErrors[i] = 'Đơn giá không được âm';
+        validationErrors.push(i);
       }
     }
 
-    if (Object.keys(validationErrors).length > 0) {
-      showError('Lỗi dữ liệu', Object.values(validationErrors)[0]);
+    if (validationErrors.length > 0) {
+      const firstIdx = validationErrors[0];
+      const firstName = acceptanceItems[firstIdx]?.productName || `Dòng ${firstIdx + 1}`;
+      showError(
+        'Thiếu dữ liệu nghiệm thu',
+        `Vui lòng nhập SLNT cho: ${firstName}${validationErrors.length > 1 ? ` và ${validationErrors.length - 1}dòng khác` : ''}`
+      );
       return;
     }
-
-    // Optional: Validate acceptedQty <= qty (can be removed if business doesn't require)
-    // const hasError = acceptanceItems.some(item => item.acceptedQty > item.qty);
-    // if (hasError) {
-    //   showError('Lỗi dữ liệu', 'Số lượng nghiệm thu không được vượt quá số lượng kế hoạch');
-    //   return;
-    // }
 
     setSavingAcceptance(true);
     try {
       // Normalize all acceptedQty before saving (handle cases where user typed but didn't blur)
       const normalizedItems = acceptanceItems.map((item: any) => {
-        const rawValue = item.rawAcceptedQty || item.acceptedQty.toString();
+        const rawValue = item.rawAcceptedQty !== undefined ? item.rawAcceptedQty : item.acceptedQty.toString();
         const normalized = rawValue.replace(/,/g, '.');
         const parts = normalized.split('.');
         let finalValue = parts[0];
         if (parts[1] && parts[1].length > 0) {
           finalValue += '.' + parts[1].slice(0, 2);
         }
+        const acceptedQty = parseFloat(finalValue) || 0;
+
+        // Normalize unitPriceOverride from rawUnitPrice if present
+        let unitPriceOverride = item.unitPriceOverride;
+        if (item.rawUnitPrice !== undefined && item.rawUnitPrice !== '') {
+          const cleaned = item.rawUnitPrice.replace(/[.,]/g, '');
+          const parsed = parseFloat(cleaned) || 0;
+          unitPriceOverride = parsed > 0 ? parsed : null;
+        }
+
         return {
-          ...item,
-          acceptedQty: parseFloat(finalValue) || 0,
+          orderItemId: item.orderItemId,
+          acceptedQty,
+          unitPriceOverride,
+          note: item.note || null,
         };
       });
 
+      await apiClient(`/projects/${id}/acceptance`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          items: normalizedItems.map(item => ({
+            orderItemId: item.orderItemId,
+            acceptedQty: item.acceptedQty,
+            unitPrice: item.unitPriceOverride ?? null,
+            note: item.note,
+          })),
+        }),
+      });
+
+      setShowAcceptanceModal(false);
+      showSuccess('Lưu nghiệm thu thành công', `Đã cập nhật ${normalizedItems.length} hạng mục`);
+
+      // Refresh items and summary to reflect acceptance data
+      await Promise.all([fetchItems(), fetchSummary()]);
     } catch (error: any) {
       console.error('Failed to save acceptance:', error);
-      showError('Lỗi', error.message || 'Không thể lưu nghiệm thu');
+      showError('Lỗi lưu nghiệm thu', error.message || 'Không thể lưu nghiệm thu, vui lòng thử lại');
     } finally {
       setSavingAcceptance(false);
     }
@@ -2415,11 +2450,11 @@ export default function OrderDetailPage() {
                                 <Input
                                   type="text"
                                   inputMode="decimal"
-                                  value={item.rawAcceptedQty || '0'}
+                                  value={item.rawAcceptedQty ?? ''}
                                   onChange={(e) => handleAcceptanceChange(index, 'acceptedQty', e.target.value)}
                                   onBlur={(e) => handleAcceptanceBlur(index, 'acceptedQty', e.target.value)}
-                                  placeholder="0"
-                                  className="h-10 text-center font-medium"
+                                  placeholder="Nhập SLNT…"
+                                  className={`h-10 text-center font-medium ${item.rawAcceptedQty === '' || item.rawAcceptedQty === undefined ? 'border-amber-400 focus:border-amber-500' : ''}`}
                                 />
                               </div>
                               <div>
@@ -2495,11 +2530,11 @@ export default function OrderDetailPage() {
                                   <Input
                                     type="text"
                                     inputMode="decimal"
-                                    value={item.rawAcceptedQty || '0'}
+                                    value={item.rawAcceptedQty ?? ''}
                                     onChange={(e) => handleAcceptanceChange(index, 'acceptedQty', e.target.value)}
                                     onBlur={(e) => handleAcceptanceBlur(index, 'acceptedQty', e.target.value)}
-                                    placeholder="0"
-                                    className="h-9 w-24 text-center mx-auto font-medium"
+                                    placeholder="Nhập SLNT…"
+                                    className={`h-9 w-24 text-center mx-auto font-medium ${item.rawAcceptedQty === '' || item.rawAcceptedQty === undefined ? 'border-amber-400' : ''}`}
                                   />
                                 </td>
                                 <td className="p-3">
