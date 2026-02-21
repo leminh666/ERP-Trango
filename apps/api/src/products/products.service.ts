@@ -60,6 +60,26 @@ export class ProductsService {
     return this.prisma.product.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        unit: true,
+        productType: true,
+        defaultSalePrice: true,
+        imageUrl: true,
+        visualType: true,
+        isActive: true,
+        deletedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            variants: { where: { isActive: true } },
+            attributeGroups: true,
+          },
+        },
+      },
     });
   }
 

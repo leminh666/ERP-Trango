@@ -18,10 +18,8 @@ import { useToast }from '@/components/toast-provider';
 export default function ProductsPage() {
   const router = useRouter();
   const { token } = useAuth();
-  const { showSuccess, showError, showWarning } = useToast();
-  const [items, setItems] = useState<Product[]>([]);
-  const [variantCounts, setVariantCounts] = useState<Record<string, number>>({});
-  const [attributeCounts, setAttributeCounts] = useState<Record<string, number>>({});
+  const { showSuccess, showError, showWarning }= useToast();
+  const [items, setItems] = useState<(Product & { _count?: { variants: number; attributeGroups: number } })[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showDeleted, setShowDeleted] = useState(false);
@@ -39,53 +37,19 @@ export default function ProductsPage() {
 
   const fetchItems = async () => {
     setLoading(true);
-    console.log('[Products] 🔄 Bắt đầu fetch...', { 
-      search, 
-      showDeleted, 
-      filterProductType, 
-      hasToken: !!token,
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'SSR'
-    });
     try {
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (showDeleted) params.append('includeDeleted', 'true');
       if (filterProductType) params.append('productType', filterProductType);
 
-      const endpoint = `/products?${params}`;
-      console.log('[Products] 📡 Gọi API:', endpoint);
-      
-      const data = await fetchJson<Product[]>(endpoint, { token });
-      console.log('[Products] ✅ API response:', { 
-        data, 
-        isArray: Array.isArray(data), 
-        length: data?.length,
-        firstItem: data?.[0] 
-      });
+      const data = await fetchJson<any[]>(`/products?${params}`, { token });
       setItems(Array.isArray(data) ? data : []);
-
-      // Fetch variant counts for each product
-      const counts: Record<string, number> = {};
-      const attrCounts: Record<string, number> = {};
-      for (const product of data) {
-        try {
-          const variants = await fetchJson<any[]>(`/product-attributes/${product.id}/variants`, { token });
-          const groups = await fetchJson<any[]>(`/product-attributes/${product.id}/groups`, { token });
-          counts[product.id] = Array.isArray(variants) ? variants.length : 0;
-          attrCounts[product.id] = Array.isArray(groups) ? groups.length : 0;
-        } catch (e) {
-          counts[product.id] = 0;
-          attrCounts[product.id] = 0;
-        }
-      }
-      setVariantCounts(counts);
-      setAttributeCounts(attrCounts);
     } catch (error) {
       console.error('[Products] ❌ Lỗi fetch:', error);
       setItems([]);
     } finally {
       setLoading(false);
-      console.log('[Products] 🏁 Fetch hoàn tất, loading=false');
     }
   };
 
@@ -343,14 +307,14 @@ export default function ProductsPage() {
                       </div>
                       {/* Attribute & Variant Info */}
                       <div className="flex gap-2 mt-2">
-                        {attributeCounts[item.id] > 0 && (
+                        {(item._count?.attributeGroups ?? 0) > 0 && (
                           <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
-                            {attributeCounts[item.id]} thuộc tính
+                            {item._count!.attributeGroups} thuộc tính
                           </span>
                         )}
-                        {variantCounts[item.id] > 0 && (
+                        {(item._count?.variants ?? 0) > 0 && (
                           <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded text-xs">
-                            {variantCounts[item.id]} biến thể
+                            {item._count!.variants}biến thể
                           </span>
                         )}
                       </div>

@@ -93,7 +93,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
   }, []);
 
   const addItem = () => {
-    setItems([...items, { product: null, productId: null, variantId: null, name: '', unit: '', qty: '1', unitPrice: '0' }]);
+    setItems([...items, { product: null, productId: null, variantId: null, name: '', unit: '', qty: '0', unitPrice: '0' }]);
     setEditingItemIndex(items.length);
   };
 
@@ -285,7 +285,7 @@ export function CreateOrderModal({ customers, onClose, onCreated, onCustomerCrea
               productId: item.product?.id || null,
               name: item.name,
               unit: item.unit,
-              qty: parseFloat(item.qty) || 1,
+              qty: parseFloat(item.qty) || 0,
               unitPrice: parseFloat(item.unitPrice) || 0,
               note: '',
             }),

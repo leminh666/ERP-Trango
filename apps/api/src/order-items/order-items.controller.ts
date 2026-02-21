@@ -43,11 +43,11 @@ export class OrderItemsController {
     @Request() req: any,
   ) {
     const userId = req.user?.id;
-    // Build Prisma input
+    // Build Prisma input — qty luôn = 0 khi tạo mới (SLNT phát sinh sau nghiệm thu)
     const prismaData: any = {
       name: data.name,
       unit: data.unit,
-      qty: data.qty,
+      qty: 0,
       unitPrice: data.unitPrice,
       note: data.note,
     };
