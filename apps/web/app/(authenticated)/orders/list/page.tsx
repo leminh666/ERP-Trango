@@ -158,19 +158,25 @@ export default function OrdersListPage() {
 
   // Calculate totals
   const totals = orders.reduce((acc, order) => ({
+    rawTotal: acc.rawTotal + (order.rawTotal ?? order.estimatedTotal),
+    discountAmount: acc.discountAmount + (order.discountAmount ?? 0),
     estimatedTotal: acc.estimatedTotal + order.estimatedTotal,
     incomeDeposit: acc.incomeDeposit + order.incomeDeposit,
     incomePayment: acc.incomePayment + order.incomePayment,
     incomeFinal: acc.incomeFinal + order.incomeFinal,
     incomeTotal: acc.incomeTotal + order.incomeTotal,
+    workshopJobAmount: acc.workshopJobAmount + (order.workshopJobAmount ?? 0),
     expenseTotal: acc.expenseTotal + order.expenseTotal,
     profitL1: acc.profitL1 + order.profitL1,
   }), {
+    rawTotal: 0,
+    discountAmount: 0,
     estimatedTotal: 0,
     incomeDeposit: 0,
     incomePayment: 0,
     incomeFinal: 0,
     incomeTotal: 0,
+    workshopJobAmount: 0,
     expenseTotal: 0,
     profitL1: 0,
   });
@@ -401,8 +407,18 @@ export default function OrdersListPage() {
                     </div>
 
                     {/* Financial badges */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="px-2 py-1 bg-green-50 text-green-700 rounded">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <div className="flex flex-col items-start">
+                        <span className="px-2 py-1 bg-gray-50 text-gray-800 rounded font-medium">
+                          {formatCurrency(order.estimatedTotal)}
+                        </span>
+                        {(order.discountAmount ?? 0) > 0 && (
+                          <span className="text-xs text-orange-600 px-2">
+                            CK: -{formatCurrency(order.discountAmount ?? 0)}
+                          </span>
+                        )}
+                      </div>
+                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded">
                         Thu: {formatCurrency(order.incomeTotal)}
                       </span>
                       <span className="px-2 py-1 bg-red-50 text-red-700 rounded">
@@ -476,7 +492,12 @@ export default function OrdersListPage() {
                         </div>
                       </td>
                       <td className="p-3 text-right font-medium truncate bg-gray-50/50">
-                        {formatCurrency(order.estimatedTotal)}
+                        <div>{formatCurrency(order.estimatedTotal)}</div>
+                        {(order.discountAmount ?? 0) > 0 && (
+                          <div className="text-xs text-orange-600 font-normal">
+                            CK: -{formatCurrency(order.discountAmount ?? 0)}
+                          </div>
+                        )}
                       </td>
                       <td className="p-3 text-right font-medium text-blue-700 bg-blue-50 truncate">
                         {formatCurrency(order.incomeTotal)}
@@ -520,8 +541,15 @@ export default function OrdersListPage() {
                 </tbody>
                 <tfoot>
                   <tr className="bg-gray-100 font-medium">
-                    <td colSpan={1} className="p-3 text-right">Tổng cộng:</td>
-                    <td className="p-3 text-right">{formatCurrency(totals.estimatedTotal)}</td>
+                    <td colSpan={1}className="p-3 text-right">Tổng cộng:</td>
+                    <td className="p-3 text-right">
+                      <div>{formatCurrency(totals.estimatedTotal)}</div>
+                      {totals.discountAmount > 0 && (
+                        <div className="text-xs text-orange-600 font-normal">
+                          CK: -{formatCurrency(totals.discountAmount)}
+                        </div>
+                      )}
+                    </td>
                     <td className="p-3 text-right font-medium text-blue-700 bg-blue-50">{formatCurrency(totals.incomeTotal)}</td>
                     <td className="p-3 text-right text-red-700 bg-red-50">{formatCurrency(totals.expenseTotal)}</td>
                     <td className={`p-3 text-right font-medium ${totals.profitL1 >= 0 ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-50'}`}>

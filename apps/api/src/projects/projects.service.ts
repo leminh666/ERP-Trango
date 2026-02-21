@@ -409,9 +409,29 @@ export class ProjectsService {
         : {}),
     };
 
+    // Date range filter — only used to filter WHICH projects appear in the list
+    // (based on project createdAt). Aggregate columns (T.Thu, T.Chi) are always lifetime.
+    const projectWhereWithDate: Prisma.ProjectWhereInput = {
+      ...projectWhere,
+      ...(from || to
+        ? {
+            createdAt: {
+              ...(from ? { gte: new Date(from) } : {}),
+              ...(to
+                ? (() => {
+                    const d = new Date(to);
+                    d.setHours(23, 59, 59, 999);
+                    return { lte: d };
+                  })()
+                : {}),
+            },
+          }
+        : {}),
+    };
+
     // Get all projects with relations
     const projects = await this.prisma.project.findMany({
-      where: projectWhere,
+      where: projectWhereWithDate,
       include: {
         customer: true,
         workshop: true,
@@ -422,26 +442,12 @@ export class ProjectsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Date range filter for transactions
-    let dateFilter: Prisma.TransactionWhereInput = {
-      deletedAt: null,
-    };
-
-    if (from || to) {
-      const startDate = from ? new Date(from) : new Date('1970-01-01');
-      const endDate = to ? new Date(to) : new Date();
-      endDate.setHours(23, 59, 59, 999);
-      dateFilter.date = {
-        gte: startDate,
-        lte: endDate,
-      };
-    }
-
-    // Get all transactions for these projects
     const projectIds = projects.map((p) => p.id);
+
+    // Fetch ALL lifetime transactions for these projects — NO date filter on aggregates
     const transactions = await this.prisma.transaction.findMany({
       where: {
-        ...dateFilter,
+        deletedAt: null,
         projectId: { in: projectIds },
       },
       include: {
@@ -545,8 +551,10 @@ export class ProjectsService {
           expenseTotal += Number(t.amount);
         });
 
-      // Calculate estimated total from order items
-      const estimatedTotal = project.orderItems.reduce((sum, item) => sum + Number(item.amount), 0);
+      // Calculate estimated total from order items, then subtract project-level discount
+      const rawTotal = project.orderItems.reduce((sum, item) => sum + Number(item.amount), 0);
+      const discountAmount = Number(project.discountAmount || 0);
+      const estimatedTotal = Math.max(0, rawTotal - discountAmount);
 
       // Calculate profit
       const profitL1 = incomeTotal - expenseTotal;
@@ -559,7 +567,9 @@ export class ProjectsService {
         workshopName: project.workshop?.name || null,
         stage: project.stage,
         status: project.status,
-        estimatedTotal,
+        rawTotal,          // Tổng trước chiết khấu
+        discountAmount,    // Chiết khấu
+        estimatedTotal,    // Tổng sau chiết khấu (= rawTotal - discountAmount)
         incomeDeposit,
         incomePayment,
         incomeFinal,

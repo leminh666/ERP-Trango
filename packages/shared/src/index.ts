@@ -391,11 +391,14 @@ export interface OrderSummary {
   workshopName: string | null;
   stage: string;
   status: string;
-  estimatedTotal: number;
+  rawTotal: number;        // Tổng trước chiết khấu
+  discountAmount: number;  // Chiết khấu
+  estimatedTotal: number;  // Tổng sau chiết khấu
   incomeDeposit: number;
   incomePayment: number;
   incomeFinal: number;
   incomeTotal: number;
+  workshopJobAmount: number;
   expenseTotal: number;
   profitL1: number;
 }
