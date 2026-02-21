@@ -13,6 +13,7 @@ import { SkeletonCard } from '@/components/skeleton';
 import { AuthGuard } from '@/components/auth-guard';
 import { Eye, Search, Filter, X } from 'lucide-react';
 import { apiClient } from '@/lib/api';
+import { DateInput } from '@/components/common/date-input';
 
 interface AuditLog {
   id: string;
