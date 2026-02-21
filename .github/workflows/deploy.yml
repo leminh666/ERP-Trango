@@ -1,9 +1,9 @@
-name: Deploy to Server
+﻿name: Deploy to Server
 
 on:
     push:
         branches:
-            - main # Trigger khi có push vào nhánh main
+            - main
 
 jobs:
     deploy:
@@ -12,44 +12,65 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v3
+              with:
+                  fetch-depth: 2
+
+            - name: Detect schema changes
+              id: schema_check
+              run: |
+                  if git diff --name-only HEAD~1 HEAD | grep -q "apps/api/prisma/schema.prisma"; then
+                    echo "changed=true" >> $GITHUB_OUTPUT
+                    echo "Phat hien thay doi schema DB"
+                  else
+                    echo "changed=false" >> $GITHUB_OUTPUT
+                    echo "Khong co thay doi schema DB"
+                  fi
 
             - name: Setup Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: "20.9.0" # Phiên bản Node.js
+                  node-version: "20.9.0"
 
             - name: Install dependencies
-              run: npm ci # Cài đặt các dependencies
-            
+              run: npm ci
+
             - name: Run generate prisma client
-              run: cd apps/api && npm run prisma:generate # Chạy npm run prisma:generate để generate prisma client
+              run: cd apps/api && npm run prisma:generate
 
             - name: Build the project
-              run: npm run build # Chạy npm run build để build ứng dụng
+              run: npm run build
 
             - name: Deploy to server
               uses: appleboy/ssh-action@v0.1.5
               with:
-                  host: ${{ secrets.SERVER_HOST }} # IP Server
-                  username: ${{ secrets.SERVER_USER }} # Username Server
-                  key: ${{ secrets.SERVER_KEY }} # Secret Key
-                  port: ${{ secrets.SERVER_PORT}} # Port
+                  host: ${{ secrets.SERVER_HOST }}
+                  username: ${{ secrets.SERVER_USER }}
+                  key: ${{ secrets.SERVER_KEY }}
+                  port: ${{ secrets.SERVER_PORT }}
                   script: |
-                      # Cập nhật PATH để bao gồm các công cụ npm và pm2 từ NVM
                       export PATH=$PATH:/root/.nvm/versions/node/v20.9.0/bin
 
-                      # Kiểm tra lại npm và pm2
                       which npm
                       which pm2
 
-                      cd /var/www/projects/ERP-Trango/  # Đến thư mục chứa project trên server
+                      cd /var/www/projects/ERP-Trango/
 
-                      git pull origin main  # Pull latest code từ repository
-                      npm install  # Cài đặt lại dependencies nếu có thay đổi
+                      git pull origin main
+                      npm install
+
                       cd /var/www/projects/ERP-Trango/apps/api
+
+                      if [ "${{ steps.schema_check.outputs.changed }}" = "true" ]; then
+                        echo "Dang chay prisma migrate deploy..."
+                        npx prisma migrate deploy
+                        echo "Migration hoan tat"
+                      else
+                        echo "Bo qua migration (khong co thay doi schema)"
+                      fi
+
                       npm run prisma:generate
 
                       cd /var/www/projects/ERP-Trango
-                      npm run build  # Xây dựng lại ứng dụng
-                      pm2 restart api-erp.trangohoanggia.com  # Restart ứng dụng API với PM2
-                      pm2 restart erp.trangohoanggia.com  # Restart ứng dụng Web với PM2
+                      npm run build
+                      pm2 restart api-erp.trangohoanggia.com
+                      pm2 restart erp.trangohoanggia.com

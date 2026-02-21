@@ -68,14 +68,14 @@ async function main() {
 
   // === PHASE 4: Seed Customers ===
   const customers = [
-    { name: 'Nguyễn Văn A', phone: '0901234567', address: '123 Lê Lợi, Q1, TP.HCM', region: 'HCM', city: 'TP.HCM', district: 'Quận 1', status: CustomerStatus.WON, sourceChannel: SourceChannel.FACEBOOK },
-    { name: 'Trần Thị B', phone: '0912345678', address: '456 Nguyễn Huệ, Q1, TP.HCM', region: 'HCM', city: 'TP.HCM', district: 'Quận 1', status: CustomerStatus.WON, sourceChannel: SourceChannel.WEBSITE },
-    { name: 'Lê Văn C', phone: '0923456789', address: '789 Điện Biên Phủ, Q.Bình Thạnh', region: 'HCM', city: 'TP.HCM', district: 'Bình Thạnh', status: CustomerStatus.WON, sourceChannel: SourceChannel.TIKTOK },
-    { name: 'Phạm Thị D', phone: '0934567890', address: '321 Võ Văn Ngân, Q.Thủ Đức', region: 'HCM', city: 'TP.HCM', district: 'Thủ Đức', status: CustomerStatus.WON, sourceChannel: SourceChannel.ZALO },
-    { name: 'Hoàng Văn E', phone: '0945678901', address: '654 Quang Trung, Q.Gò Vấp', region: 'HCM', city: 'TP.HCM', district: 'Gò Vấp', status: CustomerStatus.WON, sourceChannel: SourceChannel.INTRODUCED },
-    { name: 'Ngô Thị F', phone: '0956789012', address: '987 CMT8, Q.3, TP.HCM', region: 'HCM', city: 'TP.HCM', district: 'Quận 3', status: CustomerStatus.WON, sourceChannel: SourceChannel.FACEBOOK },
-    { name: 'Đinh Văn G', phone: '0967890123', address: '147 Hai Bà Trưng, Q.1, TP.HCM', region: 'HCM', city: 'TP.HCM', district: 'Quận 1', status: CustomerStatus.WON, sourceChannel: SourceChannel.WALK_IN },
-    { name: 'Bùi Thị H', phone: '0978901234', address: '258 Lý Thường Kiệt, Q.10, TP.HCM', region: 'HCM', city: 'TP.HCM', district: 'Quận 10', status: CustomerStatus.WON, sourceChannel: SourceChannel.REFERRAL },
+    { name: 'Nguyễn Văn A', phone: '0901234567', address: '123 Lê Lợi, Q1, TP.HCM', region: 'HCM', status: CustomerStatus.WON, sourceChannel: SourceChannel.FACEBOOK },
+    { name: 'Trần Thị B', phone: '0912345678', address: '456 Nguyễn Huệ, Q1, TP.HCM', region: 'HCM', status: CustomerStatus.WON, sourceChannel: SourceChannel.WEBSITE },
+    { name: 'Lê Văn C', phone: '0923456789', address: '789 Điện Biên Phủ, Q.Bình Thạnh', region: 'HCM', status: CustomerStatus.WON, sourceChannel: SourceChannel.TIKTOK },
+    { name: 'Phạm Thị D', phone: '0934567890', address: '321 Võ Văn Ngân, Q.Thủ Đức', region: 'HCM', status: CustomerStatus.WON, sourceChannel: SourceChannel.ZALO },
+    { name: 'Hoàng Văn E', phone: '0945678901', address: '654 Quang Trung, Q.Gò Vấp', region: 'HCM', status: CustomerStatus.WON, sourceChannel: SourceChannel.INTRODUCED },
+    { name: 'Ngô Thị F', phone: '0956789012', address: '987 CMT8, Q.3, TP.HCM', region: 'HCM', status: CustomerStatus.WON, sourceChannel: SourceChannel.FACEBOOK },
+    { name: 'Đinh Văn G', phone: '0967890123', address: '147 Hai Bà Trưng, Q.1, TP.HCM', region: 'HCM', status: CustomerStatus.WON, sourceChannel: SourceChannel.WALK_IN },
+    { name: 'Bùi Thị H', phone: '0978901234', address: '258 Lý Thường Kiệt, Q.10, TP.HCM', region: 'HCM', status: CustomerStatus.WON, sourceChannel: SourceChannel.REFERRAL },
   ];
 
   let customerCode = 1;
@@ -395,20 +395,20 @@ async function seedCategories() {
 // Seed Products (Trần gỗ và Phụ kiện)
 async function seedProducts() {
   const products = [
-    // Trần gỗ (isCeilingWood: true)
-    { code: 'SP0001', name: 'Trần gỗ óc chó', unit: 'm2', defaultSalePrice: 2500000, isCeilingWood: true, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0002', name: 'Trần gỗ sồi', unit: 'm2', defaultSalePrice: 1800000, isCeilingWood: true, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0003', name: 'Trần gỗ tếch', unit: 'm2', defaultSalePrice: 2200000, isCeilingWood: true, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0004', name: 'Trần gỗ xoan đào', unit: 'm2', defaultSalePrice: 1600000, isCeilingWood: true, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0005', name: 'Trần gỗ cao cấp gõ đỏ', unit: 'm2', defaultSalePrice: 3500000, isCeilingWood: true, imageUrl: '/placeholder-product.png' },
-    // Phụ kiện (isCeilingWood: false)
-    { code: 'SP0006', name: 'Keo dán gỗ chuyên dụng', unit: 'thùng', defaultSalePrice: 450000, isCeilingWood: false, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0007', name: 'Đinh bấm gỗ', unit: 'hộp', defaultSalePrice: 150000, isCeilingWood: false, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0008', name: 'Vít inox 3cm', unit: 'hộp', defaultSalePrice: 120000, isCeilingWood: false, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0009', name: 'Ray trượt ngăn kéo', unit: 'bộ', defaultSalePrice: 380000, isCeilingWood: false, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0010', name: 'Bản lề cửa gỗ', unit: 'cái', defaultSalePrice: 95000, isCeilingWood: false, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0011', name: 'Sơn lót gỗ chống mối', unit: 'thùng', defaultSalePrice: 680000, isCeilingWood: false, imageUrl: '/placeholder-product.png' },
-    { code: 'SP0012', name: 'Sơn bóng gỗ ngoại thất', unit: 'thùng', defaultSalePrice: 1200000, isCeilingWood: false, imageUrl: '/placeholder-product.png' },
+    // Trần gỗ
+    { code: 'SP0001', name: 'Trần gỗ óc chó', unit: 'm2', defaultSalePrice: 2500000, productType: 'CEILING_WOOD' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0002', name: 'Trần gỗ sồi', unit: 'm2', defaultSalePrice: 1800000, productType: 'CEILING_WOOD' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0003', name: 'Trần gỗ tếch', unit: 'm2', defaultSalePrice: 2200000, productType: 'CEILING_WOOD' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0004', name: 'Trần gỗ xoan đào', unit: 'm2', defaultSalePrice: 1600000, productType: 'CEILING_WOOD' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0005', name: 'Trần gỗ cao cấp gõ đỏ', unit: 'm2', defaultSalePrice: 3500000, productType: 'CEILING_WOOD' as const, imageUrl: '/placeholder-product.png' },
+    // Phụ kiện
+    { code: 'SP0006', name: 'Keo dán gỗ chuyên dụng', unit: 'thùng', defaultSalePrice: 450000, productType: 'OTHER_ITEM' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0007', name: 'Đinh bấm gỗ', unit: 'hộp', defaultSalePrice: 150000, productType: 'OTHER_ITEM' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0008', name: 'Vít inox 3cm', unit: 'hộp', defaultSalePrice: 120000, productType: 'OTHER_ITEM' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0009', name: 'Ray trượt ngăn kéo', unit: 'bộ', defaultSalePrice: 380000, productType: 'OTHER_ITEM' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0010', name: 'Bản lề cửa gỗ', unit: 'cái', defaultSalePrice: 95000, productType: 'OTHER_ITEM' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0011', name: 'Sơn lót gỗ chống mối', unit: 'thùng', defaultSalePrice: 680000, productType: 'OTHER_ITEM' as const, imageUrl: '/placeholder-product.png' },
+    { code: 'SP0012', name: 'Sơn bóng gỗ ngoại thất', unit: 'thùng', defaultSalePrice: 1200000, productType: 'OTHER_ITEM' as const, imageUrl: '/placeholder-product.png' },
   ];
 
   for (const p of products) {
@@ -423,20 +423,21 @@ async function seedProducts() {
       },
     });
   }
-  console.log(`✅ Created ${products.length} products (${products.filter(p => p.isCeilingWood).length} trần gỗ, ${products.filter(p => !p.isCeilingWood).length} phụ kiện)`);
+  const ceilingCount = products.filter(p => p.productType === 'CEILING_WOOD').length;
+  console.log(`✅ Created ${products.length} products (${ceilingCount}trần gỗ, ${products.length - ceilingCount} phụ kiện)`);
 }
 
 // Seed Suppliers (Nhà cung cấp)
 async function seedSuppliers() {
   const suppliers = [
-    { code: 'NCC001', name: 'Công ty Gỗ Óc Chó Miền Nam', phone: '0901111222', address: '123 Đường Đồng Nai, TP.Biên Hòa', region: 'Đồng Nai', city: 'Đồng Nai', district: 'Biên Hòa', note: 'Cung cấp gỗ óc chó, sồi' },
-    { code: 'NCC002', name: 'Công ty VLXD Hoàng Gia', phone: '0902222333', address: '456 Đường Võ Văn Ngân, Q.Thủ Đức', region: 'HCM', city: 'TP.HCM', district: 'Thủ Đức', note: 'Cung cấp sơn, keo, phụ kiện' },
-    { code: 'NCC003', name: 'Xưởng Gỗ Mỹ Nghệ Bình Dương', phone: '0903333444', address: '789 KCN Sóng Thần, TX.Dĩ An', region: 'Bình Dương', city: 'Bình Dương', district: 'Dĩ An', note: 'Gia công đồ gỗ nội thất' },
-    { code: 'NCC004', name: 'Công ty Phụ Kiện Ngân Hạnh', phone: '0904444555', address: '321 Đường 3/2, Q.10', region: 'HCM', city: 'TP.HCM', district: 'Quận 10', note: 'Cung cấp bản lề, ray, khóa' },
-    { code: 'NCC005', name: 'Đại lý Sơn Hải Phòng', phone: '0905555666', address: '555 Đường Lê Hồng Phong, Q.Ngô Quyền', region: 'Hải Phòng', city: 'Hải Phòng', district: 'Ngô Quyền', note: 'Cung cấp sơn chống mối, sơn bóng' },
-    { code: 'NCC006', name: 'Công ty Inox Đại Phát', phone: '0906666777', address: '888 KCN Tân Thuận, Q.7', region: 'HCM', city: 'TP.HCM', district: 'Quận 7', note: 'Cung cấp đinh, ốc, vít inox' },
-    { code: 'NCC007', name: 'Đại lý Gỗ Tếch Cao Cấp', phone: '0907777888', address: '111 Đường Quang Trung, Q.Gò Vấp', region: 'HCM', city: 'TP.HCM', district: 'Gò Vấp', note: 'Cung cấp gỗ tếch, gỗ xoan đào' },
-    { code: 'NCC008', name: 'Công ty Keo Dán Công Nghiệp', phone: '0908888999', address: '222 Đường Cộng Hòa, Q.Tân Bình', region: 'HCM', city: 'TP.HCM', district: 'Tân Bình', note: 'Cung cấp keo dán gỗ chuyên dụng' },
+    { code: 'NCC001', name: 'Công ty Gỗ Óc Chó Miền Nam', phone: '0901111222', address: '123 Đường Đồng Nai, TP.Biên Hòa', region: 'Đồng Nai', note: 'Cung cấp gỗ óc chó, sồi' },
+    { code: 'NCC002', name: 'Công ty VLXD Hoàng Gia', phone: '0902222333', address: '456 Đường Võ Văn Ngân, Q.Thủ Đức', region: 'HCM', note: 'Cung cấp sơn, keo, phụ kiện' },
+    { code: 'NCC003', name: 'Xưởng Gỗ Mỹ Nghệ Bình Dương', phone: '0903333444', address: '789 KCN Sóng Thần, TX.Dĩ An', region: 'Bình Dương', note: 'Gia công đồ gỗ nội thất' },
+    { code: 'NCC004', name: 'Công ty Phụ Kiện Ngân Hạnh', phone: '0904444555', address: '321 Đường 3/2, Q.10', region: 'HCM', note: 'Cung cấp bản lề, ray, khóa' },
+    { code: 'NCC005', name: 'Đại lý Sơn Hải Phòng', phone: '0905555666', address: '555 Đường Lê Hồng Phong, Q.Ngô Quyền', region: 'Hải Phòng', note: 'Cung cấp sơn chống mối, sơn bóng' },
+    { code: 'NCC006', name: 'Công ty Inox Đại Phát', phone: '0906666777', address: '888 KCN Tân Thuận, Q.7', region: 'HCM', note: 'Cung cấp đinh, ốc, vít inox' },
+    { code: 'NCC007', name: 'Đại lý Gỗ Tếch Cao Cấp', phone: '0907777888', address: '111 Đường Quang Trung, Q.Gò Vấp', region: 'HCM', note: 'Cung cấp gỗ tếch, gỗ xoan đào' },
+    { code: 'NCC008', name: 'Công ty Keo Dán Công Nghiệp', phone: '0908888999', address: '222 Đường Cộng Hòa, Q.Tân Bình', region: 'HCM', note: 'Cung cấp keo dán gỗ chuyên dụng' },
   ];
 
   for (const s of suppliers) {
