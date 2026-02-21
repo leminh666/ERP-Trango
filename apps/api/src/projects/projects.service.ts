@@ -437,6 +437,9 @@ export class ProjectsService {
         workshop: true,
         orderItems: {
           where: { deletedAt: null },
+          include: {
+            acceptanceItems: true,
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -551,8 +554,14 @@ export class ProjectsService {
           expenseTotal += Number(t.amount);
         });
 
-      // Calculate estimated total from order items, then subtract project-level discount
-      const rawTotal = project.orderItems.reduce((sum, item) => sum + Number(item.amount), 0);
+      // Calculate estimated total from order items using effective qty/price (acceptance-aware)
+      // Same logic as computeLineTotal in order detail frontend
+      const rawTotal = project.orderItems.reduce((sum, item) => {
+        const acceptance = (item as any).acceptanceItems?.[0];
+        const effectiveQty = acceptance?.acceptedQty != null ? Number(acceptance.acceptedQty) : Number(item.qty);
+        const effectivePrice = acceptance?.unitPrice != null ? Number(acceptance.unitPrice) : Number(item.unitPrice);
+        return sum + effectiveQty * effectivePrice;
+      }, 0);
       const discountAmount = Number(project.discountAmount || 0);
       const estimatedTotal = Math.max(0, rawTotal - discountAmount);
 

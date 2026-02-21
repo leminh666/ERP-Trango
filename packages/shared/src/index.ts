@@ -405,7 +405,11 @@ export interface OrderSummary {
 
 export interface WalletUsageSummary {
   walletId: string;
-  period: { from: Date; to: Date };
+  period: { from: Date | null; to: Date | null };
+  incomeTotal: number;
+  expenseTotal: number;
+  adjustmentsTotal: number;
+  net: number;
   incomeByCategory: {
     incomeCategoryId: string | null;
     name: string;

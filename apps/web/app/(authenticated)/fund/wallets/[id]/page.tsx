@@ -136,7 +136,7 @@ export default function WalletDetailPage() {
   const [showEditExpenseModal, setShowEditExpenseModal] = useState(false);
   const [deletingIncomeId, setDeletingIncomeId] = useState<string | null>(null);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
-  const [timeFilter, setTimeFilter] = useState('this_month');
+  const [timeFilter, setTimeFilter] = useState('this_year');
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [deletingItem, setDeletingItem] = useState<{ type: 'transaction' | 'adjustment' | 'transfer', id: string, label: string } | null>(null);

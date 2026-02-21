@@ -403,96 +403,69 @@ export class WalletsService {
   }
 
   async getUsageSummary(walletId: string, from?: Date, to?: Date) {
-    const startDate = from || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const endDate = to || new Date();
+    // KPI top (incomeTotal / expenseTotal / net) are ALWAYS lifetime — no date filter.
+    // Date range (from/to) is only used for category breakdown and recent transactions list.
+    const periodFilter = (from && to)
+      ? { date: { gte: from, lte: to }}
+      : {};
 
-    // Calculate total income (INCOME transactions + TRANSFER_IN + ADJUSTMENT_INCREASE to this wallet)
+    // === LIFETIME KPI aggregates (no date filter) ===
+
+    // Tổng thu = phiếu thu + chuyển tiền vào ví
     const incomeFromIncome = await this.prisma.transaction.aggregate({
-      where: {
-        walletId,
-        type: 'INCOME',
-        deletedAt: null,
-        date: { gte: startDate, lte: endDate },
-      },
+      where: { walletId, type: 'INCOME', deletedAt: null },
       _sum: { amount: true },
     });
-    
+
     const incomeFromTransfer = await this.prisma.transaction.aggregate({
-      where: {
-        walletToId: walletId,
-        type: 'TRANSFER',
-        deletedAt: null,
-        date: { gte: startDate, lte: endDate },
-      },
+      where: { walletToId: walletId, type: 'TRANSFER', deletedAt: null },
       _sum: { amount: true },
     });
-    
-    // Adjustments that increase balance (positive amount)
+
+    // Adjustments that increase balance (positive amount) — lifetime
     const adjustmentsIncome = await this.prisma.walletAdjustment.aggregate({
-      where: {
-        walletId,
-        amount: { gt: 0 },
-        deletedAt: null,
-        date: { gte: startDate, lte: endDate },
-      },
+      where: { walletId, amount: { gt: 0 }, deletedAt: null },
       _sum: { amount: true },
     });
-    
-    const incomeTotal = 
-      Number(incomeFromIncome._sum.amount || 0) + 
+
+    const incomeTotal =
+      Number(incomeFromIncome._sum.amount || 0) +
       Number(incomeFromTransfer._sum.amount || 0) +
       Number(adjustmentsIncome._sum.amount || 0);
 
-    // Calculate total expense (EXPENSE transactions + TRANSFER_OUT + ADJUSTMENT_DECREASE from this wallet)
+    // Tổng chi = phiếu chi + chuyển tiền ra khỏi ví
     const expenseFromExpense = await this.prisma.transaction.aggregate({
-      where: {
-        walletId,
-        type: 'EXPENSE',
-        deletedAt: null,
-        date: { gte: startDate, lte: endDate },
-      },
+      where: { walletId, type: 'EXPENSE', deletedAt: null },
       _sum: { amount: true },
     });
-    
+
     const expenseFromTransfer = await this.prisma.transaction.aggregate({
-      where: {
-        walletId,
-        type: 'TRANSFER',
-        deletedAt: null,
-        date: { gte: startDate, lte: endDate },
-      },
+      where: { walletId, type: 'TRANSFER', deletedAt: null },
       _sum: { amount: true },
     });
-    
-    // Adjustments that decrease balance (negative amount)
+
+    // Adjustments that decrease balance (negative amount) — lifetime
     const adjustmentsExpense = await this.prisma.walletAdjustment.aggregate({
-      where: {
-        walletId,
-        amount: { lt: 0 },
-        deletedAt: null,
-        date: { gte: startDate, lte: endDate },
-      },
+      where: { walletId, amount: { lt: 0 }, deletedAt: null },
       _sum: { amount: true },
     });
-    
-    const expenseTotal = 
-      Number(expenseFromExpense._sum.amount || 0) + 
+
+    const expenseTotal =
+      Number(expenseFromExpense._sum.amount || 0) +
       Number(expenseFromTransfer._sum.amount || 0) +
       Math.abs(Number(adjustmentsExpense._sum.amount || 0));
 
-    // Calculate adjustments total within the period
+    // Adjustments total (lifetime)
     const adjustmentsResult = await this.prisma.walletAdjustment.aggregate({
-      where: {
-        walletId,
-        date: { gte: startDate, lte: endDate },
-        deletedAt: null,
-      },
+      where: { walletId, deletedAt: null },
       _sum: { amount: true },
     });
     const adjustmentsTotal = Number(adjustmentsResult._sum.amount || 0);
 
-    // Net = income - expense (adjustments already included in income/expense totals)
+    // Net = Tổng thu - Tổng chi (lifetime)
     const net = incomeTotal - expenseTotal;
+
+    // === Period-filtered breakdown (for charts/category lists) ===
 
     // Income by category
     const incomeByCategory = await this.prisma.transaction.groupBy({
@@ -500,8 +473,8 @@ export class WalletsService {
       where: {
         walletId,
         type: 'INCOME',
-        deletedAt: null, // AUDIT FIX: Exclude soft-deleted records
-        date: { gte: startDate, lte: endDate },
+        deletedAt: null,
+        ...periodFilter,
       },
       _sum: { amount: true },
     });
@@ -519,8 +492,8 @@ export class WalletsService {
       where: {
         walletId,
         type: 'EXPENSE',
-        deletedAt: null, // AUDIT FIX: Exclude soft-deleted records
-        date: { gte: startDate, lte: endDate },
+        deletedAt: null,
+        ...periodFilter,
       },
       _sum: { amount: true },
     });
@@ -532,13 +505,13 @@ export class WalletsService {
       where: { id: { in: expenseCategoryIds } },
     });
 
-    // Recent transactions (top 50 income/expense/transfer)
+    // Recent transactions (top 50, period-filtered if provided)
     const recentTransactions = await this.prisma.transaction.findMany({
       where: {
         walletId,
         type: { in: ['INCOME', 'EXPENSE', 'TRANSFER'] },
         deletedAt: null,
-        date: { gte: startDate, lte: endDate },
+        ...periodFilter,
       },
       orderBy: { date: 'desc' },
       take: 50,
@@ -547,7 +520,7 @@ export class WalletsService {
 
     return {
       walletId,
-      period: { from: startDate, to: endDate },
+      period: { from: from ?? null, to: to ?? null },
       // KPI totals
       incomeTotal,
       expenseTotal,
