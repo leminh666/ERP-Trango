@@ -57,9 +57,74 @@ export class WorkshopJobsService {
   ) {}
 
   /**
-   * Generate unique workshop job code atomically using CodeSequence
+   * Compute workshop debt: sum of (netAmount - paidAmount) for all jobs in a workshop
+   * netAmount = amount - discountAmount
+   * paidAmount = sum of EXPENSE transactions linked to workshopJobId
+   *
+   * @param workshopId - Workshop ID
+   * @returns debt amount (>= 0)
    */
-  private async getNextWorkshopJobCode(): Promise<string> {
+  private async computeWorkshopDebt(workshopId: string): Promise<number> {
+    const workshopJobs = await this.prisma.workshopJob.findMany({
+      where: { workshopId, deletedAt: null },
+      select: { id: true, amount: true, discountAmount: true },
+    });
+
+    let totalDebt = 0;
+
+    for (const wj of workshopJobs) {
+      const rawAmount = Number(wj.amount || 0);
+      const discountAmount = Number(wj.discountAmount || 0);
+      const netAmount = rawAmount - discountAmount;
+
+      // Get paid amount from EXPENSE transactions linked to this job
+      const paidTransactions = await this.prisma.transaction.findMany({
+        where: {
+          workshopJobId: wj.id,
+          type: 'EXPENSE',
+          deletedAt: null,
+        },
+        select: { amount: true },
+      });
+
+      const paidAmount = paidTransactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+      const jobDebt = Math.max(0, netAmount - paidAmount);
+      totalDebt += jobDebt;
+    }
+
+    return totalDebt;
+  }
+
+  /**
+   * Get all workshop debts (for dashboard)
+   * Returns only workshops with debt > 0
+   */
+  async getWorkshopDebts(): Promise<Array<{ id: string; name: string; phone: string | null; note: string | null; debt: number }>> {
+    const workshops = await this.prisma.workshop.findMany({
+      where: { deletedAt: null, isActive: true },
+      select: { id: true, name: true, phone: true, note: true },
+    });
+
+    const debts: Array<{ id: string; name: string; phone: string | null; note: string | null; debt: number }> = [];
+
+    for (const workshop of workshops) {
+      const debt = await this.computeWorkshopDebt(workshop.id);
+      if (debt > 0) {
+        debts.push({
+          id: workshop.id,
+          name: workshop.name,
+          phone: workshop.phone,
+          note: workshop.note,
+          debt,
+        });
+      }
+    }
+
+    // Sort by debt descending
+    debts.sort((a, b) => b.debt - a.debt);
+    return debts;
+  }
+
     const SEQUENCE_KEY = 'WORKSHOP_JOB';
 
     // Atomic increment using upsert

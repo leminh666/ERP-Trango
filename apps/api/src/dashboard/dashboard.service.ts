@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable }from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { WorkshopJobsService } from '../workshop-jobs/workshop-jobs.service';
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private workshopJobsService: WorkshopJobsService,
+  ) {}
 
   async getDashboardData(from: string, to: string) {
     const startDate = new Date(from);
@@ -203,41 +207,10 @@ export class DashboardService {
     const supplierDebtsTop = supplierDebts.slice(0, 5);
 
     // ========== Calculate Workshop Debts ==========
-    // Debt = sum of (amount - paidAmount) for all workshop jobs for this workshop
-    const workshops = await this.prisma.workshop.findMany({
-      where: { deletedAt: null, isActive: true },
-      select: { id: true, name: true, phone: true, note: true },
-    });
-
-    let workshopDebtTotal = 0;
-    const workshopDebts: { id: string; name: string; phone: string | null; note: string | null; debt: number }[] = [];
-
-    for (const workshop of workshops) {
-      const workshopJobs = await this.prisma.workshopJob.findMany({
-        where: { workshopId: workshop.id, deletedAt: null },
-        select: { id: true, amount: true, discountAmount: true, paidAmount: true },
-      });
-
-      // Debt = (amount - discountAmount) - paidAmount per job
-      const debtAmount = workshopJobs.reduce((sum, wj) => {
-        const net = Math.max(0, Number(wj.amount || 0) - Number(wj.discountAmount || 0));
-        return sum + Math.max(0, net - Number(wj.paidAmount || 0));
-      }, 0);
-
-      if (debtAmount > 0) {
-        workshopDebts.push({
-          id: workshop.id,
-          name: workshop.name,
-          phone: workshop.phone,
-          note: workshop.note,
-          debt: debtAmount,
-        });
-        workshopDebtTotal += debtAmount;
-      }
-    }
-
-    // Sort by debt descending, take top 5
-    workshopDebts.sort((a, b) => b.debt - a.debt);
+    // Use workshopJobsService.getWorkshopDebts() to compute debt correctly
+    // Debt = sum of (amount - discountAmount - paidAmount) for all workshop jobs
+    const workshopDebts = await this.workshopJobsService.getWorkshopDebts();
+    const workshopDebtTotal = workshopDebts.reduce((sum, w) => sum + w.debt, 0);
     const workshopDebtsTop = workshopDebts.slice(0, 5);
 
     // 3. Get AR (Accounts Receivable) - from CRM Customers (legacy - for compatibility)
