@@ -151,12 +151,16 @@ export class WorkshopJobsService {
 
     return jobs.map((job) => {
       const paidAmount = paidMap.get(job.id) || 0;
-      const totalAmount = Number(job.amount || 0);
-      const debtAmount = totalAmount - paidAmount;
+      const rawAmount = Number(job.amount || 0);
+      const discountAmount = Number(job.discountAmount || 0);
+      const netAmount = rawAmount - discountAmount; // Tổng tiền SAU chiết khấu
+      const debtAmount = Math.max(0, netAmount - paidAmount);
 
       return {
         ...job,
-        amount: totalAmount,
+        rawAmount,
+        discountAmount,
+        netAmount,
         paidAmount,
         debtAmount,
       };
@@ -199,7 +203,7 @@ export class WorkshopJobsService {
 
     const jobs = await this.prisma.workshopJob.findMany({
       where,
-      select: { id: true, amount: true },
+      select: { id: true, amount: true, discountAmount: true },
     });
 
     if (jobs.length === 0) {
@@ -211,7 +215,11 @@ export class WorkshopJobsService {
     }
 
     const jobIds = jobs.map((j) => j.id);
-    const totalJobAmount = jobs.reduce((sum, j) => sum + Number(j.amount || 0), 0);
+    // totalJobAmount = SUM(amount - discountAmount) — tổng tiền SAU chiết khấu
+    const totalJobAmount = jobs.reduce(
+      (sum, j) => sum + Math.max(0, Number(j.amount || 0) - Number(j.discountAmount || 0)),
+      0,
+    );
 
     const paymentGroups = await this.prisma.transaction.groupBy({
       by: ['workshopJobId'],
@@ -271,11 +279,16 @@ export class WorkshopJobsService {
     });
 
     const paidAmount = payments.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
-    const totalAmount = Number(job.amount || 0);
-    const debtAmount = totalAmount - paidAmount;
+    const rawAmount = Number(job.amount || 0);
+    const discountAmount = Number(job.discountAmount || 0);
+    const netAmount = rawAmount - discountAmount; // Tổng tiền SAU chiết khấu
+    const debtAmount = Math.max(0, netAmount - paidAmount);
 
     return {
       job,
+      rawAmount,
+      discountAmount,
+      netAmount,
       paidAmount,
       debtAmount,
       payments: payments.map((tx) => ({

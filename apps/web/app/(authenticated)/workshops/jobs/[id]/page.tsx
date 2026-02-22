@@ -187,10 +187,14 @@ export default function WorkshopJobDetailPage() {
         discountAmount: Number(data.job.discountAmount || 0),
         items: data.job.items || [],
       });
+      const rawAmount = Number(data.job.amount || 0);
+      const discountAmount = Number(data.job.discountAmount || 0);
+      const netAmount = rawAmount - discountAmount;
+      const paidAmount = Number(data.paidAmount || 0);
       setPaymentsData({
         ...data,
-        paidAmount: Number(data.paidAmount || 0),
-        debtAmount: Number(data.debtAmount || 0),
+        paidAmount,
+        debtAmount: Math.max(0, netAmount - paidAmount),
         payments: (data.payments || []).map((p) => ({
           ...p,
           amount: Number(p.amount || 0),

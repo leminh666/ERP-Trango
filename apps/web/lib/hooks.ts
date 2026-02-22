@@ -3,22 +3,22 @@ import { TimeFilterValue, TimePreset } from '@/components/time-filter';
 import { getDateRangeFromPreset } from '@/lib/date-presets';
 
 /**
- * Default time filter = Tháng này (as per system requirements)
+ * Default time filter = Năm này (as per system requirements)
  */
 export function getDefaultTimeFilter(): TimeFilterValue {
   const now = new Date();
-  const range = getDateRangeFromPreset('this_month', now);
+  const range = getDateRangeFromPreset('this_year', now);
 
   return {
     from: range.from?.toISOString().split('T')[0] || '',
     to: range.to?.toISOString().split('T')[0] || '',
-    preset: 'this_month' as TimePreset,
+    preset: 'this_year' as TimePreset,
   };
 }
 
 /**
  * Hook để sync filter với preset
- * Default = 'this_month' per requirements
+ * Default = 'this_year' per requirements
  */
 export function useDefaultTimeFilter() {
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>(getDefaultTimeFilter);

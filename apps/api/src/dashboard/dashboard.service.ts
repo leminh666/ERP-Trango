@@ -89,7 +89,8 @@ export class DashboardService {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     // ========== Calculate Customer Debts ==========
-    // Debt = totalAmount (from projects) - paidAmount (from transactions)
+    // Debt = (rawTotal - discountAmount) - paidAmount (INCOME transactions)
+    // rawTotal uses acceptance-aware qty×price (same as getSummary in projects.service.ts)
     const customers = await this.prisma.customer.findMany({
       where: { deletedAt: null, isActive: true },
       select: { id: true, name: true, phone: true },
@@ -99,26 +100,40 @@ export class DashboardService {
     const customerDebts: { id: string; name: string; phone: string | null; debt: number }[] = [];
 
     for (const customer of customers) {
-      // Get all projects for this customer
+      // Get all projects with orderItems + acceptanceItems
       const projects = await this.prisma.project.findMany({
         where: { customerId: customer.id, deletedAt: null },
-        include: { orderItems: true },
+        include: {
+          orderItems: {
+            where: { deletedAt: null },
+            include: { acceptanceItems: true },
+          },
+        },
       });
 
+      // Acceptance-aware total, subtract discount per project
       const totalAmount = projects.reduce((sum, project) => {
-        const projectTotal = project.orderItems.reduce((itemSum, item) => {
-          return itemSum + Number(item.amount || 0);
+        const rawTotal = project.orderItems.reduce((itemSum, item) => {
+          const acceptance = item.acceptanceItems?.[0];
+          const effectiveQty = acceptance?.acceptedQty != null
+            ? Number(acceptance.acceptedQty)
+            : Number(item.qty || 0);
+          const effectivePrice = acceptance?.unitPrice != null
+            ? Number(acceptance.unitPrice)
+            : Number(item.unitPrice || 0);
+          return itemSum + effectiveQty * effectivePrice;
         }, 0);
-        return sum + projectTotal;
+        return sum + rawTotal - Number(project.discountAmount || 0);
       }, 0);
 
-      // Get all income transactions (payments)
+      // Get all income transactions (payments received from customer)
       const incomeTransactions = await this.prisma.transaction.findMany({
         where: {
           project: { customerId: customer.id },
           type: 'INCOME',
           deletedAt: null,
         },
+        select: { amount: true },
       });
       const paidAmount = incomeTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
@@ -139,7 +154,12 @@ export class DashboardService {
     const customerDebtsTop = customerDebts.slice(0, 5);
 
     // ========== Calculate Supplier Debts ==========
-    // Debt = sum of expense transactions linked to each supplier
+    // NOTE: The Supplier model has no invoice/purchase-order table.
+    // Transaction.supplierId records payments already MADE to suppliers (EXPENSE = paid out).
+    // There is no "amount owed to supplier" source in the schema.
+    // Công nợ NCC = Tổng INCOME từ NCC (hoàn tiền) - Tổng EXPENSE cho NCC (đã chi)
+    // If EXPENSE > INCOME → supplier owes us nothing, we owe them (but no invoice to compare) → 0
+    // If INCOME > EXPENSE → supplier owes us money → show as debt
     const suppliers = await this.prisma.supplier.findMany({
       where: { deletedAt: null, isActive: true },
       select: { id: true, name: true, phone: true, note: true },
@@ -149,16 +169,23 @@ export class DashboardService {
     const supplierDebts: { id: string; name: string; phone: string | null; note: string | null; debt: number }[] = [];
 
     for (const supplier of suppliers) {
-      // Get all EXPENSE transactions for this supplier
-      const supplierTransactions = await this.prisma.transaction.findMany({
-        where: { supplierId: supplier.id, type: 'EXPENSE', deletedAt: null },
-        select: { id: true, amount: true },
-      });
+      const [expenseTxs, incomeTxs] = await Promise.all([
+        this.prisma.transaction.findMany({
+          where: { supplierId: supplier.id, type: 'EXPENSE', deletedAt: null },
+          select: { amount: true },
+        }),
+        this.prisma.transaction.findMany({
+          where: { supplierId: supplier.id, type: 'INCOME', deletedAt: null },
+          select: { amount: true },
+        }),
+      ]);
 
-      const debtAmount = supplierTransactions.reduce((sum, tx) => {
-        return sum + Number(tx.amount || 0);
-      }, 0);
+      const totalExpense = expenseTxs.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+      const totalIncome = incomeTxs.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
 
+      // Supplier owes us if we received more income from them than we paid out
+      // (e.g. refunds > payments). Otherwise 0 — no invoice tracking available.
+      const debtAmount = Math.max(0, totalIncome - totalExpense);
       if (debtAmount > 0) {
         supplierDebts.push({
           id: supplier.id,
@@ -188,11 +215,13 @@ export class DashboardService {
     for (const workshop of workshops) {
       const workshopJobs = await this.prisma.workshopJob.findMany({
         where: { workshopId: workshop.id, deletedAt: null },
-        select: { id: true, amount: true, paidAmount: true },
+        select: { id: true, amount: true, discountAmount: true, paidAmount: true },
       });
 
+      // Debt = (amount - discountAmount) - paidAmount per job
       const debtAmount = workshopJobs.reduce((sum, wj) => {
-        return sum + Math.max(0, Number(wj.amount || 0) - Number(wj.paidAmount || 0));
+        const net = Math.max(0, Number(wj.amount || 0) - Number(wj.discountAmount || 0));
+        return sum + Math.max(0, net - Number(wj.paidAmount || 0));
       }, 0);
 
       if (debtAmount > 0) {

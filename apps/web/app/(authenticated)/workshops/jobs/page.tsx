@@ -22,7 +22,10 @@ import { cn } from '@/lib/utils';
 interface WorkshopJobListItem {
   id: string;
   code: string;
-  amount: number;
+  rawAmount: number;       // Tổng trước chiết khấu
+  discountAmount: number;  // Chiết khấu
+  netAmount: number;       // Tổng SAU chiết khấu (= rawAmount - discountAmount)
+  amount: number;          // alias cho netAmount — dùng để hiển thị "Tổng tiền"
   status: string;
   startDate?: string | null;
   dueDate?: string | null;
@@ -171,12 +174,22 @@ export default function WorkshopJobsPage() {
       const data = await apiClient<any[]>(`/workshop-jobs?${params.toString()}`);
       
       setJobs(
-        unwrapItems(data).map((j: any) => ({
-          ...j,
-          amount: Number(j.amount || 0),
-          paidAmount: Number(j.paidAmount || 0),
-          debtAmount: Number(j.amount || 0) - Number(j.paidAmount || 0),
-        })),
+        unwrapItems(data).map((j: any) => {
+          const rawAmount = Number(j.rawAmount ?? j.amount ?? 0);
+          const discountAmount = Number(j.discountAmount || 0);
+          const netAmount = Number(j.netAmount ?? (rawAmount - discountAmount));
+          const paidAmount = Number(j.paidAmount || 0);
+          const debtAmount = Math.max(0, netAmount - paidAmount);
+          return {
+            ...j,
+            rawAmount,
+            discountAmount,
+            netAmount,
+            amount: netAmount, // "Tổng tiền" hiển thị = sau CK
+            paidAmount,
+            debtAmount,
+          };
+        }),
       );
     } catch (error) {
       console.error('Failed to fetch workshop jobs:', error);
@@ -499,6 +512,9 @@ export default function WorkshopJobsPage() {
                         <div className="text-center">
                           <p className="text-xs text-gray-500">Tổng tiền</p>
                           <p className="font-medium text-sm text-blue-600">{formatCurrency(job.amount)}</p>
+                          {job.discountAmount > 0 && (
+                            <p className="text-xs text-gray-400">CK: -{formatCurrency(job.discountAmount)}</p>
+                          )}
                         </div>
                         <div className="text-center">
                           <p className="text-xs text-green-600">Đã trả</p>
@@ -583,7 +599,10 @@ export default function WorkshopJobsPage() {
                         </td>
                         <td className="p-3">{job.workshop?.name}</td>
                         <td className="p-3 text-right font-medium text-blue-600">
-                          {formatCurrency(job.amount)}
+                          <div>{formatCurrency(job.amount)}</div>
+                          {job.discountAmount > 0 && (
+                            <div className="text-xs text-gray-400 font-normal">CK: -{formatCurrency(job.discountAmount)}</div>
+                          )}
                         </td>
                         <td className="p-3 text-right text-green-600">
                           {job.paidAmount > 0 ? formatCurrency(job.paidAmount) : '-'}

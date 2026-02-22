@@ -29,11 +29,11 @@ export default function IncomeReportPage() {
   const { token, isLoading: authLoading } = useAuth();
   const [data, setData] = useState<IncomeReportSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  // Default to this_month as per system requirements
+  // Default to this_year as per system requirements
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>({
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    to: new Date().toISOString().split('T')[0],
-    preset: 'this_month',
+    from: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
+    to: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0],
+    preset: 'this_year',
   });
 
   useEffect(() => {
